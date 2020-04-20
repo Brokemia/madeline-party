@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{50EBE06B-4A25-42B8-9E58-E14C33D93651}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>MadelineParty</RootNamespace>
+    <AssemblyName>MadelinePartyCode</AssemblyName>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="FNA">
+      <HintPath>..\..\..\..\..\..\Games\epic-games-store\drive_c\Program Files\Epic Games\Celeste\FNA.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MMHOOK_Celeste">
+      <HintPath>..\..\..\..\..\..\Games\epic-games-store\drive_c\Program Files\Epic Games\Celeste\MMHOOK_Celeste.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="YamlDotNet">
+      <HintPath>..\..\..\..\..\..\Games\epic-games-store\drive_c\Program Files\Epic Games\Celeste\YamlDotNet.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>..\..\..\MonoMod.RuntimeDetour.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="GhostNetMod">
+      <HintPath>..\..\Ghostnet\GhostNetMod.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="GhostMod">
+      <HintPath>..\..\Ghostnet\GhostMod.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Celeste">
+      <HintPath>..\..\..\Celeste.exe</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="MadelinePartyModule.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="LeftButton.cs" />
+    <Compile Include="BoardController.cs" />
+    <Compile Include="PlayerToken.cs" />
+    <Compile Include="PlayerNumberSelect.cs" />
+    <Compile Include="PlayerSelectTrigger.cs" />
+    <Compile Include="PlayerData.cs" />
+    <Compile Include="GameData.cs" />
+    <Compile Include="RightButton.cs" />
+    <Compile Include="GameScoreboard.cs" />
+    <Compile Include="PlayerRankingController.cs" />
+    <Compile Include="DieNumber.cs" />
+    <Compile Include="GameEndController.cs" />
+    <Compile Include="Ghostnet\DieRollData.cs" />
+    <Compile Include="Ghostnet\EmoteConverter.cs" />
+    <Compile Include="Ghostnet\MadelinePartyChunk.cs" />
+    <Compile Include="Ghostnet\MinigameEndData.cs" />
+    <Compile Include="Ghostnet\IPauseUpdateGhostnetChat.cs" />
+    <Compile Include="Minigame\MinigameEntity.cs" />
+    <Compile Include="Minigame\MinigameFinishTrigger.cs" />
+    <Compile Include="Minigame\MinigameTheoMover.cs" />
+    <Compile Include="Ghostnet\PlayerChoiceData.cs" />
+    <Compile Include="Ghostnet\Obselete\GhostnetConnectionManager.cs" />
+    <Compile Include="Ghostnet\Obselete\PlayWhilePaused.cs" />
+    <Compile Include="Ghostnet\RandomSeedData.cs" />
+    <Compile Include="Ghostnet\MinigameStartData.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Ghostnet\" />
+    <Folder Include="Minigame\" />
+    <Folder Include="Ghostnet\Obselete\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>
