@@ -2,13 +2,12 @@
 using System.Collections;
 using System.Linq;
 using Celeste;
-using MadelineParty.Ghostnet;
 using Microsoft.Xna.Framework;
 using Monocle;
 
 namespace MadelineParty {
-    public class GameScoreboard : Entity, IComparable, IPauseUpdateGhostnetChat {
-        private class ScoreboardText : Entity, IPauseUpdateGhostnetChat {
+    public class GameScoreboard : Entity, IComparable {
+        private class ScoreboardText : Entity {
             private GameScoreboard parent;
 
             public ScoreboardText(GameScoreboard parent) {

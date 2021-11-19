@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using Celeste;
-using MadelineParty.Ghostnet;
 using Microsoft.Xna.Framework;
 using Monocle;
+using static MadelineParty.BoardController;
 
 namespace MadelineParty {
-    public class PlayerToken : Entity, IPauseUpdateGhostnetChat {
+    public class PlayerToken : Entity {
         private class TokenImage : Component {
             public PlayerToken token => (PlayerToken)base.Entity;
 
@@ -21,7 +21,7 @@ namespace MadelineParty {
             }
         }
 
-        public Vector2 currentSpace;
+        public BoardSpace currentSpace;
 
         Random rand = new Random();
 
@@ -29,17 +29,17 @@ namespace MadelineParty {
 
         private Component image;
 
-        private List<MTexture> textures;
+        public List<MTexture> textures;
 
         private float timeTilBlink = 10;
 
-        private Vector2 scale;
+        public Vector2 scale { get; private set; }
 
-        private float frame;
+        public float frame { get; private set; }
 
         public string Name;
 
-        public PlayerToken(string texture, Vector2 position, Vector2 scale, int depth, Vector2 space) : base(position) {
+        public PlayerToken(string texture, Vector2 position, Vector2 scale, int depth, BoardSpace space) : base(position) {
             if (string.IsNullOrEmpty(Path.GetExtension(texture))) {
                 texture += ".png";
             }

@@ -5,7 +5,7 @@ namespace MadelineParty
 {
     public class PlayerData : IComparable
     {
-        public uint GhostNetID = uint.MaxValue;
+        public uint CelesteNetID = uint.MaxValue;
         public int TurnOrder;
         public int TokenSelected;
         // Used to maintain player position across minigames
@@ -28,7 +28,7 @@ namespace MadelineParty
 
         public PlayerData(int token, uint gnetID) : this(token)
         {
-            GhostNetID = gnetID;
+            CelesteNetID = gnetID;
         }
 
         // Adds or subtracts the specified number of strawberries from the total

@@ -1,23 +1,20 @@
 ﻿using System;
 using Celeste;
-using MadelineParty.Ghostnet;
+using Celeste.Mod.CelesteNet.Client;
+using MadelineParty.CelesteNet;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace MadelineParty
-{
+namespace MadelineParty {
 
-    public class PlayerNumberSelect : Solid, IPauseUpdateGhostnetChat
-    {
+    public class PlayerNumberSelect : Solid {
         public const int MAXPLAYERS = 4;
 
-        public class PlayerNumberPlus : Solid, IPauseUpdateGhostnetChat
-        {
+        public class PlayerNumberPlus : Solid {
             private PlayerNumberSelect parent;
             private MTexture texture;
 
-            public PlayerNumberPlus(Vector2 position, PlayerNumberSelect parent) : base(position, 16, 16, true)
-            {
+            public PlayerNumberPlus(Vector2 position, PlayerNumberSelect parent) : base(position, 16, 16, true) {
                 this.parent = parent;
                 OnDashCollide = OnDashed;
                 SurfaceSoundIndex = SurfaceIndex.TileToIndex['3'];
@@ -26,43 +23,35 @@ namespace MadelineParty
                 AddTag(Tags.FrozenUpdate);
             }
 
-            public override void Render()
-            {
+            public override void Render() {
                 texture.Draw(this.Position);
                 base.Render();
             }
 
-            public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true)
-            {
-                if (playSound)
-                {
+            public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true) {
+                if (playSound) {
                     Audio.Play("event:/game/general/wall_break_ice", Position);
                 }
 
-                if (MadelinePartyModule.ghostnetConnected)
-                {
+                if (MadelinePartyModule.IsCelesteNetInstalled()) {
                     parent.playerNumber++;
-                    if (parent.playerNumber > MAXPLAYERS)
-                    {
+                    if (parent.playerNumber > MAXPLAYERS) {
                         parent.playerNumber = 1;
                     }
                 }
             }
 
-            private DashCollisionResults OnDashed(Player player, Vector2 direction)
-            {
+            private DashCollisionResults OnDashed(Player player, Vector2 direction) {
                 Break(player.Center, direction);
                 return DashCollisionResults.Rebound;
             }
         }
 
-        public class PlayerNumberMinus : Solid, IPauseUpdateGhostnetChat
-        {
+        public class PlayerNumberMinus : Solid {
             private PlayerNumberSelect parent;
             private MTexture texture;
 
-            public PlayerNumberMinus(Vector2 position, PlayerNumberSelect parent) : base(position, 16, 16, true)
-            {
+            public PlayerNumberMinus(Vector2 position, PlayerNumberSelect parent) : base(position, 16, 16, true) {
                 this.parent = parent;
                 OnDashCollide = OnDashed;
                 SurfaceSoundIndex = SurfaceIndex.TileToIndex['3'];
@@ -71,31 +60,25 @@ namespace MadelineParty
                 AddTag(Tags.FrozenUpdate);
             }
 
-            public override void Render()
-            {
+            public override void Render() {
                 texture.Draw(this.Position);
                 base.Render();
             }
 
-            public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true)
-            {
-                if (playSound)
-                {
+            public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true) {
+                if (playSound) {
                     Audio.Play("event:/game/general/wall_break_ice", Position);
                 }
 
-                if (MadelinePartyModule.ghostnetConnected)
-                {
+                if (MadelinePartyModule.IsCelesteNetInstalled()) {
                     parent.playerNumber--;
-                    if (parent.playerNumber < 1)
-                    {
+                    if (parent.playerNumber < 1) {
                         parent.playerNumber = MAXPLAYERS;
                     }
                 }
             }
 
-            private DashCollisionResults OnDashed(Player player, Vector2 direction)
-            {
+            private DashCollisionResults OnDashed(Player player, Vector2 direction) {
                 Break(player.Center, direction);
                 return DashCollisionResults.Rebound;
             }
@@ -110,24 +93,18 @@ namespace MadelineParty
 
         public int playerNumber = 1;
 
-        private MTexture[] textures = new MTexture[] { null, null, null, null};
+        private MTexture[] textures = new MTexture[] { null, null, null, null };
 
         public PlayerNumberSelect(Vector2 position, Vector2[] nodes)
-            : base(position, 32, 32, true)
-        {
+            : base(position, 32, 32, true) {
             GameData.Reset();
-            if (nodes.Length == 0)
-            {
+            if (nodes.Length == 0) {
                 plus = new PlayerNumberPlus(position + new Vector2(-60, 0), this);
-                minus = new PlayerNumberMinus(position + new Vector2(60+16, 0), this);
-            }
-            else if (nodes.Length == 1)
-            {
+                minus = new PlayerNumberMinus(position + new Vector2(60 + 16, 0), this);
+            } else if (nodes.Length == 1) {
                 plus = new PlayerNumberPlus(nodes[0], this);
                 minus = new PlayerNumberMinus(position + new Vector2(60, 0), this);
-            }
-            else
-            {
+            } else {
                 plus = new PlayerNumberPlus(nodes[0], this);
                 minus = new PlayerNumberMinus(nodes[1], this);
             }
@@ -142,12 +119,10 @@ namespace MadelineParty
         }
 
         public PlayerNumberSelect(EntityData data, Vector2 offset)
-            : this(data.Position + offset, data.Nodes)
-        {
+            : this(data.Position + offset, data.Nodes) {
         }
 
-        public override void Added(Scene scene)
-        {
+        public override void Added(Scene scene) {
             base.Added(scene);
             level = scene as Level;
             level.CanRetry = false;
@@ -155,37 +130,30 @@ namespace MadelineParty
             scene.Add(minus);
         }
 
-        public override void Render()
-        {
+        public override void Render() {
             textures[playerNumber - 1].Draw(this.Position);
             base.Render();
         }
 
-        public override void Update()
-        {
+        public override void Update() {
             base.Update();
-            if (!MadelinePartyModule.ghostnetConnected && playerNumber != 1)
-            {
+            if (!MadelinePartyModule.IsCelesteNetInstalled() && playerNumber != 1) {
                 playerNumber = 1;
             }
 
         }
 
-        public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true)
-        {
-            if (playSound)
-            {
+        public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true) {
+            if (playSound) {
                 Audio.Play("event:/game/general/wall_break_ice", Position);
             }
             Player player = Scene.Tracker.GetEntity<Player>();
             GameData.playerNumber = playerNumber;
-            if (MadelinePartyModule.ghostnetConnected && playerNumber != 1)
-            {
+            if (MadelinePartyModule.IsCelesteNetInstalled() && playerNumber != 1) {
                 SendPartySearch();
             }
 
-            level.OnEndOfFrame += delegate
-            {
+            level.OnEndOfFrame += delegate {
                 Leader.StoreStrawberries(player.Leader);
                 level.Remove(player);
                 level.UnloadLevel();
@@ -198,22 +166,15 @@ namespace MadelineParty
             };
         }
 
-        private void SendPartySearch()
-        {
-            Celeste.Mod.Ghost.Net.GhostNetModule.Instance.Client.Connection.SendManagement(new Celeste.Mod.Ghost.Net.GhostNetFrame
-            {
-                EmoteConverter.convertPartyChunkToEmoteChunk(new MadelinePartyChunk
-                {
-                    playerID = Celeste.Mod.Ghost.Net.GhostNetModule.Instance.Client.PlayerID,
-                    playerName = Celeste.Mod.Ghost.Net.GhostNetModule.Instance.Client.PlayerName.Name,
-                    respondingTo = Celeste.Mod.Ghost.Net.GhostNetModule.Instance.Client.PlayerID,
-                    lookingForParty = (byte)GameData.playerNumber
-                })
-            }, true);
+        private void SendPartySearch() {
+            CelesteNetClientModule.Instance?.Client?.Send(new PartyData {
+                Player = CelesteNetClientModule.Instance?.Client?.PlayerInfo,
+                respondingTo = CelesteNetClientModule.Instance.Client.PlayerInfo.ID,
+                lookingForParty = (byte)GameData.playerNumber
+            });
         }
 
-        private DashCollisionResults OnDashed(Player player, Vector2 direction)
-        {
+        private DashCollisionResults OnDashed(Player player, Vector2 direction) {
             Break(player.Center, direction);
             return DashCollisionResults.Rebound;
         }

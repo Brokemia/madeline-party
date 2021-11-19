@@ -3,13 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod;
-using Celeste.Mod.Ghost.Net;
-using MadelineParty.Ghostnet;
+using Celeste.Mod.CelesteNet.Client;
+using MadelineParty.CelesteNet;
 using Microsoft.Xna.Framework;
 using Monocle;
+using Logger = Celeste.Mod.Logger;
 
 namespace MadelineParty {
-    public class BoardController : Entity, IPauseUpdateGhostnetChat {
+    public class BoardController : Entity {
         public enum BoardStatus {
             WAITING,
             GAMESTART,
@@ -21,6 +22,13 @@ namespace MadelineParty {
             DOWN = 1,
             LEFT = 2,
             RIGHT = 3
+        }
+
+        public struct BoardSpace {
+            public int x, y;
+            public List<BoardSpace> destinations;
+            public char type;
+            public bool heartSpace;
         }
 
         public static string[] TokenPaths = { "madeline/normal00", "badeline/normal00", "theo/excited00", "granny/normal00" };
@@ -66,13 +74,15 @@ namespace MadelineParty {
 
         private DateTime minigameStartTime;
 
+        public static LevelData riggedMinigame = null;
+
         public BoardStatus status = BoardStatus.GAMESTART;
 
         public static BoardController Instance;
 
         public BoardController(EntityData data) : base(data.Position) {
             Instance = this;
-            boardDecals = new Decal[board.Length, board[0].Length];
+            boardDecals = new Dictionary<Vector2, Decal>();
             diceNumbers = GFX.Game.GetAtlasSubtextures("decals/madelineparty/dicenumbers/dice_");
             AddTag(TagsExt.SubHUD);
             AddTag(Tags.PauseUpdate);
@@ -84,7 +94,7 @@ namespace MadelineParty {
         // r = red space
         // s = start
         // i = item shop
-        public char[][] board = { new char[]{ 'b', 'r', 'b', 'r', 'r', 'b', ' ', ' ', ' ', ' ', ' ', ' ' },
+        /*public char[][] board = {  new char[]{ 'b', 'r', 'b', 'r', 'r', 'b', ' ', ' ', ' ', ' ', ' ', ' ' },
                                    new char[]{ 'b', ' ', ' ', 'b', ' ', 'b', 'b', ' ', ' ', ' ', ' ', ' ' },
                                    new char[]{ 'b', ' ', ' ', 'b', ' ', ' ', 'b', ' ', ' ', ' ', ' ', ' ' },
                                    new char[]{ 'b', ' ', ' ', 'r', ' ', ' ', 'r', ' ', ' ', ' ', ' ', ' ' },
@@ -95,11 +105,11 @@ namespace MadelineParty {
                                    new char[]{ 's', 'b', 'b', 'b', 'b', 'b', 'r', 'b', ' ', ' ', ' ', 'b' },
                                    new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'b', ' ', ' ', ' ', 'b' },
                                    new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'b', ' ', ' ', ' ', 'b' },
-                                   new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'b', 'b', 'r', 'r', 'r' } };
+                                   new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'b', 'b', 'r', 'r', 'r' } };*/
 
-        private Decal[,] boardDecals;
+        private Dictionary<Vector2, Decal> boardDecals;
 
-        public char[][] directions = { new char[]{ '>', '>', '>', '.', '>', 'v', ' ', ' ', ' ', ' ', ' ', ' ' },
+        /*public char[][] directions = {  new char[]{ '>', '>', '>', '.', '>', 'v', ' ', ' ', ' ', ' ', ' ', ' ' },
                                         new char[]{ '^', ' ', ' ', 'v', ' ', '>', 'v', ' ', ' ', ' ', ' ', ' ' },
                                         new char[]{ '^', ' ', ' ', 'v', ' ', ' ', 'v', ' ', ' ', ' ', ' ', ' ' },
                                         new char[]{ '^', ' ', ' ', 'v', ' ', ' ', 'v', ' ', ' ', ' ', ' ', ' ' },
@@ -110,12 +120,44 @@ namespace MadelineParty {
                                         new char[]{ '>', '>', '^', '<', '<', '<', '<', '<', ' ', ' ', ' ', 'v' },
                                         new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', '^', ' ', ' ', ' ', 'v' },
                                         new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', '^', ' ', ' ', ' ', 'v' },
-                                        new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', '^', '<', '<', '<', '<' } };
+                                        new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', '^', '<', '<', '<', '<' } };*/
+
+        public static List<BoardSpace> boardSpaces = new List<BoardSpace>();
 
         public override void Added(Scene scene) {
             base.Added(scene);
             level = SceneAs<Level>();
             level.CanRetry = false;
+
+            foreach (BoardSpace space in boardSpaces) {
+                Vector2 pos = new Vector2(X + space.x, Y + space.y);
+                level.Add(boardDecals[pos] = new Decal(
+                    space.type switch {
+                        'r' => "madelineparty/redspace",
+                        'b' => "madelineparty/bluespace",
+                        _ => "madelineparty/shopspace"
+                    }, pos, Vector2.One, 0));
+
+                if(space.type == 's') {
+                    int tokensAdded = 0;
+                    for (int k = 0; k < GameData.players.Length; k++) {
+                        if (GameData.players[k] != null) {
+                            if (!GameData.gameStarted) {
+                                PlayerToken token = new PlayerToken(TokenPaths[GameData.players[k].TokenSelected], pos + new Vector2(-24, tokensAdded * 18), new Vector2(.25f, .25f), -1, space);
+                                playerTokens[k] = token;
+                                GameData.players[k].token = token;
+                            } else {
+                                playerTokens[k] = GameData.players[k].token;
+                            }
+                            tokensAdded++;
+                        }
+                    }
+
+                    for (int k = playerTokens.Length - 1; k >= 0; k--) {
+                        if (playerTokens[k] != null) level.Add(playerTokens[k]);
+                    }
+                }
+            }
 
             for (int i = 0; i < board.Length; i++) {
                 for (int j = 0; j < board[i].Length; j++) {
@@ -257,16 +299,16 @@ namespace MadelineParty {
                 }
 
                 if (delayedDieRoll != null) {
-                    if (isWaitingOnPlayer(GameData.playerSelectTriggers[delayedDieRoll.playerID])) {
+                    if (isWaitingOnPlayer(GameData.playerSelectTriggers[delayedDieRoll.Player.ID])) {
                         string rollString = "";
                         foreach (int i in delayedDieRoll.rolls) {
                             rollString += i + ", ";
                         }
-                        Logger.Log("MadelineParty", "Delayed emote interpreted as die roll from player " + delayedDieRoll.playerID + ". Rolls: " + rollString);
+                        Logger.Log("MadelineParty", "Delayed emote interpreted as die roll from player " + delayedDieRoll.Player.ID + ". Rolls: " + rollString);
 
                         if (delayedDieRoll.rolls.Length == 2)
-                            GameData.players[GameData.playerSelectTriggers[delayedDieRoll.playerID]].items.Remove(GameData.Item.DOUBLEDICE);
-                        RollDice(GameData.playerSelectTriggers[delayedDieRoll.playerID], delayedDieRoll.rolls);
+                            GameData.players[GameData.playerSelectTriggers[delayedDieRoll.Player.ID]].items.Remove(GameData.Item.DOUBLEDICE);
+                        RollDice(GameData.playerSelectTriggers[delayedDieRoll.Player.ID], delayedDieRoll.rolls);
                     }
                     delayedDieRoll = null;
                 }
@@ -341,7 +383,10 @@ namespace MadelineParty {
                         }
                         break;
                     }
+                    // If we're not at an intersection
+                    // Calculate the screen position we're approaching
                     Vector2 approaching = ScreenCoordsFromBoardCoords(SwapXY(playerMovePath[playerMoveProgress + 1]));
+                    // Check if we've hit our next space
                     if (playerTokens[movingPlayerID].Position.Equals(approaching)) {
                         playerMoveProgress++;
                         playerTokens[movingPlayerID].currentSpace = playerMovePath[playerMoveProgress];
@@ -359,7 +404,7 @@ namespace MadelineParty {
                             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.ConfirmShopEnter);
                             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.CancelShopEnter);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.ENTERSHOP);
-                        } else if (playerMoveProgress == playerMoveDistance) {
+                        } else if (playerMoveProgress == playerMoveDistance) { // Check if we've hit our destination
                             playerMoveDistance = 0;
                             playerMovePath = null;
                             playerMoveProgress = 0;
@@ -380,53 +425,36 @@ namespace MadelineParty {
                     }
                     playerTokens[movingPlayerID].Position = Calc.Approach(playerTokens[movingPlayerID].Position, approaching, 80f * Engine.DeltaTime);
                     break;
-                default:
-                    break;
             }
         }
 
-        private void GhostNetSendPlayerChoice(PlayerChoiceData.ChoiceType type, int choice) {
-            GhostNetModule.Instance.Client.Connection.SendManagement(new GhostNetFrame
-            {
-                EmoteConverter.convertPlayerChoiceToEmoteChunk(new PlayerChoiceData
-                {
-                    playerID = GhostNetModule.Instance.Client.PlayerID,
-                    playerName = GhostNetModule.Instance.Client.PlayerName.Name,
-                    choiceType = type,
-                    choice = choice
-                })
-            }, true);
+        private void CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType type, int choice) {
+            CelesteNetClientModule.Instance.Client?.Send(new PlayerChoiceData {
+                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
+                choiceType = type,
+                choice = choice
+            });
         }
 
-        private void GhostNetSendDieRolls(int[] rolls) {
-            GhostNetModule.Instance.Client.Connection.SendManagement(new GhostNetFrame
-            {
-                EmoteConverter.convertDieRollToEmoteChunk(new DieRollData
-                {
-                    playerID = GhostNetModule.Instance.Client.PlayerID,
-                    playerName = GhostNetModule.Instance.Client.PlayerName.Name,
-                    rolls = rolls
-                })
-            }, true);
+        private void CelesteNetSendDieRolls(int[] rolls) {
+            CelesteNetClientModule.Instance.Client?.Send(new DieRollData {
+                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
+                rolls = rolls
+            });
         }
 
-        private void GhostNetSendMinigameStart(int choice, long time = 0) {
-            GhostNetModule.Instance.Client.Connection.SendManagement(new GhostNetFrame
-            {
-                EmoteConverter.convertMinigameStartToEmoteChunk(new MinigameStartData
-                {
-                    playerID = GhostNetModule.Instance.Client.PlayerID,
-                    playerName = GhostNetModule.Instance.Client.PlayerName.Name,
-                    choice = choice,
-                    gameStart = time
-                })
-            }, true);
+        private void CelesteNetSendMinigameStart(int choice, long time = 0) {
+            CelesteNetClientModule.Instance.Client?.Send(new MinigameStartData {
+                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
+                choice = choice,
+                gameStart = time
+            });
         }
 
         public void SkipItem() {
             // Only send out data if we are the player that skipped the item
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.ghostnetConnected) {
-                GhostNetSendPlayerChoice(PlayerChoiceData.ChoiceType.SHOPITEM, 1);
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.SHOPITEM, 1);
             }
             shopItemViewing++;
             if (shopItemViewing < GameData.shopContents.Count) {
@@ -446,8 +474,8 @@ namespace MadelineParty {
 
         public void BuyItem() {
             // Only send out data if we are the player that bought the item
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.ghostnetConnected) {
-                GhostNetSendPlayerChoice(PlayerChoiceData.ChoiceType.SHOPITEM, 0);
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.SHOPITEM, 0);
             }
             GameData.Item itemBought = GameData.shopContents[shopItemViewing];
             GameData.players[turnOrder[playerTurn]].items.Add(itemBought);
@@ -463,8 +491,8 @@ namespace MadelineParty {
 
         public void SkipShop() {
             // Only send out data if we are the player that skipped the shop
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.ghostnetConnected) {
-                GhostNetSendPlayerChoice(PlayerChoiceData.ChoiceType.ENTERSHOP, 1);
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.ENTERSHOP, 1);
             }
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
@@ -474,8 +502,8 @@ namespace MadelineParty {
 
         public void EnterShop() {
             // Only send out data if we are the player that entered the shop
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.ghostnetConnected) {
-                GhostNetSendPlayerChoice(PlayerChoiceData.ChoiceType.ENTERSHOP, 0);
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.ENTERSHOP, 0);
             }
             shopItemViewing = 0;
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, GameData.shopContents[shopItemViewing]);
@@ -490,8 +518,8 @@ namespace MadelineParty {
 
         public void SkipHeart() {
             // Only send out data if we are the player that skipped the heart
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.ghostnetConnected) {
-                GhostNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEART, 1);
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEART, 1);
             }
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
@@ -501,8 +529,8 @@ namespace MadelineParty {
 
         public void BuyHeart() {
             // Only send out data if we are the player that bought the heart
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.ghostnetConnected) {
-                GhostNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEART, 0);
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEART, 0);
             }
             scoreboards[turnOrder[playerTurn]].StrawberryChange(-GameData.heartCost, .08f);
             GameData.players[turnOrder[playerTurn]].ChangeStrawberries(-GameData.heartCost);
@@ -538,9 +566,9 @@ namespace MadelineParty {
             // Only send out data if we are the player that bought the heart
             if (turnOrder[playerTurn] == GameData.realPlayerID) {
                 GameData.heartSpace = possibleHeartSpaces[rand.Next(possibleHeartSpaces.Count)];
-                if (MadelinePartyModule.ghostnetConnected) {
-                    GhostNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEARTX, (int)GameData.heartSpace.X);
-                    GhostNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEARTY, (int)GameData.heartSpace.Y);
+                if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                    CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEARTX, (int)GameData.heartSpace.X);
+                    CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEARTY, (int)GameData.heartSpace.Y);
                 }
             }
             Add(new Coroutine(WaitForNewHeartSpaceCoroutine()));
@@ -593,8 +621,8 @@ namespace MadelineParty {
 
         public void ContinueMovementAfterIntersection(Direction chosen) {
             // Only send out data if we are the player that chose the direction
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.ghostnetConnected) {
-                GhostNetSendPlayerChoice(PlayerChoiceData.ChoiceType.DIRECTION, (int)chosen);
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.DIRECTION, (int)chosen);
             }
             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
@@ -676,16 +704,20 @@ namespace MadelineParty {
                 List<LevelData> minigames = level.Session.MapData.Levels.FindAll((obj) => obj.Name.StartsWith("z_Minigame", StringComparison.InvariantCulture));
                 minigames.RemoveAll((obj) => GameData.playedMinigames.Contains(obj.Name));
                 int chosenMinigame = rand.Next(minigames.Count);
+                if(riggedMinigame != null) {
+                    chosenMinigame = minigames.IndexOf(riggedMinigame);
+                    riggedMinigame = null;
+                }
                 minigameStartTime = DateTime.UtcNow.AddSeconds(3);
                 Console.WriteLine("Minigame chosen: " + chosenMinigame);
                 ChoseMinigame(chosenMinigame);
-                if (MadelinePartyModule.ghostnetConnected) {
-                    GhostNetSendMinigameStart(chosenMinigame, minigameStartTime.ToFileTimeUtc());
+                if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                    CelesteNetSendMinigameStart(chosenMinigame, minigameStartTime.ToFileTimeUtc());
                 }
             }
             Console.WriteLine("Host? " + GameData.gnetHost);
 
-            Console.WriteLine("Begin minigame wait"); // TODO Minigame synchronization
+            Console.WriteLine("Begin minigame wait");
             while (GameData.minigame == null /*|| minigameStartTime.CompareTo(DateTime.UtcNow) < 0*/) {
                 yield return null;
             }
@@ -810,10 +842,10 @@ namespace MadelineParty {
             RollDice(playerID, false);
         }
 
-        // Usually called only due to Ghostnet messages
+        // Usually called only due to Celestenet messages
         public void RollDice(int playerID, int[] rolls) {
-            if (MadelinePartyModule.ghostnetConnected && playerID == GameData.realPlayerID) {
-                GhostNetSendDieRolls(rolls);
+            if (MadelinePartyModule.IsCelesteNetInstalled() && playerID == GameData.realPlayerID) {
+                CelesteNetSendDieRolls(rolls);
             }
             Add(new Coroutine(DieRollAnimation(playerID, rolls)));
         }
@@ -829,8 +861,8 @@ namespace MadelineParty {
                     GameData.players[playerID].items.Remove(GameData.Item.DOUBLEDICE);
                 }
             }
-            if (MadelinePartyModule.ghostnetConnected && playerID == GameData.realPlayerID) {
-                GhostNetSendDieRolls(rolls.ToArray());
+            if (MadelinePartyModule.IsCelesteNetInstalled() && playerID == GameData.realPlayerID) {
+                CelesteNetSendDieRolls(rolls.ToArray());
             }
             Add(new Coroutine(DieRollAnimation(playerID, rolls.ToArray())));
         }

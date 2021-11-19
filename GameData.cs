@@ -28,10 +28,12 @@ namespace MadelineParty
         // The ID of the player at this client
         public static int realPlayerID = -1;
         public static bool gnetHost = true;
-        public static List<uint> ghostnetIDs = new List<uint>();
+        public static List<uint> celestenetIDs = new List<uint>();
         // Which playerSelectTrigger each player is in
         public static ConcurrentDictionary<uint, int> playerSelectTriggers = new ConcurrentDictionary<uint, int>();
         public static List<string> playedMinigames = new List<string>();
+        // Matches player token ID to minigame status
+        public static Dictionary<int, uint> minigameStatus = new Dictionary<int, uint>();
         // Matches player token ID to minigame results
         public static List<Tuple<int, uint>> minigameResults = new List<Tuple<int, uint>>();
         public static Vector2 heartSpace = new Vector2(6, 8);
@@ -63,10 +65,11 @@ namespace MadelineParty
             realPlayerID = -1;
             heartSpace = new Vector2(6, 8);
             gnetHost = true;
-            ghostnetIDs = new List<uint>();
+            celestenetIDs = new List<uint>();
             heartCost = 5;
             playerSelectTriggers = new ConcurrentDictionary<uint, int>();
             playedMinigames = new List<string>();
+            minigameStatus = new Dictionary<int, uint>();
             minigameResults = new List<Tuple<int, uint>>();
             currentPlayerSelection = null;
             minigame = null;

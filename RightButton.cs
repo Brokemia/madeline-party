@@ -1,18 +1,14 @@
 ﻿using System;
 using Celeste;
-using MadelineParty.Ghostnet;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace MadelineParty
-{
+namespace MadelineParty {
 
-    public class RightButton : Solid, IComparable, IPauseUpdateGhostnetChat
-    {
+    public class RightButton : Solid, IComparable {
         private const string decalPrefix = "madelineparty/rightbutton";
 
-        public enum Modes
-        {
+        public enum Modes {
             CancelHeartBuy,
             CancelShopEnter,
             CancelItemBuy,
@@ -24,12 +20,9 @@ namespace MadelineParty
             Inactive
         }
 
-        protected char tileType
-        {
-            get
-            {
-                switch (currentMode)
-                {
+        protected char tileType {
+            get {
+                switch (currentMode) {
                     case Modes.Inactive:
                         return '3';
                     default:
@@ -42,10 +35,8 @@ namespace MadelineParty
 
         private float height;
 
-        protected bool currentlyBreakable
-        {
-            get
-            {
+        protected bool currentlyBreakable {
+            get {
                 return currentMode != Modes.Inactive;
             }
         }
@@ -58,8 +49,7 @@ namespace MadelineParty
         private Level level;
 
         public RightButton(Vector2 position, float width, float height, Modes startingMode)
-            : base(position, width, height, safe: true)
-        {
+            : base(position, width, height, safe: true) {
             this.width = width;
             this.height = height;
             currentMode = startingMode;
@@ -70,20 +60,16 @@ namespace MadelineParty
         }
 
         public RightButton(EntityData data, Vector2 offset)
-            : this(data.Position + offset, data.Width, data.Height, data.Enum<Modes>("startingMode", defaultValue: Modes.Inactive))
-        {
+            : this(data.Position + offset, data.Width, data.Height, data.Enum<Modes>("startingMode", defaultValue: Modes.Inactive)) {
         }
 
-        public Modes GetCurrentMode()
-        {
+        public Modes GetCurrentMode() {
             return currentMode;
         }
 
-        public void SetCurrentMode(Modes mode)
-        {
+        public void SetCurrentMode(Modes mode) {
             currentMode = mode;
-            switch (mode)
-            {
+            switch (mode) {
                 case Modes.CancelHeartBuy:
                 case Modes.CancelItemBuy:
                 case Modes.CancelShopEnter:
@@ -95,29 +81,23 @@ namespace MadelineParty
             }
         }
 
-        public override void Added(Scene scene)
-        {
+        public override void Added(Scene scene) {
             base.Added(scene);
             level = SceneAs<Level>();
         }
 
-        public override void Awake(Scene scene)
-        {
+        public override void Awake(Scene scene) {
             base.Awake(scene);
             // Choose the closest left button decal to display to
-            foreach (Decal item in scene.Entities.FindAll<Decal>())
-            {
+            foreach (Decal item in scene.Entities.FindAll<Decal>()) {
                 //Console.WriteLine("Decal found: " + item.Name);
-                if (item.Name.StartsWith("decals/" + decalPrefix, StringComparison.InvariantCulture))
-                {
-                    if (DistanceBetween(item, this) < DistanceBetween(associatedDecal, this))
-                    {
+                if (item.Name.StartsWith("decals/" + decalPrefix, StringComparison.InvariantCulture)) {
+                    if (DistanceBetween(item, this) < DistanceBetween(associatedDecal, this)) {
                         associatedDecal = item;
                     }
                 }
             }
-            foreach (BoardController item in scene.Entities.FindAll<BoardController>())
-            {
+            foreach (BoardController item in scene.Entities.FindAll<BoardController>()) {
                 board = item;
             }
             SwapDecal(decalPrefix + currentMode.ToString().ToLower());
@@ -126,37 +106,26 @@ namespace MadelineParty
             Add(new TileInterceptor(tileGrid, highPriority: true));
         }
 
-        private double DistanceBetween(Entity e1, Entity e2)
-        {
+        private double DistanceBetween(Entity e1, Entity e2) {
             if (e1 == null || e2 == null)
                 return Double.MaxValue;
             return Math.Sqrt(Math.Pow(e1.CenterX - e2.CenterX, 2) + Math.Pow(e1.CenterY - e2.CenterY, 2));
         }
 
-        public override void Removed(Scene scene)
-        {
+        public override void Removed(Scene scene) {
             base.Removed(scene);
             Celeste.Celeste.Freeze(0.05f);
         }
 
-        public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true)
-        {
-            if (playSound)
-            {
-                if (tileType == '1')
-                {
+        public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true) {
+            if (playSound) {
+                if (tileType == '1') {
                     Audio.Play("event:/game/general/wall_break_dirt", Position);
-                }
-                else if (tileType == '3')
-                {
+                } else if (tileType == '3') {
                     Audio.Play("event:/game/general/wall_break_ice", Position);
-                }
-                else if (tileType == '9')
-                {
+                } else if (tileType == '9') {
                     Audio.Play("event:/game/general/wall_break_wood", Position);
-                }
-                else
-                {
+                } else {
                     Audio.Play("event:/game/general/wall_break_stone", Position);
                 }
             }
@@ -164,10 +133,8 @@ namespace MadelineParty
             DoBreakAction();
         }
 
-        private void DoBreakAction()
-        {
-            switch (currentMode)
-            {
+        private void DoBreakAction() {
+            switch (currentMode) {
                 case Modes.DoubleDice:
                     SetCurrentMode(Modes.Inactive);
                     board.RollDice(GetTokenID(), true);
@@ -200,47 +167,38 @@ namespace MadelineParty
 
         // Swaps the associatedDecal with a different one
         // Does nothing if associatedDecal is null
-        private void SwapDecal(string name)
-        {
-            if (associatedDecal != null)
-            {
+        private void SwapDecal(string name) {
+            if (associatedDecal != null) {
                 associatedDecal.RemoveSelf();
                 associatedDecal = new Decal(name, associatedDecal.Position, associatedDecal.Scale, associatedDecal.Depth);
                 base.Scene.Add(associatedDecal);
             }
         }
 
-        private DashCollisionResults OnDashed(Player player, Vector2 direction)
-        {
+        private DashCollisionResults OnDashed(Player player, Vector2 direction) {
             Break(player.Center, direction);
             return DashCollisionResults.Rebound;
         }
 
         // Get the ID of the token of the player using it
-        public int GetTokenID()
-        {
-            if (X < level.LevelOffset.X + level.Bounds.Width / 2 && Y < level.LevelOffset.Y + level.Bounds.Height / 2)
-            {
+        public int GetTokenID() {
+            if (X < level.LevelOffset.X + level.Bounds.Width / 2 && Y < level.LevelOffset.Y + level.Bounds.Height / 2) {
                 return 0;
             }
-            if (X > level.LevelOffset.X + level.Bounds.Width / 2 && Y < level.LevelOffset.Y + level.Bounds.Height / 2)
-            {
+            if (X > level.LevelOffset.X + level.Bounds.Width / 2 && Y < level.LevelOffset.Y + level.Bounds.Height / 2) {
                 return 1;
             }
-            if (X < level.LevelOffset.X + level.Bounds.Width / 2 && Y > level.LevelOffset.Y + level.Bounds.Height / 2)
-            {
+            if (X < level.LevelOffset.X + level.Bounds.Width / 2 && Y > level.LevelOffset.Y + level.Bounds.Height / 2) {
                 return 2;
             }
-            if (X > level.LevelOffset.X + level.Bounds.Width / 2 && Y > level.LevelOffset.Y + level.Bounds.Height / 2)
-            {
+            if (X > level.LevelOffset.X + level.Bounds.Width / 2 && Y > level.LevelOffset.Y + level.Bounds.Height / 2) {
                 return 3;
             }
 
             return 0;
         }
 
-        public int CompareTo(object obj)
-        {
+        public int CompareTo(object obj) {
             if (obj == null) return 1;
             return obj is RightButton other ? GetTokenID().CompareTo(other.GetTokenID()) : 1;
         }

@@ -1,13 +1,12 @@
 ﻿using System;
 using Celeste;
-using MadelineParty.Ghostnet;
 using Microsoft.Xna.Framework;
 using Monocle;
 
 namespace MadelineParty
 {
 
-    public class LeftButton : Solid, IComparable, IPauseUpdateGhostnetChat
+    public class LeftButton : Solid, IComparable
     {
         private const string decalPrefix = "madelineparty/leftbutton";
 

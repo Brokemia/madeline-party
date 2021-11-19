@@ -2,35 +2,29 @@
 using System.Collections;
 using System.Collections.Generic;
 using Celeste;
-using MadelineParty.Ghostnet;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace MadelineParty
-{
-    public class PlayerRankingController : Entity, IPauseUpdateGhostnetChat
-    {
+namespace MadelineParty {
+    public class PlayerRankingController : Entity {
         private Level level;
 
-        public PlayerRankingController()
-        {
+        public PlayerRankingController() {
             AddTag(Tags.PauseUpdate);
             AddTag(Tags.FrozenUpdate);
             Add(new Coroutine(SendBack()));
         }
 
-        public override void Added(Scene scene)
-        {
+        public override void Added(Scene scene) {
             base.Added(scene);
             level = SceneAs<Level>();
         }
 
-        private void EndGame()
-        {
-            List<PlayerData> playerList = new List<PlayerData>(Array.FindAll<PlayerData>(GameData.players, (x) => x != null));
+        private void EndGame() {
+            List<PlayerData> playerList = new List<PlayerData>(Array.FindAll(GameData.players, (x) => x != null));
             // TODO Tiebreaker die roll
-            playerList.Sort((x, y) => { if (x.hearts == y.hearts)
-                {
+            playerList.Sort((x, y) => {
+                if (x.hearts == y.hearts) {
                     return y.strawberries.CompareTo(x.strawberries);
                 }
                 return y.hearts.CompareTo(x.hearts);
@@ -38,14 +32,15 @@ namespace MadelineParty
 
             int winnerID = playerList[0].TokenSelected;
             int realPlayerPlace = playerList.FindIndex((obj) => obj.TokenSelected == GameData.realPlayerID);
-            level.OnEndOfFrame += delegate
-            {
+            level.OnEndOfFrame += delegate {
                 Player player = level.Tracker.GetEntity<Player>();
                 Leader.StoreStrawberries(player.Leader);
                 level.Remove(player);
                 level.UnloadLevel();
 
                 level.Session.Level = "Game_VictoryRoyale";
+                GameData.minigameResults.Clear();
+                GameData.minigameStatus.Clear();
 
                 List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns.ToArray());
                 // Sort the spawns so the highest one is first
@@ -58,26 +53,23 @@ namespace MadelineParty
             };
         }
 
-        private IEnumerator SendBack()
-        {
+        private IEnumerator SendBack() {
             yield return 7f;
+            level.Remove(level.Entities.FindAll<MinigameDisplay>());
             GameData.minigame = null;
-            if (GameData.turn > GameData.maxTurns)
-            {
+            if (GameData.turn > GameData.maxTurns) {
                 EndGame();
-            }
-            else
-            {
-                level.OnEndOfFrame += delegate
-                {
+            } else {
+                level.OnEndOfFrame += delegate {
                     Player player = level.Tracker.GetEntity<Player>();
                     Leader.StoreStrawberries(player.Leader);
                     level.Remove(player);
                     level.UnloadLevel();
 
                     level.Session.Level = "Game_MainRoom";
-                    switch (GameData.realPlayerID)
-                    {
+                    GameData.minigameResults.Clear();
+                    GameData.minigameStatus.Clear();
+                    switch (GameData.realPlayerID) {
                         case 0:
                             level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
                             break;

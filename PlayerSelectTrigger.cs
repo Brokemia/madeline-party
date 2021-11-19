@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Celeste;
-using Celeste.Mod.Ghost.Net;
-using MadelineParty.Ghostnet;
+using Celeste.Mod.CelesteNet.Client;
+using MadelineParty.CelesteNet;
 using Microsoft.Xna.Framework;
 using Monocle;
 
 namespace MadelineParty {
-    public class PlayerSelectTrigger : Trigger, IComparable, IPauseUpdateGhostnetChat {
+    public class PlayerSelectTrigger : Trigger, IComparable {
         private Level level;
         private List<PlayerSelectTrigger> otherChoices = new List<PlayerSelectTrigger>();
         public bool occupied;
@@ -22,25 +22,20 @@ namespace MadelineParty {
             AddTag(Tags.FrozenUpdate);
         }
 
-        private void GhostNetSendOnEnterExit(int status) {
-            Celeste.Mod.Ghost.Net.GhostNetModule.Instance.Client.Connection.SendManagement(new Celeste.Mod.Ghost.Net.GhostNetFrame
-                {
-                    EmoteConverter.convertPartyChunkToEmoteChunk(new MadelinePartyChunk
-                    {
-                        playerID = Celeste.Mod.Ghost.Net.GhostNetModule.Instance.Client.PlayerID,
-                        playerName = Celeste.Mod.Ghost.Net.GhostNetModule.Instance.Client.PlayerName.Name,
-                        respondingTo = Celeste.Mod.Ghost.Net.GhostNetModule.Instance.Client.PlayerID,
-                        playerSelectTrigger = status
-                    })
-                }, true);
+        private void CelesteNetSendOnEnterExit(int status) {
+            CelesteNetClientModule.Instance?.Client?.Send(new PartyData {
+                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
+                respondingTo = CelesteNetClientModule.Instance.Client.PlayerInfo.ID,
+                playerSelectTrigger = status
+            });
         }
 
         public override void OnEnter(Player player) {
             base.OnEnter(player);
             occupied = true;
             GameData.currentPlayerSelection = this;
-            if (MadelinePartyModule.ghostnetConnected) {
-                GhostNetSendOnEnterExit(playerID);
+            if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                CelesteNetSendOnEnterExit(playerID);
             }
 
             // -1 so it doesn't count me as a player
@@ -61,8 +56,8 @@ namespace MadelineParty {
             }
         }
 
-        private void GhostNetOccupiedAction() {
-            GameData.players[playerID] = new PlayerData(playerID, GhostNetModule.Instance.Client.PlayerID);
+        private void CelesteNetOccupiedAction() {
+            GameData.players[playerID] = new PlayerData(playerID, CelesteNetClientModule.Instance.Client.PlayerInfo.ID);
             foreach (KeyValuePair<uint, int> pair in GameData.playerSelectTriggers) {
                 if (pair.Value != playerID && pair.Value >= 0) {
                     GameData.players[pair.Value] = new PlayerData(pair.Value, pair.Key);
@@ -71,16 +66,11 @@ namespace MadelineParty {
             // Host determines the random seeds for the game
             // Seeds are determined in advance to avoid duplicate rolls when it matters
             if (GameData.gnetHost) {
-                GhostNetModule.Instance.Client.Connection.SendManagement(new GhostNetFrame
-                {
-                    EmoteConverter.convertRandomSeedToEmoteChunk(new RandomSeedData
-                    {
-                        playerID = GhostNetModule.Instance.Client.PlayerID,
-                        playerName = GhostNetModule.Instance.Client.PlayerName.Name,
-                        turnOrderSeed = GameData.turnOrderSeed,
-                        tieBreakerSeed = GameData.tieBreakerSeed
-                    })
-                }, true);
+                CelesteNetClientModule.Instance.Client?.Send(new RandomSeedData {
+                    Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
+                    turnOrderSeed = GameData.turnOrderSeed,
+                    tieBreakerSeed = GameData.tieBreakerSeed
+                });
             }
         }
 
@@ -93,8 +83,8 @@ namespace MadelineParty {
             GameData.turnOrderSeed = (uint)rand.Next(2, 100000);
             GameData.tieBreakerSeed = (uint)rand.Next(2, 100000);
             BoardController.generateTurnOrderRolls();
-            if (MadelinePartyModule.ghostnetConnected) {
-                GhostNetOccupiedAction();
+            if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                CelesteNetOccupiedAction();
             } else {
                 GameData.players[playerID] = new PlayerData(playerID);
             }
@@ -130,8 +120,8 @@ namespace MadelineParty {
             base.OnLeave(player);
             if (GameData.realPlayerID == -1) {
                 occupied = false;
-                if (MadelinePartyModule.ghostnetConnected) {
-                    GhostNetSendOnEnterExit(-1);
+                if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                    CelesteNetSendOnEnterExit(-1);
                 }
                 GameData.currentPlayerSelection = null;
             }

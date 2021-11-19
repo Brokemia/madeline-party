@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections;
 using Celeste;
-using MadelineParty.Ghostnet;
 using Monocle;
 
-namespace MadelineParty
-{
-    public class GameEndController : Entity, IPauseUpdateGhostnetChat
-    {
+namespace MadelineParty {
+    public class GameEndController : Entity {
         private Level level;
 
-        public override void Added(Scene scene)
-        {
+        public override void Added(Scene scene) {
             base.Added(scene);
             level = SceneAs<Level>();
             Add(new Coroutine(GameEndRoutine()));
@@ -19,11 +15,9 @@ namespace MadelineParty
             AddTag(Tags.FrozenUpdate);
         }
 
-        private IEnumerator GameEndRoutine()
-        {
+        private IEnumerator GameEndRoutine() {
             yield return 7f;
-            level.OnEndOfFrame += delegate
-            {
+            level.OnEndOfFrame += delegate {
                 Player player = level.Tracker.GetEntity<Player>();
                 Leader.StoreStrawberries(player.Leader);
                 level.Remove(player);

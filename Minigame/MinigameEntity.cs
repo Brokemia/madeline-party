@@ -1,23 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Celeste;
-using Celeste.Mod.Ghost.Net;
-using MadelineParty.Ghostnet;
+using Celeste.Mod.CelesteNet.Client;
+using MadelineParty.CelesteNet;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace MadelineParty
-{
-    public abstract class MinigameEntity : Trigger, IPauseUpdateGhostnetChat
-    {
+namespace MadelineParty {
+    [Tracked(true)]
+    public abstract class MinigameEntity : Trigger {
         protected Level level;
         protected int displayNum = -1;
         protected List<MTexture> diceNumbers;
         public static bool started;
+        public bool completed;
         public static float startTime = -1;
 
-        protected MinigameEntity(EntityData data, Vector2 offset) : base(data, offset)
-        {
+        protected MinigameEntity(EntityData data, Vector2 offset) : base(data, offset) {
             diceNumbers = GFX.Game.GetAtlasSubtextures("decals/madelineparty/dicenumbers/dice_");
             Visible = true;
             Depth = -99999;
@@ -25,11 +24,9 @@ namespace MadelineParty
             AddTag(Tags.FrozenUpdate);
         }
 
-        public override void Render()
-        {
+        public override void Render() {
             base.Render();
-            if (displayNum > 0)
-            {
+            if (displayNum > 0) {
                 Player player = level.Tracker.GetEntity<Player>();
                 if (player != null)
                     diceNumbers[displayNum - 1].Draw(player.Position + new Vector2(-24, -72));
@@ -55,8 +52,7 @@ namespace MadelineParty
             }
         }
 
-        private IEnumerator Countdown()
-        {
+        private IEnumerator Countdown() {
             Player player = level.Tracker.GetEntity<Player>();
             player.StateMachine.State = 11;
             // Stops the player from being moved by wind immediately
@@ -77,22 +73,34 @@ namespace MadelineParty
             AfterStart();
         }
 
-        protected virtual void AfterStart()
-        {
+        protected virtual void AfterStart() {
 
         }
 
-        protected void GhostNetSendMinigameResults(uint results)
-        {
-            GhostNetModule.Instance.Client.Connection.SendManagement(new GhostNetFrame
-            {
-                EmoteConverter.convertMinigameEndToEmoteChunk(new MinigameEndData
-                {
-                    playerID = GhostNetModule.Instance.Client.PlayerID,
-                    playerName = GhostNetModule.Instance.Client.PlayerName.Name,
-                    results = results
-                })
-            }, true);
+        protected void CelesteNetSendMinigameResults(uint results) {
+            CelesteNetClientModule.Instance.Client?.Send(new MinigameEndData {
+                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
+                results = results
+            });
+        }
+
+        protected void CelesteNetSendMinigameStatus(uint status) {
+            CelesteNetClientModule.Instance.Client?.Send(new MinigameStatusData {
+                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
+                results = status
+            });
+        }
+
+        protected void CelesteNetSendVector2(Vector2 vec, int extra = 0) {
+            CelesteNetClientModule.Instance.Client?.Send(new MinigameVector2Data {
+                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
+                vec = vec,
+                extra = extra
+            });
+        }
+
+        public virtual void CelesteNetReceiveVector2(Vector2 vec, int extra) {
+
         }
     }
 }
