@@ -36,7 +36,7 @@ namespace MadelineParty
         public static Dictionary<int, uint> minigameStatus = new Dictionary<int, uint>();
         // Matches player token ID to minigame results
         public static List<Tuple<int, uint>> minigameResults = new List<Tuple<int, uint>>();
-        public static Vector2 heartSpace = new Vector2(6, 8);
+        public static int heartSpaceID = 5;
         public static PlayerSelectTrigger currentPlayerSelection;
         public static int heartCost = 5;
         public static LevelData minigame;
@@ -63,7 +63,7 @@ namespace MadelineParty
             tieBreakerSeed = 20;
             players = new PlayerData[]{ null, null, null, null };
             realPlayerID = -1;
-            heartSpace = new Vector2(6, 8);
+            heartSpaceID = 5;
             gnetHost = true;
             celestenetIDs = new List<uint>();
             heartCost = 5;

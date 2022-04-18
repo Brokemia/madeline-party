@@ -24,6 +24,8 @@ namespace MadelineParty.Tools {
 
 		private static readonly Color gridColor = new Color(0.1f, 0.1f, 0.1f);
 
+		public static readonly int coordScale = 2;
+
 		private static Camera Camera;
 
 		private float fade = 0f;
@@ -70,7 +72,8 @@ namespace MadelineParty.Tools {
 			foreach(BoardSpaceTemplate temp in spaces) {
 				connections[temp] = new HashSet<BoardSpaceTemplate>();
 				foreach(BoardSpace con in temp.originalSpace.destinations) {
-					connections[temp].Add(spaces.Find((s) => s.originalSpace.Equals(con)));
+					Console.WriteLine("From " + temp.originalSpace.ID + " to " + con.ID);
+					connections[temp].Add(spaces.Find((s) => s.originalSpace.ID.Equals(con.ID)));
                 }
             }
 			Camera = new Camera();
@@ -94,18 +97,21 @@ namespace MadelineParty.Tools {
 		}
 
 		private void Save() {
+			int nextID = 0;
 			boardSpaces.Clear();
 			foreach(BoardSpaceTemplate template in spaces) {
 				template.originalSpace = new BoardSpace() {
-					x = template.X,
-					y = template.Y,
+					ID = nextID,
+					x = template.X / coordScale,
+					y = template.Y / coordScale,
 					type = template.Type,
 					heartSpace = template.HeartSpace,
 					destinations = new List<BoardSpace>()
 				};
+				nextID++;
             }
 			foreach(BoardSpaceTemplate template in spaces) {
-				if(connections[template] == null) {
+				if(!connections.ContainsKey(template) || connections[template] == null) {
 					connections[template] = new HashSet<BoardSpaceTemplate>();
                 }
 				foreach (BoardSpaceTemplate con in connections[template]) {
@@ -113,6 +119,10 @@ namespace MadelineParty.Tools {
                 }
 				boardSpaces.Add(template.originalSpace);
             }
+			Console.WriteLine("Saving!");
+			foreach(BoardSpaceTemplate template in spaces) {
+				Console.WriteLine(template.originalSpace.ToString());
+			}
 		}
 
 		private void SaveAndReload() {
@@ -170,7 +180,7 @@ namespace MadelineParty.Tools {
 							mouseMode = MouseModes.Select;
 						}
 					} else if (MInput.Keyboard.Check(Keys.N)) {
-						spaces.Add(new BoardSpaceTemplate(new BoardSpace { x = (int)mousePosition.X, y = (int)mousePosition.Y, type = 'b' }));
+						spaces.Add(new BoardSpaceTemplate(new BoardSpace { x = (int)mousePosition.X / 2, y = (int)mousePosition.Y / 2, type = 'b' }));
 					} else if (flag) {
 						if (!SelectionCheck(mousePosition)) {
 							SetSelection(mousePosition);
@@ -231,7 +241,7 @@ namespace MadelineParty.Tools {
 					mouseMode = MouseModes.Hover;
 				}
 			} else if (mouseMode == MouseModes.Move) {
-				Vector2 relativeMove = (mousePosition - mouseDragStart).Round();
+				Vector2 relativeMove = coordScale * ((mousePosition - mouseDragStart) / coordScale).Round();
 				bool snap = selection.Count == 1 && !MInput.Keyboard.Check(Keys.LeftAlt);
 				foreach (BoardSpaceTemplate space in selection) {
 					space.Move(relativeMove);

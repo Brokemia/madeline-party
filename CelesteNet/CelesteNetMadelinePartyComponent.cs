@@ -140,11 +140,8 @@ namespace MadelineParty.CelesteNet {
                     case PlayerChoiceData.ChoiceType.DIRECTION:
                         BoardController.Instance.ContinueMovementAfterIntersection((BoardController.Direction)data.choice);
                         break;
-                    case PlayerChoiceData.ChoiceType.HEARTX:
-                        GameData.heartSpace.X = data.choice;
-                        break;
-                    case PlayerChoiceData.ChoiceType.HEARTY:
-                        GameData.heartSpace.Y = data.choice;
+                    case PlayerChoiceData.ChoiceType.HEARTSPACEID:
+                        GameData.heartSpaceID = data.choice;
                         break;
                     default:
                         Logger.Log("MadelineParty", "Unhandled choice (" + data.choiceType + ") from " + data.Player.FullName + "#" + data.Player.ID);

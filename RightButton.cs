@@ -151,16 +151,16 @@ namespace MadelineParty {
                     board.SkipItem();
                     break;
                 case Modes.Up:
-                    board.ContinueMovementAfterIntersection(BoardController.Direction.UP);
+                    board.ContinueMovementAfterIntersection(BoardController.Direction.Up);
                     break;
                 case Modes.Down:
-                    board.ContinueMovementAfterIntersection(BoardController.Direction.DOWN);
+                    board.ContinueMovementAfterIntersection(BoardController.Direction.Down);
                     break;
                 case Modes.Left:
-                    board.ContinueMovementAfterIntersection(BoardController.Direction.LEFT);
+                    board.ContinueMovementAfterIntersection(BoardController.Direction.Left);
                     break;
                 case Modes.Right:
-                    board.ContinueMovementAfterIntersection(BoardController.Direction.RIGHT);
+                    board.ContinueMovementAfterIntersection(BoardController.Direction.Right);
                     break;
             }
         }

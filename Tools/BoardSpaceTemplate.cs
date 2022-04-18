@@ -31,8 +31,8 @@ namespace MadelineParty.Tools {
 
         public BoardSpaceTemplate(BoardSpace data) {
             originalSpace = data;
-            X = data.x;
-            Y = data.y;
+            X = data.x * BoardEditor.coordScale;
+            Y = data.y * BoardEditor.coordScale;
             Type = data.type;
             HeartSpace = data.heartSpace;
         }

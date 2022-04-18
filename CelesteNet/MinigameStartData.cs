@@ -25,12 +25,12 @@ namespace MadelineParty.CelesteNet {
             Player = Get<MetaPlayerUpdate>(ctx);
         }
 
-        public override void Read(DataContext ctx, BinaryReader reader) {
+        protected override void Read(CelesteNetBinaryReader reader) {
             choice = reader.ReadInt32();
             gameStart = reader.ReadInt64();
         }
 
-        public override void Write(DataContext ctx, BinaryWriter writer) {
+        protected override void Write(CelesteNetBinaryWriter writer) {
             writer.Write(choice);
             writer.Write(gameStart);
         }

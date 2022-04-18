@@ -1,5 +1,6 @@
 ﻿using System;
 using Celeste;
+using Celeste.Mod;
 using Celeste.Mod.CelesteNet.Client;
 using MadelineParty.CelesteNet;
 using Microsoft.Xna.Framework;
@@ -38,6 +39,8 @@ namespace MadelineParty {
                     if (parent.playerNumber > MAXPLAYERS) {
                         parent.playerNumber = 1;
                     }
+                } else {
+                    Logger.Log("MadelineParty", "CelesteNet not installed or connected");
                 }
             }
 
@@ -75,6 +78,8 @@ namespace MadelineParty {
                     if (parent.playerNumber < 1) {
                         parent.playerNumber = MAXPLAYERS;
                     }
+                } else {
+                    Logger.Log("MadelineParty", "CelesteNet not installed or connected");
                 }
             }
 

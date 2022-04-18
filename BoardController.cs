@@ -18,22 +18,61 @@ namespace MadelineParty {
         }
 
         public enum Direction {
-            UP = 0,
-            DOWN = 1,
-            LEFT = 2,
-            RIGHT = 3
+            Up,
+            Down,
+            Left,
+            Right
         }
 
         public struct BoardSpace {
+            public int ID;
             public int x, y;
-            public List<BoardSpace> destinations;
+            private List<BoardSpace> _destinations;
+            public List<BoardSpace> destinations {
+                get {
+                    if(_destinations == null) {
+                        _destinations = new List<BoardSpace>();
+                        foreach(int id in destIDs_DONTUSE) {
+                            _destinations.Add(boardSpaces.Find(m => m.ID == id));
+                        }
+                    }
+                    return _destinations;
+                }
+                set {
+                    _destinations = value;
+                }
+            }
+            public List<int> destIDs_DONTUSE;
             public char type;
             public bool heartSpace;
+            public Vector2 position { get { return new Vector2(x, y); } }
+            public Vector2 screenPosition => (Instance.Position - (Engine.Scene as Level).LevelOffset + new Vector2(x, y)) * 6;
+
+            public override string ToString() {
+                string res = $"boardSpaces.Add(new BoardSpace() {{ ID = {ID}, type = '{type}', x = {x}, y = {y}, heartSpace = {heartSpace.ToString().ToLower()}, destIDs_DONTUSE = new List<int>{{";
+                foreach(BoardSpace dest in destinations) {
+                    res += dest.ID + ", ";
+                }
+                res += "} } );";
+                return res;
+            }
+        }
+
+        protected class TurnDisplay : Entity {
+            public TurnDisplay() {
+                AddTag(TagsExt.SubHUD);
+            }
+
+            public override void Render() {
+                base.Render();
+
+                ActiveFont.DrawOutline("Turn " + (Instance.turnDisplay == -1 ? GameData.turn : Instance.turnDisplay) + "/" + GameData.maxTurns, (Position - Instance.level.LevelOffset) * 6 + new Vector2(12 * 5 - 4, 12 * 10 + 10) * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Blue, 2f, Color.Black);
+            }
         }
 
         public static string[] TokenPaths = { "madeline/normal00", "badeline/normal00", "theo/excited00", "granny/normal00" };
 
-        private List<Vector2> playerMovePath = null;
+        private List<BoardSpace> playerMovePath = null;
 
         // The distance the player will be moving
         private int playerMoveDistance = 0;
@@ -80,11 +119,18 @@ namespace MadelineParty {
 
         public static BoardController Instance;
 
+        public Dictionary<char, MTexture> spaceTextures = new Dictionary<char, MTexture>();
+        public MTexture heartTexture = GFX.Game["decals/madelineparty/heartstill"];
+
         public BoardController(EntityData data) : base(data.Position) {
             Instance = this;
-            boardDecals = new Dictionary<Vector2, Decal>();
+            //boardDecals = new Dictionary<Vector2, Decal>();
             diceNumbers = GFX.Game.GetAtlasSubtextures("decals/madelineparty/dicenumbers/dice_");
-            AddTag(TagsExt.SubHUD);
+            spaceTextures = new Dictionary<char, MTexture> {
+                ['r'] = GFX.Game["decals/madelineparty/redspace"],
+                ['b'] = GFX.Game["decals/madelineparty/bluespace"],
+                ['i'] = GFX.Game["decals/madelineparty/shopspace"]
+            };
             AddTag(Tags.PauseUpdate);
             AddTag(Tags.FrozenUpdate);
         }
@@ -107,7 +153,7 @@ namespace MadelineParty {
                                    new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'b', ' ', ' ', ' ', 'b' },
                                    new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'b', 'b', 'r', 'r', 'r' } };*/
 
-        private Dictionary<Vector2, Decal> boardDecals;
+        //private Dictionary<Vector2, Decal> boardDecals;
 
         /*public char[][] directions = {  new char[]{ '>', '>', '>', '.', '>', 'v', ' ', ' ', ' ', ' ', ' ', ' ' },
                                         new char[]{ '^', ' ', ' ', 'v', ' ', '>', 'v', ' ', ' ', ' ', ' ', ' ' },
@@ -124,26 +170,34 @@ namespace MadelineParty {
 
         public static List<BoardSpace> boardSpaces = new List<BoardSpace>();
 
+        static BoardController() {
+            boardSpaces.Add(new BoardSpace() { ID = 0, type = 's', x = 16, y = 52, heartSpace = false, destIDs_DONTUSE = new List<int> { 1, } });
+            boardSpaces.Add(new BoardSpace() { ID = 1, type = 'b', x = 33, y = 42, heartSpace = false, destIDs_DONTUSE = new List<int> { 2, } });
+            boardSpaces.Add(new BoardSpace() { ID = 2, type = 'b', x = 45, y = 23, heartSpace = true, destIDs_DONTUSE = new List<int> { 3, 10, } });
+            boardSpaces.Add(new BoardSpace() { ID = 3, type = 'b', x = 78, y = 22, heartSpace = true, destIDs_DONTUSE = new List<int> { 4, } });
+            boardSpaces.Add(new BoardSpace() { ID = 4, type = 'b', x = 105, y = 25, heartSpace = true, destIDs_DONTUSE = new List<int> { 5, } });
+            boardSpaces.Add(new BoardSpace() { ID = 5, type = 'b', x = 117, y = 48, heartSpace = true, destIDs_DONTUSE = new List<int> { 6, } });
+            boardSpaces.Add(new BoardSpace() { ID = 6, type = 'b', x = 103, y = 69, heartSpace = true, destIDs_DONTUSE = new List<int> { 7, } });
+            boardSpaces.Add(new BoardSpace() { ID = 7, type = 'b', x = 78, y = 74, heartSpace = true, destIDs_DONTUSE = new List<int> { 8, } });
+            boardSpaces.Add(new BoardSpace() { ID = 8, type = 'b', x = 51, y = 76, heartSpace = true, destIDs_DONTUSE = new List<int> { 9, } });
+            boardSpaces.Add(new BoardSpace() { ID = 9, type = 'b', x = 37, y = 61, heartSpace = true, destIDs_DONTUSE = new List<int> { 1, } });
+            boardSpaces.Add(new BoardSpace() { ID = 10, type = 'b', x = 26, y = -4, heartSpace = false, destIDs_DONTUSE = new List<int> { 11, } });
+            boardSpaces.Add(new BoardSpace() { ID = 11, type = 'i', x = 63, y = -5, heartSpace = false, destIDs_DONTUSE = new List<int> { 4, } });
+        }
+
         public override void Added(Scene scene) {
             base.Added(scene);
             level = SceneAs<Level>();
             level.CanRetry = false;
+            level.Add(new TurnDisplay());
 
             foreach (BoardSpace space in boardSpaces) {
-                Vector2 pos = new Vector2(X + space.x, Y + space.y);
-                level.Add(boardDecals[pos] = new Decal(
-                    space.type switch {
-                        'r' => "madelineparty/redspace",
-                        'b' => "madelineparty/bluespace",
-                        _ => "madelineparty/shopspace"
-                    }, pos, Vector2.One, 0));
-
                 if(space.type == 's') {
                     int tokensAdded = 0;
                     for (int k = 0; k < GameData.players.Length; k++) {
                         if (GameData.players[k] != null) {
                             if (!GameData.gameStarted) {
-                                PlayerToken token = new PlayerToken(TokenPaths[GameData.players[k].TokenSelected], pos + new Vector2(-24, tokensAdded * 18), new Vector2(.25f, .25f), -1, space);
+                                PlayerToken token = new PlayerToken(TokenPaths[GameData.players[k].TokenSelected], space.screenPosition + new Vector2(0, tokensAdded * 18), new Vector2(.25f, .25f), -1, space);
                                 playerTokens[k] = token;
                                 GameData.players[k].token = token;
                             } else {
@@ -158,96 +212,6 @@ namespace MadelineParty {
                     }
                 }
             }
-
-            for (int i = 0; i < board.Length; i++) {
-                for (int j = 0; j < board[i].Length; j++) {
-                    switch (board[i][j]) {
-                        case 'r':
-                            level.Add(boardDecals[i, j] = new Decal("madelineparty/redspace", new Vector2(this.X + j * 10, this.Y + i * 10), new Vector2(1, 1), 0));
-                            if (i > 0 && SpaceAccessibleFrom(i, j, i - 1, j)) {
-                                level.Add(new Decal("madelineparty/verticalconnector", new Vector2(this.X + j * 10, this.Y + i * 10 - 5), new Vector2(1, 1), 1));
-                            }
-                            if (i < board.Length - 1 && SpaceAccessibleFrom(i, j, i + 1, j)) {
-                                level.Add(new Decal("madelineparty/verticalconnector", new Vector2(this.X + j * 10, this.Y + i * 10 + 5), new Vector2(1, 1), 1));
-                            }
-                            if (j > 0 && SpaceAccessibleFrom(i, j, i, j - 1)) {
-                                level.Add(new Decal("madelineparty/horizontalconnector", new Vector2(this.X + j * 10 - 5, this.Y + i * 10), new Vector2(1, 1), 1));
-                            }
-                            if (j < board[i].Length - 1 && SpaceAccessibleFrom(i, j, i, j + 1)) {
-                                level.Add(new Decal("madelineparty/horizontalconnector", new Vector2(this.X + j * 10 + 5, this.Y + i * 10), new Vector2(1, 1), 1));
-                            }
-                            break;
-                        case 'b':
-                            level.Add(boardDecals[i, j] = new Decal("madelineparty/bluespace", new Vector2(this.X + j * 10, this.Y + i * 10), new Vector2(1, 1), 0));
-                            if (i > 0 && SpaceAccessibleFrom(i, j, i - 1, j)) {
-                                level.Add(new Decal("madelineparty/verticalconnector", new Vector2(this.X + j * 10, this.Y + i * 10 - 5), new Vector2(1, 1), 1));
-                            }
-                            if (i < board.Length - 1 && SpaceAccessibleFrom(i, j, i + 1, j)) {
-                                level.Add(new Decal("madelineparty/verticalconnector", new Vector2(this.X + j * 10, this.Y + i * 10 + 5), new Vector2(1, 1), 1));
-                            }
-                            if (j > 0 && SpaceAccessibleFrom(i, j, i, j - 1)) {
-                                level.Add(new Decal("madelineparty/horizontalconnector", new Vector2(this.X + j * 10 - 5, this.Y + i * 10), new Vector2(1, 1), 1));
-                            }
-                            if (j < board[i].Length - 1 && SpaceAccessibleFrom(i, j, i, j + 1)) {
-                                level.Add(new Decal("madelineparty/horizontalconnector", new Vector2(this.X + j * 10 + 5, this.Y + i * 10), new Vector2(1, 1), 1));
-                            }
-                            break;
-                        case 'i':
-                            level.Add(boardDecals[i, j] = new Decal("madelineparty/shopspace", new Vector2(this.X + j * 10, this.Y + i * 10), new Vector2(1, 1), 0));
-                            if (i > 0 && SpaceAccessibleFrom(i, j, i - 1, j)) {
-                                level.Add(new Decal("madelineparty/verticalconnector", new Vector2(this.X + j * 10, this.Y + i * 10 - 5), new Vector2(1, 1), 1));
-                            }
-                            if (i < board.Length - 1 && SpaceAccessibleFrom(i, j, i + 1, j)) {
-                                level.Add(new Decal("madelineparty/verticalconnector", new Vector2(this.X + j * 10, this.Y + i * 10 + 5), new Vector2(1, 1), 1));
-                            }
-                            if (j > 0 && SpaceAccessibleFrom(i, j, i, j - 1)) {
-                                level.Add(new Decal("madelineparty/horizontalconnector", new Vector2(this.X + j * 10 - 5, this.Y + i * 10), new Vector2(1, 1), 1));
-                            }
-                            if (j < board[i].Length - 1 && SpaceAccessibleFrom(i, j, i, j + 1)) {
-                                level.Add(new Decal("madelineparty/horizontalconnector", new Vector2(this.X + j * 10 + 5, this.Y + i * 10), new Vector2(1, 1), 1));
-                            }
-                            break;
-                        case 's':
-                            if (i > 0 && SpaceAccessibleFrom(i, j, i - 1, j)) {
-                                level.Add(new Decal("madelineparty/verticalconnector", new Vector2(this.X + j * 10, this.Y + i * 10 - 5), new Vector2(1, 1), 1));
-                            }
-                            if (i < board.Length - 1 && SpaceAccessibleFrom(i, j, i + 1, j)) {
-                                level.Add(new Decal("madelineparty/verticalconnector", new Vector2(this.X + j * 10, this.Y + i * 10 + 5), new Vector2(1, 1), 1));
-                            }
-                            if (j > 0 && SpaceAccessibleFrom(i, j, i, j - 1)) {
-                                level.Add(new Decal("madelineparty/horizontalconnector", new Vector2(this.X + j * 10 - 5, this.Y + i * 10), new Vector2(1, 1), 1));
-                            }
-                            if (j < board[i].Length - 1 && SpaceAccessibleFrom(i, j, i, j + 1)) {
-                                level.Add(new Decal("madelineparty/horizontalconnector", new Vector2(this.X + j * 10 + 5, this.Y + i * 10), new Vector2(1, 1), 1));
-                            }
-                            int tokensAdded = 0;
-                            for (int k = 0; k < GameData.players.Length; k++) {
-                                if (GameData.players[k] != null) {
-                                    if (!GameData.gameStarted) {
-                                        PlayerToken token = new PlayerToken(TokenPaths[GameData.players[k].TokenSelected], ScreenCoordsFromBoardCoords(new Vector2(j, i), new Vector2(-24, tokensAdded * 18)), new Vector2(.25f, .25f), -1, new Vector2(i, j));
-                                        playerTokens[k] = token;
-                                        GameData.players[k].token = token;
-                                    } else {
-                                        playerTokens[k] = GameData.players[k].token;
-                                    }
-                                    tokensAdded++;
-                                }
-                            }
-
-                            for (int k = playerTokens.Length - 1; k >= 0; k--) {
-                                if (playerTokens[k] != null) level.Add(playerTokens[k]);
-                            }
-
-                            break;
-                    }
-                }
-            }
-
-            // Replace the decal at the heart space
-            Decal decal = boardDecals[(int)GameData.heartSpace.X, (int)GameData.heartSpace.Y];
-            decal.RemoveSelf();
-            boardDecals[(int)GameData.heartSpace.X, (int)GameData.heartSpace.Y] = new Decal("madelineparty/heartstill", decal.Position, new Vector2(.75f, .75f), decal.Depth);
-            Scene.Add(boardDecals[(int)GameData.heartSpace.X, (int)GameData.heartSpace.Y]);
         }
 
         public override void Awake(Scene scene) {
@@ -345,61 +309,41 @@ namespace MadelineParty {
                     if (playerMoveProgress == playerMovePath.Count - 1) {
                         playerMoveDistance -= playerMoveProgress;
                         playerMoveProgress = 0;
-                        playerMovePath = new List<Vector2> { playerTokens[movingPlayerID].currentSpace };
+                        playerMovePath = new List<BoardSpace> { playerTokens[movingPlayerID].currentSpace };
                         status = BoardStatus.WAITING;
 
-                        // If we've set the left button to a direction yet
+                        if(playerMovePath[playerMoveProgress].destinations.Count > 2) {
+                            throw new NotSupportedException("Intersections with more than two places to go are not supported");
+                        }
                         bool leftUsed = false;
-                        if (SpaceAccessibleFrom(playerMovePath[playerMoveProgress].X, playerMovePath[playerMoveProgress].Y, playerMovePath[playerMoveProgress].X, playerMovePath[playerMoveProgress].Y - 1)) {
+                        foreach(BoardSpace dest in playerMovePath[playerMoveProgress].destinations) {
+                            Direction dir = getCardinalDirection(playerMovePath[playerMoveProgress].x, playerMovePath[playerMoveProgress].y, dest.x, dest.y);
+
                             if (leftUsed) {
-                                rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Left);
+                                rightButtons[turnOrder[playerTurn]].SetCurrentMode((RightButton.Modes)Enum.Parse(typeof(RightButton.Modes), dir.ToString()));
                             } else {
-                                leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Left);
+                                leftButtons[turnOrder[playerTurn]].SetCurrentMode((LeftButton.Modes)Enum.Parse(typeof(LeftButton.Modes), dir.ToString()));
                                 leftUsed = true;
-                            }
-                        }
-                        if (SpaceAccessibleFrom(playerMovePath[playerMoveProgress].X, playerMovePath[playerMoveProgress].Y, playerMovePath[playerMoveProgress].X, playerMovePath[playerMoveProgress].Y + 1)) {
-                            if (leftUsed) {
-                                rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Right);
-                            } else {
-                                leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Right);
-                                leftUsed = true;
-                            }
-                        }
-                        if (SpaceAccessibleFrom(playerMovePath[playerMoveProgress].X, playerMovePath[playerMoveProgress].Y, playerMovePath[playerMoveProgress].X - 1, playerMovePath[playerMoveProgress].Y)) {
-                            if (leftUsed) {
-                                rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Up);
-                            } else {
-                                leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Up);
-                                leftUsed = true;
-                            }
-                        }
-                        if (SpaceAccessibleFrom(playerMovePath[playerMoveProgress].X, playerMovePath[playerMoveProgress].Y, playerMovePath[playerMoveProgress].X + 1, playerMovePath[playerMoveProgress].Y)) {
-                            if (leftUsed) {
-                                rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Down);
-                            } else {
-                                leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Down);
                             }
                         }
                         break;
                     }
                     // If we're not at an intersection
-                    // Calculate the screen position we're approaching
-                    Vector2 approaching = ScreenCoordsFromBoardCoords(SwapXY(playerMovePath[playerMoveProgress + 1]));
+                    BoardSpace approaching = playerMovePath[playerMoveProgress + 1];
                     // Check if we've hit our next space
-                    if (playerTokens[movingPlayerID].Position.Equals(approaching)) {
+                    if (playerTokens[movingPlayerID].Position.Equals(approaching.screenPosition)) {
                         playerMoveProgress++;
                         playerTokens[movingPlayerID].currentSpace = playerMovePath[playerMoveProgress];
 
                         // If we're on the heart space
-                        if (GameData.heartSpace == playerTokens[movingPlayerID].currentSpace && GameData.players[movingPlayerID].strawberries >= GameData.heartCost) {
+                        if (GameData.heartSpaceID == playerTokens[movingPlayerID].currentSpace.ID && GameData.players[movingPlayerID].strawberries >= GameData.heartCost) {
                             status = BoardStatus.WAITING;
                             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.ConfirmHeartBuy);
                             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.CancelHeartBuy);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYHEART);
                         }
                         // If we're at the item shop and have enough free space
-                        else if (board[(int)playerTokens[movingPlayerID].currentSpace.X][(int)playerTokens[movingPlayerID].currentSpace.Y] == 'i' && GameData.players[movingPlayerID].items.Count < GameData.maxItems) {
+                        else if (playerTokens[movingPlayerID].currentSpace.type == 'i' && GameData.players[movingPlayerID].items.Count < GameData.maxItems) {
                             status = BoardStatus.WAITING;
                             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.ConfirmShopEnter);
                             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.CancelShopEnter);
@@ -409,7 +353,7 @@ namespace MadelineParty {
                             playerMovePath = null;
                             playerMoveProgress = 0;
                             status = BoardStatus.WAITING;
-                            switch (board[(int)playerTokens[movingPlayerID].currentSpace.X][(int)playerTokens[movingPlayerID].currentSpace.Y]) {
+                            switch (playerTokens[movingPlayerID].currentSpace.type) {
                                 case 'b':
                                     scoreboards[movingPlayerID].StrawberryChange(3);
                                     GameData.players[movingPlayerID].ChangeStrawberries(3);
@@ -423,7 +367,7 @@ namespace MadelineParty {
                         }
                         break;
                     }
-                    playerTokens[movingPlayerID].Position = Calc.Approach(playerTokens[movingPlayerID].Position, approaching, 80f * Engine.DeltaTime);
+                    playerTokens[movingPlayerID].Position = Calc.Approach(playerTokens[movingPlayerID].Position, approaching.screenPosition, 80f * Engine.DeltaTime);
                     break;
             }
         }
@@ -538,51 +482,22 @@ namespace MadelineParty {
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
 
-            // Replace the heart decal
-            Decal decal = boardDecals[(int)GameData.heartSpace.X, (int)GameData.heartSpace.Y];
-            decal.RemoveSelf();
-            string replacement = "madelineparty/";
-            switch (board[(int)playerTokens[movingPlayerID].currentSpace.X][(int)playerTokens[movingPlayerID].currentSpace.Y]) {
-                case 'b':
-                    replacement += "bluespace";
-                    break;
-                case 'r':
-                    replacement += "redspace";
-                    break;
-            }
-            boardDecals[(int)GameData.heartSpace.X, (int)GameData.heartSpace.Y] = new Decal(replacement, decal.Position, new Vector2(1, 1), decal.Depth);
-            Scene.Add(boardDecals[(int)GameData.heartSpace.X, (int)GameData.heartSpace.Y]);
-
-            List<Vector2> possibleHeartSpaces = new List<Vector2>();
-
-            for (int i = 0; i < board.Length; i++) {
-                for (int j = 0; j < board[i].Length; j++) {
-                    if (board[i][j] != 'i' && directions[i][j] != '.' && IsLandableSpace(board[i][j]) && !SpaceAtOrNearStart(i, j) && (i != (int)GameData.heartSpace.X || j != (int)GameData.heartSpace.Y)) {
-                        possibleHeartSpaces.Add(new Vector2(i, j));
-                    }
-                }
-            }
-            GameData.heartSpace = new Vector2(-1, -1);
+            GameData.heartSpaceID = -1;
             // Only send out data if we are the player that bought the heart
             if (turnOrder[playerTurn] == GameData.realPlayerID) {
-                GameData.heartSpace = possibleHeartSpaces[rand.Next(possibleHeartSpaces.Count)];
+                List<BoardSpace> possibleHeartSpaces = boardSpaces.FindAll((s) => s.heartSpace && GameData.players[turnOrder[playerTurn]].token.currentSpace.ID != s.ID);
+                GameData.heartSpaceID = possibleHeartSpaces[rand.Next(possibleHeartSpaces.Count)].ID;
                 if (MadelinePartyModule.IsCelesteNetInstalled()) {
-                    CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEARTX, (int)GameData.heartSpace.X);
-                    CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEARTY, (int)GameData.heartSpace.Y);
+                    CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEARTSPACEID, (int)GameData.heartSpaceID);
                 }
             }
             Add(new Coroutine(WaitForNewHeartSpaceCoroutine()));
         }
 
         private IEnumerator WaitForNewHeartSpaceCoroutine() {
-            while (GameData.heartSpace.X < 0 || GameData.heartSpace.Y < 0) {
+            while (GameData.heartSpaceID < 0) {
                 yield return null;
             }
-            // Replace the decal at the heart space
-            Decal decal = boardDecals[(int)GameData.heartSpace.X, (int)GameData.heartSpace.Y];
-            decal.RemoveSelf();
-            boardDecals[(int)GameData.heartSpace.X, (int)GameData.heartSpace.Y] = new Decal("madelineparty/heartstill", decal.Position, new Vector2(.75f, .75f), decal.Depth);
-            base.Scene.Add(boardDecals[(int)GameData.heartSpace.X, (int)GameData.heartSpace.Y]);
 
             AfterChoice();
         }
@@ -597,8 +512,8 @@ namespace MadelineParty {
                 playerMovePath = null;
                 playerMoveProgress = 0;
                 status = BoardStatus.WAITING;
-                if (GameData.heartSpace != playerTokens[movingPlayerID].currentSpace) {
-                    switch (board[(int)playerTokens[movingPlayerID].currentSpace.X][(int)playerTokens[movingPlayerID].currentSpace.Y]) {
+                if (GameData.heartSpaceID != playerTokens[movingPlayerID].currentSpace.ID) {
+                    switch (playerTokens[movingPlayerID].currentSpace.type) {
                         case 'b':
                             scoreboards[movingPlayerID].StrawberryChange(3);
                             GameData.players[movingPlayerID].ChangeStrawberries(3);
@@ -613,10 +528,23 @@ namespace MadelineParty {
             }
         }
 
-        // Returns if the space is or is adjacent to a start space
-        private bool SpaceAtOrNearStart(int i, int j) {
-            return board[i][j] == 's' || (i > 0 && board[i - 1][j] == 's') || (i < board.Length - 1 && board[i + 1][j] == 's')
-                || (j > 0 && board[i][j - 1] == 's') || (j < board[i].Length - 1 && board[i][j + 1] == 's');
+        private Direction getCardinalDirection(int srcX, int srcY, int destX, int destY) {
+            int dx = destX - srcX;
+            int dy = destY - srcY;
+            float steepness = Math.Abs(dy / (float)dx);
+            if (steepness > 1) {
+                if (dy < 0) {
+                    return Direction.Up;
+                } else {
+                    return Direction.Down;
+                }
+            } else {
+                if (dx > 0) {
+                    return Direction.Right;
+                } else {
+                    return Direction.Left;
+                }
+            }
         }
 
         public void ContinueMovementAfterIntersection(Direction chosen) {
@@ -626,47 +554,21 @@ namespace MadelineParty {
             }
             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
-            switch (chosen) {
-                case Direction.UP:
-                    playerMovePath.Add(new Vector2(playerMovePath[playerMoveProgress].X - 1, playerMovePath[playerMoveProgress].Y));
+            bool found = false;
+            foreach (BoardSpace dest in playerMovePath[playerMoveProgress].destinations) {
+                if(getCardinalDirection(playerMovePath[playerMoveProgress].x, playerMovePath[playerMoveProgress].y, dest.x, dest.y) == chosen) {
+                    found = true;
+                    playerMovePath.Add(dest);
                     break;
-                case Direction.DOWN:
-                    playerMovePath.Add(new Vector2(playerMovePath[playerMoveProgress].X + 1, playerMovePath[playerMoveProgress].Y));
-                    break;
-                case Direction.LEFT:
-                    playerMovePath.Add(new Vector2(playerMovePath[playerMoveProgress].X, playerMovePath[playerMoveProgress].Y - 1));
-                    break;
-                case Direction.RIGHT:
-                    playerMovePath.Add(new Vector2(playerMovePath[playerMoveProgress].X, playerMovePath[playerMoveProgress].Y + 1));
-                    break;
+                }
+            }
+            if(!found) {
+                throw new Exception("Chose direction that doesn't exist???");
             }
 
             for (int i = 1; i < playerMoveDistance; i++) {
-                // Which ways the player can go from here
-                bool up = false, down = false, left = false, right = false;
-                if (SpaceAccessibleFrom(playerMovePath[i].X, playerMovePath[i].Y, playerMovePath[i].X - 1, playerMovePath[i].Y)) {
-                    left = true;
-                }
-                if (SpaceAccessibleFrom(playerMovePath[i].X, playerMovePath[i].Y, playerMovePath[i].X + 1, playerMovePath[i].Y)) {
-                    right = true;
-                }
-                if (SpaceAccessibleFrom(playerMovePath[i].X, playerMovePath[i].Y, playerMovePath[i].X, playerMovePath[i].Y - 1)) {
-                    up = true;
-                }
-                if (SpaceAccessibleFrom(playerMovePath[i].X, playerMovePath[i].Y, playerMovePath[i].X, playerMovePath[i].Y + 1)) {
-                    down = true;
-                }
-
-                if (directions[(int)playerMovePath[i].X][(int)playerMovePath[i].Y] != '.') {
-                    if (left) {
-                        playerMovePath.Add(new Vector2(playerMovePath[i].X - 1, playerMovePath[i].Y));
-                    } else if (right) {
-                        playerMovePath.Add(new Vector2(playerMovePath[i].X + 1, playerMovePath[i].Y));
-                    } else if (up) {
-                        playerMovePath.Add(new Vector2(playerMovePath[i].X, playerMovePath[i].Y - 1));
-                    } else if (down) {
-                        playerMovePath.Add(new Vector2(playerMovePath[i].X, playerMovePath[i].Y + 1));
-                    }
+                if (playerMovePath[i].destinations.Count == 1) {
+                    playerMovePath.Add(playerMovePath[i].destinations[0]);
                 } else {
                     break;
                 }
@@ -744,7 +646,7 @@ namespace MadelineParty {
             return space != ' ';
         }
 
-        public bool SpaceAccessibleFrom(float fromX, float fromY, float toX, float toY) {
+        /*public bool SpaceAccessibleFrom(float fromX, float fromY, float toX, float toY) {
             return SpaceAccessibleFrom((int)fromX, (int)fromY, (int)toX, (int)toY);
         }
 
@@ -786,7 +688,7 @@ namespace MadelineParty {
             }
 
             return false;
-        }
+        }*/
 
         // Returns which number player this is, ignoring unpicked characters
         private int getRelativePlayerID(int absPlayerID) {
@@ -814,7 +716,7 @@ namespace MadelineParty {
                 // Number of expected die rolls
                 int numberOfSpaces = status == BoardStatus.GAMESTART ? GameData.playerNumber : rolls.Length;
                 // new Vector2(8, 4) for text instead of graphics
-                number.MoveNumber((rolls.Length == 1 ? leftButtons[playerID].Position : rightButtons[playerID].Position) + new Vector2(0, 12) + new Vector2(8, 4), Position + new Vector2(board[0].Length * 5 - 10 * (numberOfSpaces - 1) - 4 + 20 * number.posIndex, -24) + new Vector2(8, 4));
+                number.MoveNumber((rolls.Length == 1 ? leftButtons[playerID].Position : rightButtons[playerID].Position) + new Vector2(0, 12) + new Vector2(8, 4), Position + new Vector2(12 * 5 - 10 * (numberOfSpaces - 1) - 4 + 20 * number.posIndex, -24) + new Vector2(8, 4));
                 yield return .25f;
             }
             yield return 3.25f;
@@ -898,37 +800,13 @@ namespace MadelineParty {
             movingPlayerID = playerID;
             playerMoveDistance = roll;
             playerMoveProgress = 0;
-            Vector2 startingSpace = new Vector2(playerTokens[playerID].currentSpace.X, playerTokens[playerID].currentSpace.Y);
-            playerMovePath = new List<Vector2>
+            playerMovePath = new List<BoardSpace>
             {
-                startingSpace
+                playerTokens[playerID].currentSpace
             };
             for (int i = 0; i < playerMoveDistance; i++) {
-                // Which ways the player can go from here
-                bool up = false, down = false, left = false, right = false;
-                if (SpaceAccessibleFrom(playerMovePath[i].X, playerMovePath[i].Y, playerMovePath[i].X - 1, playerMovePath[i].Y)) {
-                    left = true;
-                }
-                if (SpaceAccessibleFrom(playerMovePath[i].X, playerMovePath[i].Y, playerMovePath[i].X + 1, playerMovePath[i].Y)) {
-                    right = true;
-                }
-                if (SpaceAccessibleFrom(playerMovePath[i].X, playerMovePath[i].Y, playerMovePath[i].X, playerMovePath[i].Y - 1)) {
-                    up = true;
-                }
-                if (SpaceAccessibleFrom(playerMovePath[i].X, playerMovePath[i].Y, playerMovePath[i].X, playerMovePath[i].Y + 1)) {
-                    down = true;
-                }
-
-                if (directions[(int)playerMovePath[i].X][(int)playerMovePath[i].Y] != '.') {
-                    if (left) {
-                        playerMovePath.Add(new Vector2(playerMovePath[i].X - 1, playerMovePath[i].Y));
-                    } else if (right) {
-                        playerMovePath.Add(new Vector2(playerMovePath[i].X + 1, playerMovePath[i].Y));
-                    } else if (up) {
-                        playerMovePath.Add(new Vector2(playerMovePath[i].X, playerMovePath[i].Y - 1));
-                    } else if (down) {
-                        playerMovePath.Add(new Vector2(playerMovePath[i].X, playerMovePath[i].Y + 1));
-                    }
+                if (playerMovePath[i].destinations.Count == 1) {
+                    playerMovePath.Add(playerMovePath[i].destinations[0]);
                 } else {
                     break;
                 }
@@ -940,7 +818,23 @@ namespace MadelineParty {
         public override void Render() {
             base.Render();
 
-            ActiveFont.DrawOutline("Turn " + (turnDisplay == -1 ? GameData.turn : turnDisplay) + "/" + GameData.maxTurns, (Position - level.LevelOffset) * 6 + new Vector2(board[0].Length * 5 - 4, board.Length * 10 + 10) * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Blue, 2f, Color.Black);
+            foreach (BoardSpace space in boardSpaces) {
+                Vector2 spacePos = Position + new Vector2(space.x, space.y);
+                foreach (BoardSpace dest in space.destinations) {
+                    Draw.Line(spacePos, Position + new Vector2(dest.x, dest.y), Color.White);
+                }
+            }
+
+            foreach (BoardSpace space in boardSpaces) {
+                Vector2 spacePos = Position + new Vector2(space.x, space.y);
+                if (space.ID != GameData.heartSpaceID) {
+                    if (spaceTextures.ContainsKey(space.type)) {
+                        spaceTextures[space.type].DrawCentered(spacePos);
+                    }
+                } else {
+                    heartTexture.DrawCentered(spacePos, Color.White, 0.75f);
+                }
+            }
         }
 
         public static void generateTurnOrderRolls() {

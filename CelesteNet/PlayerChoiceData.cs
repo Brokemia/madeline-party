@@ -11,8 +11,7 @@ namespace MadelineParty.CelesteNet {
 
         public enum ChoiceType {
             HEART,
-            HEARTX,
-            HEARTY,
+            HEARTSPACEID,
             ENTERSHOP,
             SHOPITEM,
             DIRECTION
@@ -34,12 +33,12 @@ namespace MadelineParty.CelesteNet {
             Player = Get<MetaPlayerUpdate>(ctx);
         }
 
-        public override void Read(DataContext ctx, BinaryReader reader) {
+        protected override void Read(CelesteNetBinaryReader reader) {
             choiceType = (ChoiceType)reader.ReadInt32();
             choice = reader.ReadInt32();
         }
 
-        public override void Write(DataContext ctx, BinaryWriter writer) {
+        protected override void Write(CelesteNetBinaryWriter writer) {
             writer.Write((int)choiceType);
             writer.Write(choice);
         }

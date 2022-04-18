@@ -21,14 +21,14 @@ namespace MadelineParty.CelesteNet {
             Player = Get<MetaPlayerUpdate>(ctx);
         }
 
-        public override void Read(DataContext ctx, BinaryReader reader) {
+        protected override void Read(CelesteNetBinaryReader reader) {
             rolls = new int[reader.ReadInt32()];
             for(int i = 0; i < rolls.Length; i++) {
                 rolls[i] = reader.ReadInt32();
             }
         }
 
-        public override void Write(DataContext ctx, BinaryWriter writer) {
+        protected override void Write(CelesteNetBinaryWriter writer) {
             writer.Write(rolls.Length);
             foreach(int r in rolls) {
                 writer.Write(r);
