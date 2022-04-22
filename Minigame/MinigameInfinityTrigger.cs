@@ -64,14 +64,18 @@ namespace MadelineParty {
             // Used in IL hooks
             private readonly DreamBlock dreamBlock;
             private readonly int idx;
+            private static Vector2 tempVec2;
 #pragma warning restore IDE0052, CS0414, CS0649
 
             public Vector2 Position {
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                get { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
+                get { UpdatePos(); return tempVec2; }
+                //[MethodImpl(MethodImplOptions.NoInlining)]
+                //get { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 set { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
             }
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void UpdatePos() { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
 
             public int Layer {
                 [MethodImpl(MethodImplOptions.NoInlining)]
@@ -105,7 +109,13 @@ namespace MadelineParty {
             foreach (PropertyInfo prop in typeof(DreamParticle).GetProperties()) {
                 FieldInfo targetField = DreamParticle.t_DreamParticle.GetField(prop.Name);
                 if (targetField != null) {
-                    hooks_DreamParticle_Properties.Add(new ILHook(prop.GetGetMethod(), ctx => DreamParticle_get_Prop(ctx, targetField)));
+                    if (prop.Name == "Position") {
+                        hooks_DreamParticle_Properties.Add(new ILHook(
+                            typeof(DreamParticle).GetMethod("UpdatePos", BindingFlags.NonPublic | BindingFlags.Instance),
+                            ctx => DreamParticle_UpdatePos(ctx, targetField)));
+                    } else {
+                        hooks_DreamParticle_Properties.Add(new ILHook(prop.GetGetMethod(), ctx => DreamParticle_get_Prop(ctx, targetField)));
+                    }
                     hooks_DreamParticle_Properties.Add(new ILHook(prop.GetSetMethod(), ctx => DreamParticle_set_Prop(ctx, targetField)));
                 }
             }
@@ -264,6 +274,29 @@ namespace MadelineParty {
         private static FieldInfo f_CustomDreamParticle_dreamBlock = typeof(DreamParticle).GetField("dreamBlock", BindingFlags.NonPublic | BindingFlags.Instance);
         private static FieldInfo f_DreamBlock_particles = typeof(DreamBlock).GetField("particles", BindingFlags.NonPublic | BindingFlags.Instance);
         private static FieldInfo f_CustomDreamParticle_idx = typeof(DreamParticle).GetField("idx", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        /*
+         * Position needs some extra care because of issues with methods that return Structs.
+         * We use a static field (not threadsafe!) to temporarily store the variable, then return it normally in the property accessor.
+         */
+        private static void DreamParticle_UpdatePos(ILContext context, FieldInfo targetField) {
+            FieldInfo f_DreamParticle_tempVec2 = typeof(DreamParticle).GetField("tempVec2", BindingFlags.NonPublic | BindingFlags.Static);
+            context.Instrs.Clear();
+
+            ILCursor cursor = new ILCursor(context);
+            // this.dreamBlock.particles
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.Emit(OpCodes.Ldfld, f_CustomDreamParticle_dreamBlock);
+            cursor.Emit(OpCodes.Ldfld, f_DreamBlock_particles);
+            // [this.idx].Position
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.Emit(OpCodes.Ldfld, f_CustomDreamParticle_idx);
+            cursor.Emit(OpCodes.Ldelema, DreamParticle.t_DreamParticle);
+            cursor.Emit(OpCodes.Ldfld, targetField);
+            // -> DreamParticle.tempVec2
+            cursor.Emit(OpCodes.Stsfld, f_DreamParticle_tempVec2);
+            cursor.Emit(OpCodes.Ret);
+        }
 
         private static void DreamParticle_set_Prop(ILContext context, FieldInfo targetField) {
             context.Instrs.Clear();

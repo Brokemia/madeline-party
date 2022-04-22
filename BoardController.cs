@@ -65,8 +65,8 @@ namespace MadelineParty {
 
             public override void Render() {
                 base.Render();
-
-                ActiveFont.DrawOutline("Turn " + (Instance.turnDisplay == -1 ? GameData.turn : Instance.turnDisplay) + "/" + GameData.maxTurns, (Position - Instance.level.LevelOffset) * 6 + new Vector2(12 * 5 - 4, 12 * 10 + 10) * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Blue, 2f, Color.Black);
+                string text = "Turn " + (Instance.turnDisplay == -1 ? GameData.turn : Instance.turnDisplay) + "/" + GameData.maxTurns;
+                ActiveFont.DrawOutline(text, new Vector2(Celeste.Celeste.TargetWidth / 2, Celeste.Celeste.TargetHeight - 6 * 16), new Vector2(0.5f,0.5f), Vector2.One, Color.Blue, 2f, Color.Black);
             }
         }
 
