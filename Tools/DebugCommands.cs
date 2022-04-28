@@ -7,7 +7,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MadelineParty.Tools {
+
     class DebugCommands {
+		public static string greenSpaceEvent = "seeker";
+
 		[Command("rig_minigame", "set the next minigame that will be chosen (if you are the host)")]
 		private static void CmdRigMinigame(int id = 1) {
 			if (GameData.gnetHost) {
@@ -22,6 +25,11 @@ namespace MadelineParty.Tools {
 		private static void CmdBoardEditor() {
 			Engine.Scene = new BoardEditor();
 			Engine.Commands.Open = false;
+		}
+
+		[Command("green_space", "set the specific event to be used for any green spaces set after this")]
+		private static void CmdGreenSpace(string spaceEvent) {
+			greenSpaceEvent = spaceEvent;
 		}
 	}
 }

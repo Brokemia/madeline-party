@@ -106,7 +106,8 @@ namespace MadelineParty.Tools {
 					y = template.Y / coordScale,
 					type = template.Type,
 					heartSpace = template.HeartSpace,
-					destinations = new List<BoardSpace>()
+					destinations = new List<BoardSpace>(),
+					greenSpaceEvent = template.GreenSpaceEvent
 				};
 				nextID++;
             }
@@ -258,7 +259,10 @@ namespace MadelineParty.Tools {
 				SetType('i');
 			} else if (MInput.Keyboard.Pressed(Keys.D4)) {
 				SetType('s');
-			}
+			} else if (MInput.Keyboard.Pressed(Keys.D5)) {
+				SetType('g');
+				SetGreenSpaceEvent(DebugCommands.greenSpaceEvent);
+            }
 			if(MInput.Keyboard.Pressed(Keys.H)) {
 				ToggleHeartSpace();
             }
@@ -276,6 +280,12 @@ namespace MadelineParty.Tools {
 		private void SetType(char type) {
 			foreach (BoardSpaceTemplate item in selection) {
 				item.Type = type;
+			}
+		}
+
+		private void SetGreenSpaceEvent(string gse) {
+			foreach (BoardSpaceTemplate item in selection) {
+				item.GreenSpaceEvent = gse;
 			}
 		}
 

@@ -30,9 +30,9 @@ namespace MadelineParty {
             private List<BoardSpace> _destinations;
             public List<BoardSpace> destinations {
                 get {
-                    if(_destinations == null) {
+                    if (_destinations == null) {
                         _destinations = new List<BoardSpace>();
-                        foreach(int id in destIDs_DONTUSE) {
+                        foreach (int id in destIDs_DONTUSE) {
                             _destinations.Add(boardSpaces.Find(m => m.ID == id));
                         }
                     }
@@ -45,15 +45,16 @@ namespace MadelineParty {
             public List<int> destIDs_DONTUSE;
             public char type;
             public bool heartSpace;
+            public string greenSpaceEvent;
             public Vector2 position { get { return new Vector2(x, y); } }
             public Vector2 screenPosition => (Instance.Position - (Engine.Scene as Level).LevelOffset + new Vector2(x, y)) * 6;
 
             public override string ToString() {
-                string res = $"boardSpaces.Add(new BoardSpace() {{ ID = {ID}, type = '{type}', x = {x}, y = {y}, heartSpace = {heartSpace.ToString().ToLower()}, destIDs_DONTUSE = new List<int>{{";
-                foreach(BoardSpace dest in destinations) {
+                string res = $"boardSpaces.Add(new BoardSpace() {{ ID = {ID}, type = '{type}', x = {x}, y = {y}, heartSpace = {heartSpace.ToString().ToLower()}, greenSpaceEvent = \"{greenSpaceEvent}\", destIDs_DONTUSE = new List<int>{{";
+                foreach (BoardSpace dest in destinations) {
                     res += dest.ID + ", ";
                 }
-                res += "} } );";
+                res += "}} );";
                 return res;
             }
         }
@@ -66,7 +67,16 @@ namespace MadelineParty {
             public override void Render() {
                 base.Render();
                 string text = "Turn " + (Instance.turnDisplay == -1 ? GameData.turn : Instance.turnDisplay) + "/" + GameData.maxTurns;
-                ActiveFont.DrawOutline(text, new Vector2(Celeste.Celeste.TargetWidth / 2, Celeste.Celeste.TargetHeight - 6 * 16), new Vector2(0.5f,0.5f), Vector2.One, Color.Blue, 2f, Color.Black);
+                ActiveFont.DrawOutline(text, new Vector2(Celeste.Celeste.TargetWidth / 2, Celeste.Celeste.TargetHeight - 6 * 16), new Vector2(0.5f, 0.5f), Vector2.One, Color.Blue, 2f, Color.Black);
+            }
+        }
+
+        protected class SubHUDSprite : Entity {
+            public Sprite sprite;
+            public SubHUDSprite(Sprite sprite) {
+                this.sprite = sprite;
+                Add(sprite);
+                AddTag(TagsExt.SubHUD);
             }
         }
 
@@ -129,44 +139,17 @@ namespace MadelineParty {
             spaceTextures = new Dictionary<char, MTexture> {
                 ['r'] = GFX.Game["decals/madelineparty/redspace"],
                 ['b'] = GFX.Game["decals/madelineparty/bluespace"],
+                ['g'] = GFX.Game["decals/madelineparty/greenspace"],
                 ['i'] = GFX.Game["decals/madelineparty/shopspace"]
             };
             AddTag(Tags.PauseUpdate);
             AddTag(Tags.FrozenUpdate);
         }
 
-        // Maybe retrieve this from settings depending on if I want this mod to be moddable
         // b = blue space
         // r = red space
         // s = start
         // i = item shop
-        /*public char[][] board = {  new char[]{ 'b', 'r', 'b', 'r', 'r', 'b', ' ', ' ', ' ', ' ', ' ', ' ' },
-                                   new char[]{ 'b', ' ', ' ', 'b', ' ', 'b', 'b', ' ', ' ', ' ', ' ', ' ' },
-                                   new char[]{ 'b', ' ', ' ', 'b', ' ', ' ', 'b', ' ', ' ', ' ', ' ', ' ' },
-                                   new char[]{ 'b', ' ', ' ', 'r', ' ', ' ', 'r', ' ', ' ', ' ', ' ', ' ' },
-                                   new char[]{ 'r', 'r', ' ', 'i', ' ', ' ', 'b', ' ', ' ', ' ', ' ', ' ' },
-                                   new char[]{ ' ', 'r', ' ', 'b', 'r', ' ', 'b', ' ', ' ', 'r', 'b', 'b' },
-                                   new char[]{ ' ', 'b', 'b', ' ', 'r', 'b', 'b', 'b', 'r', 'b', ' ', 'b' },
-                                   new char[]{ ' ', ' ', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'r' },
-                                   new char[]{ 's', 'b', 'b', 'b', 'b', 'b', 'r', 'b', ' ', ' ', ' ', 'b' },
-                                   new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'b', ' ', ' ', ' ', 'b' },
-                                   new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'b', ' ', ' ', ' ', 'b' },
-                                   new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'b', 'b', 'r', 'r', 'r' } };*/
-
-        //private Dictionary<Vector2, Decal> boardDecals;
-
-        /*public char[][] directions = {  new char[]{ '>', '>', '>', '.', '>', 'v', ' ', ' ', ' ', ' ', ' ', ' ' },
-                                        new char[]{ '^', ' ', ' ', 'v', ' ', '>', 'v', ' ', ' ', ' ', ' ', ' ' },
-                                        new char[]{ '^', ' ', ' ', 'v', ' ', ' ', 'v', ' ', ' ', ' ', ' ', ' ' },
-                                        new char[]{ '^', ' ', ' ', 'v', ' ', ' ', 'v', ' ', ' ', ' ', ' ', ' ' },
-                                        new char[]{ '^', '<', ' ', 'v', ' ', ' ', 'v', ' ', ' ', ' ', ' ', ' ' },
-                                        new char[]{ ' ', '^', ' ', '>', 'v', ' ', 'v', ' ', ' ', '>', '>', 'v' },
-                                        new char[]{ ' ', '^', '<', ' ', '>', '>', '>', '>', '>', '^', ' ', 'v' },
-                                        new char[]{ ' ', ' ', '^', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'v' },
-                                        new char[]{ '>', '>', '^', '<', '<', '<', '<', '<', ' ', ' ', ' ', 'v' },
-                                        new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', '^', ' ', ' ', ' ', 'v' },
-                                        new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', '^', ' ', ' ', ' ', 'v' },
-                                        new char[]{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', '^', '<', '<', '<', '<' } };*/
 
         public static List<BoardSpace> boardSpaces = new List<BoardSpace>();
 
@@ -174,12 +157,12 @@ namespace MadelineParty {
             boardSpaces.Add(new BoardSpace() { ID = 0, type = 's', x = 16, y = 52, heartSpace = false, destIDs_DONTUSE = new List<int> { 1, } });
             boardSpaces.Add(new BoardSpace() { ID = 1, type = 'b', x = 33, y = 42, heartSpace = false, destIDs_DONTUSE = new List<int> { 2, } });
             boardSpaces.Add(new BoardSpace() { ID = 2, type = 'b', x = 45, y = 23, heartSpace = true, destIDs_DONTUSE = new List<int> { 3, 10, } });
-            boardSpaces.Add(new BoardSpace() { ID = 3, type = 'b', x = 78, y = 22, heartSpace = true, destIDs_DONTUSE = new List<int> { 4, } });
-            boardSpaces.Add(new BoardSpace() { ID = 4, type = 'b', x = 105, y = 25, heartSpace = true, destIDs_DONTUSE = new List<int> { 5, } });
-            boardSpaces.Add(new BoardSpace() { ID = 5, type = 'b', x = 117, y = 48, heartSpace = true, destIDs_DONTUSE = new List<int> { 6, } });
-            boardSpaces.Add(new BoardSpace() { ID = 6, type = 'b', x = 103, y = 69, heartSpace = true, destIDs_DONTUSE = new List<int> { 7, } });
-            boardSpaces.Add(new BoardSpace() { ID = 7, type = 'b', x = 78, y = 74, heartSpace = true, destIDs_DONTUSE = new List<int> { 8, } });
-            boardSpaces.Add(new BoardSpace() { ID = 8, type = 'b', x = 51, y = 76, heartSpace = true, destIDs_DONTUSE = new List<int> { 9, } });
+            boardSpaces.Add(new BoardSpace() { ID = 3, type = 'g', x = 78, y = 22, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 4, } });
+            boardSpaces.Add(new BoardSpace() { ID = 4, type = 'g', x = 105, y = 25, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 5, } });
+            boardSpaces.Add(new BoardSpace() { ID = 5, type = 'g', x = 117, y = 48, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 6, } });
+            boardSpaces.Add(new BoardSpace() { ID = 6, type = 'g', x = 103, y = 69, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 7, } });
+            boardSpaces.Add(new BoardSpace() { ID = 7, type = 'g', x = 78, y = 74, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 8, } });
+            boardSpaces.Add(new BoardSpace() { ID = 8, type = 'g', x = 51, y = 76, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 9, } });
             boardSpaces.Add(new BoardSpace() { ID = 9, type = 'b', x = 37, y = 61, heartSpace = true, destIDs_DONTUSE = new List<int> { 1, } });
             boardSpaces.Add(new BoardSpace() { ID = 10, type = 'b', x = 26, y = -4, heartSpace = false, destIDs_DONTUSE = new List<int> { 11, } });
             boardSpaces.Add(new BoardSpace() { ID = 11, type = 'i', x = 63, y = -5, heartSpace = false, destIDs_DONTUSE = new List<int> { 4, } });
@@ -192,7 +175,7 @@ namespace MadelineParty {
             level.Add(new TurnDisplay());
 
             foreach (BoardSpace space in boardSpaces) {
-                if(space.type == 's') {
+                if (space.type == 's') {
                     int tokensAdded = 0;
                     for (int k = 0; k < GameData.players.Length; k++) {
                         if (GameData.players[k] != null) {
@@ -312,11 +295,11 @@ namespace MadelineParty {
                         playerMovePath = new List<BoardSpace> { playerTokens[movingPlayerID].currentSpace };
                         status = BoardStatus.WAITING;
 
-                        if(playerMovePath[playerMoveProgress].destinations.Count > 2) {
+                        if (playerMovePath[playerMoveProgress].destinations.Count > 2) {
                             throw new NotSupportedException("Intersections with more than two places to go are not supported");
                         }
                         bool leftUsed = false;
-                        foreach(BoardSpace dest in playerMovePath[playerMoveProgress].destinations) {
+                        foreach (BoardSpace dest in playerMovePath[playerMoveProgress].destinations) {
                             Direction dir = getCardinalDirection(playerMovePath[playerMoveProgress].x, playerMovePath[playerMoveProgress].y, dest.x, dest.y);
 
                             if (leftUsed) {
@@ -353,21 +336,28 @@ namespace MadelineParty {
                             playerMovePath = null;
                             playerMoveProgress = 0;
                             status = BoardStatus.WAITING;
-                            switch (playerTokens[movingPlayerID].currentSpace.type) {
-                                case 'b':
-                                    scoreboards[movingPlayerID].StrawberryChange(3);
-                                    GameData.players[movingPlayerID].ChangeStrawberries(3);
-                                    break;
-                                case 'r':
-                                    scoreboards[movingPlayerID].StrawberryChange(-3);
-                                    GameData.players[movingPlayerID].ChangeStrawberries(-3);
-                                    break;
-                            }
+                            HandleSpaceAction();
                             EndTurn();
                         }
                         break;
                     }
                     playerTokens[movingPlayerID].Position = Calc.Approach(playerTokens[movingPlayerID].Position, approaching.screenPosition, 80f * Engine.DeltaTime);
+                    break;
+            }
+        }
+
+        private void HandleSpaceAction() {
+            switch (playerTokens[movingPlayerID].currentSpace.type) {
+                case 'b':
+                    scoreboards[movingPlayerID].StrawberryChange(3);
+                    GameData.players[movingPlayerID].ChangeStrawberries(3);
+                    break;
+                case 'r':
+                    scoreboards[movingPlayerID].StrawberryChange(-3);
+                    GameData.players[movingPlayerID].ChangeStrawberries(-3);
+                    break;
+                case 'g':
+                    DoGreenSpace(playerTokens[movingPlayerID].currentSpace);
                     break;
             }
         }
@@ -512,18 +502,7 @@ namespace MadelineParty {
                 playerMovePath = null;
                 playerMoveProgress = 0;
                 status = BoardStatus.WAITING;
-                if (GameData.heartSpaceID != playerTokens[movingPlayerID].currentSpace.ID) {
-                    switch (playerTokens[movingPlayerID].currentSpace.type) {
-                        case 'b':
-                            scoreboards[movingPlayerID].StrawberryChange(3);
-                            GameData.players[movingPlayerID].ChangeStrawberries(3);
-                            break;
-                        case 'r':
-                            scoreboards[movingPlayerID].StrawberryChange(-3);
-                            GameData.players[movingPlayerID].ChangeStrawberries(-3);
-                            break;
-                    }
-                }
+                HandleSpaceAction();
                 EndTurn();
             }
         }
@@ -556,13 +535,13 @@ namespace MadelineParty {
             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
             bool found = false;
             foreach (BoardSpace dest in playerMovePath[playerMoveProgress].destinations) {
-                if(getCardinalDirection(playerMovePath[playerMoveProgress].x, playerMovePath[playerMoveProgress].y, dest.x, dest.y) == chosen) {
+                if (getCardinalDirection(playerMovePath[playerMoveProgress].x, playerMovePath[playerMoveProgress].y, dest.x, dest.y) == chosen) {
                     found = true;
                     playerMovePath.Add(dest);
                     break;
                 }
             }
-            if(!found) {
+            if (!found) {
                 throw new Exception("Chose direction that doesn't exist???");
             }
 
@@ -606,7 +585,7 @@ namespace MadelineParty {
                 List<LevelData> minigames = level.Session.MapData.Levels.FindAll((obj) => obj.Name.StartsWith("z_Minigame", StringComparison.InvariantCulture));
                 minigames.RemoveAll((obj) => GameData.playedMinigames.Contains(obj.Name));
                 int chosenMinigame = rand.Next(minigames.Count);
-                if(riggedMinigame != null) {
+                if (riggedMinigame != null) {
                     chosenMinigame = minigames.IndexOf(riggedMinigame);
                     riggedMinigame = null;
                 }
@@ -620,7 +599,7 @@ namespace MadelineParty {
             Console.WriteLine("Host? " + GameData.gnetHost);
 
             Console.WriteLine("Begin minigame wait");
-            while (GameData.minigame == null /*|| minigameStartTime.CompareTo(DateTime.UtcNow) < 0*/) {
+            while (true || GameData.minigame == null /*|| minigameStartTime.CompareTo(DateTime.UtcNow) < 0*/) {
                 yield return null;
             }
 
@@ -849,6 +828,44 @@ namespace MadelineParty {
         // Whether one of the two buttons for the player specified is active
         public bool isWaitingOnPlayer(int playerID) {
             return leftButtons[playerID].GetCurrentMode() != LeftButton.Modes.Inactive || rightButtons[playerID].GetCurrentMode() != RightButton.Modes.Inactive;
+        }
+
+        private void DoGreenSpace(BoardSpace space) {
+            switch (space.greenSpaceEvent) {
+                case "seeker":
+                default:
+                    Sprite seekerSprite = GFX.SpriteBank.Create("seeker");
+                    SubHUDSprite seeker = new SubHUDSprite(seekerSprite);
+                    seeker.Collider = new Hitbox(7, 7);
+                    seeker.Depth = -40000;
+                    Scene.Add(seeker);
+                    seeker.Position = space.screenPosition + new Vector2(100, -30);
+                    seekerSprite.FlipX = true;
+                    seekerSprite.Play("recover");
+                    seekerSprite.OnFinish += s => seekerSprite.Play("search");
+                    seekerSprite.Scale = new Vector2(2, 2);
+                    Add(new Coroutine(_SeekerCharge(seeker, seeker.Position, space.screenPosition - new Vector2(100, -30))));
+                    break;
+            }
+        }
+
+        private IEnumerator _SeekerCharge(SubHUDSprite seeker, Vector2 start, Vector2 end) {
+            yield return 0.6f;
+            float speed = -6;
+            while ((seeker.Position - end).Length() >= 1) {
+                speed = Calc.Approach(speed, 26f, 30f * Engine.DeltaTime);
+                seeker.Position += speed * (end - start).SafeNormalize();
+                yield return null;
+            }
+            while (speed > 2) {
+                speed = Calc.Approach(speed, 0, 40f * Engine.DeltaTime);
+                seeker.Position += speed * (end - start).SafeNormalize();
+                yield return null;
+            }
+            yield return 4f;
+            seeker.sprite.Play("takeHit");
+            yield return 10f;
+            seeker.RemoveSelf();
         }
     }
 }

@@ -25,6 +25,8 @@ namespace MadelineParty.Tools {
 
         public bool HeartSpace;
 
+        public string GreenSpaceEvent;
+
         public const int size = 16;
 
         private Vector2 moveAnchor;
@@ -35,6 +37,7 @@ namespace MadelineParty.Tools {
             Y = data.y * BoardEditor.coordScale;
             Type = data.type;
             HeartSpace = data.heartSpace;
+            GreenSpaceEvent = data.greenSpaceEvent;
         }
 
         public void Render(Camera camera) {
@@ -51,6 +54,9 @@ namespace MadelineParty.Tools {
                     break;
                 case 's':
                     Draw.HollowRect(Rect.X, Rect.Y, size, size, Color.Yellow);
+                    break;
+                case 'g':
+                    Draw.Circle(X, Y, size / 2, Color.Green, 5);
                     break;
             }
             
