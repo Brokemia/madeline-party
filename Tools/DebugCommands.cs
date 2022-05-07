@@ -31,5 +31,23 @@ namespace MadelineParty.Tools {
 		private static void CmdGreenSpace(string spaceEvent) {
 			greenSpaceEvent = spaceEvent;
 		}
+
+		[Command("gse", "run a green space event")]
+		private static void CmdGreenSpaceEvent(string spaceEvent, int space = 2) {
+			BoardController.Instance.DoGreenSpace(new BoardController.BoardSpace {
+				greenSpaceEvent = spaceEvent,
+				x = BoardController.boardSpaces[space].x,
+				y = BoardController.boardSpaces[space].y
+			}, null);
+			Engine.Commands.ExecuteCommand("clear", new string[0]);
+		}
+
+		[Command("set_space", "move a player's token to a specific space")]
+		private static void SetSpace(int playerID, int spaceID) {
+			PlayerToken token = BoardController.Instance.playerTokens[playerID];
+			var space = BoardController.boardSpaces[spaceID];
+			token.currentSpace = space;
+			token.Position = space.screenPosition;
+        }
 	}
 }

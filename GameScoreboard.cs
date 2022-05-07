@@ -145,10 +145,6 @@ namespace MadelineParty {
             base.Render();
         }
 
-        public void StrawberryChange(int changeBy) {
-            StrawberryChange(changeBy, .25f);
-        }
-
         public void StrawberryChange(int changeBy, float changeSpeed) {
             strawberryChangeSpeed = changeSpeed;
             tempStrawberries = GameData.players[playerID].strawberries;

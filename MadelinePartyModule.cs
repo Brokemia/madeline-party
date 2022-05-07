@@ -202,6 +202,7 @@ namespace MadelineParty {
         [Obsolete]
         public override void LoadContent() {
             celesteNetInstalled = Everest.Modules.Any(mod => mod.GetType().Name.Equals("CelesteNetClientModule"));
+            BoardController.LoadContent();
         }
 
         // Unload the entirety of your mod's content, remove any event listeners and undo all hooks.

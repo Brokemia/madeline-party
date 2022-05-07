@@ -136,7 +136,7 @@ namespace MadelineParty {
             otherChoices.Sort();
             for (int i = 0; i < otherChoices.Count; i++) {
                 if (otherChoices[i] == this) {
-                    PlayerToken token = new PlayerToken(BoardController.TokenPaths[i], ScreenCoordsFromGameCoords(Position, new Vector2(Width, Height) * 3), new Vector2(.25f, .25f), -900000000, new BoardController.BoardSpace());
+                    PlayerToken token = new PlayerToken(i, BoardController.TokenPaths[i], ScreenCoordsFromGameCoords(Position, new Vector2(Width, Height) * 3), new Vector2(.25f, .25f), -900000000, new BoardController.BoardSpace());
                     level.Add(token);
                     playerID = i;
                 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -8,6 +9,7 @@ using Monocle;
 using static MadelineParty.BoardController;
 
 namespace MadelineParty {
+    [Tracked]
     public class PlayerToken : Entity {
         private class TokenImage : Component {
             public PlayerToken token => (PlayerToken)base.Entity;
@@ -21,9 +23,11 @@ namespace MadelineParty {
             }
         }
 
+        public int id;
+
         public BoardSpace currentSpace;
 
-        Random rand = new Random();
+        private Random rand = new Random();
 
         public float AnimationSpeed;
 
@@ -39,10 +43,29 @@ namespace MadelineParty {
 
         public string Name;
 
-        public PlayerToken(string texture, Vector2 position, Vector2 scale, int depth, BoardSpace space) : base(position) {
+        private DeathEffect deathEffect;
+
+        private float respawnEase = -1;
+
+        public Action<PlayerToken> OnRespawn;
+
+        private static Dictionary<string, Color> colors = new Dictionary<string, Color> {
+            { "madeline/normal00", Player.NormalHairColor },
+            { "badeline/normal00", Player.NormalBadelineHairColor },
+            { "theo/excited00", Color.ForestGreen },
+            { "granny/normal00", Color.Blue }, // It's obviously because of the bird
+            { "luigi/normal00", Color.LimeGreen }
+        };
+
+        private Color color;
+
+        public PlayerToken(int id, string texture, Vector2 position, Vector2 scale, int depth, BoardSpace space) : base(position) {
+            this.id = id;
+            color = colors[texture];
             if (string.IsNullOrEmpty(Path.GetExtension(texture))) {
                 texture += ".png";
             }
+            Collider = new Hitbox(20, 20, -5, -5);
             AnimationSpeed = 12f;
             Depth = depth;
             this.scale = scale;
@@ -57,6 +80,7 @@ namespace MadelineParty {
         }
 
         public override void Update() {
+            base.Update();
             if (textures.Count > 1) {
                 timeTilBlink -= AnimationSpeed * Engine.DeltaTime;
                 if (timeTilBlink < 0) {
@@ -66,6 +90,37 @@ namespace MadelineParty {
                         timeTilBlink = rand.NextFloat(50) + 25;
                     }
                 }
+            }
+        }
+
+        public IEnumerator Respawn() {
+            if (deathEffect == null) {
+                Add(deathEffect = new DeathEffect(color));
+                image.Visible = false;
+                yield return deathEffect.Duration + 0.1f;
+                respawnEase = 1f;
+                Tween respawnTween = Tween.Create(Tween.TweenMode.Oneshot, null, 0.6f, true);
+                respawnTween.OnUpdate = delegate (Tween t)
+                {
+                    respawnEase = 1f - t.Eased;
+                };
+                respawnTween.OnComplete = delegate
+                {
+                    respawnEase = -1f;
+                    deathEffect = null;
+                    image.Visible = true;
+                    Vector2 normalScale = scale;
+                    Add(Wiggler.Create(0.25f, 4f, (f) => scale = normalScale * new Vector2(1, f * 0.15f + 1f), true, true));
+                };
+                Add(respawnTween);
+                OnRespawn?.Invoke(this);
+            }
+        }
+
+        public override void Render() {
+            base.Render();
+            if (respawnEase >= 0) {
+                DeathEffect.Draw(Position, color, respawnEase);
             }
         }
 

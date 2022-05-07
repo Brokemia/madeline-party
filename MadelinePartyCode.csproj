@@ -11,7 +11,7 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup>
-   <LangVersion>8.0</LangVersion>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -70,6 +70,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GreenSpace\GreenSpaceEvent.cs" />
+    <Compile Include="GreenSpace\GreenSpaceAttribute.cs" />
+    <Compile Include="GreenSpace\GS_BadelineYeet.cs" />
+    <Compile Include="GreenSpace\GS_Seeker.cs" />
+    <Compile Include="SubHUDSprite.cs" />
     <Compile Include="Tools\BoardEditor.cs" />
     <Compile Include="CelesteNet\MinigameVector2Data.cs" />
     <Compile Include="CelesteNet\MinigameStatusData.cs" />

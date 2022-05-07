@@ -54,7 +54,7 @@ namespace MadelineParty {
             int realPlayerPlace = GameData.minigameResults.FindIndex((obj) => obj.Item1 == GameData.realPlayerID);
             // A check to stop the game from crashing when I hit one of these while testing
             if (winnerID >= 0 && GameData.players[winnerID] != null) {
-
+                // TODO animate this change in strawberries, maybe just move it so it happens immediately after the second teleport
                 GameData.players[winnerID].ChangeStrawberries(10);
                 level.OnEndOfFrame += delegate {
                     Leader.StoreStrawberries(player.Leader);

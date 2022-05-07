@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Celeste;
 using Celeste.Mod;
 using Celeste.Mod.CelesteNet.Client;
 using MadelineParty.CelesteNet;
+using MadelineParty.GreenSpace;
 using Microsoft.Xna.Framework;
 using Monocle;
 using Logger = Celeste.Mod.Logger;
@@ -71,15 +74,6 @@ namespace MadelineParty {
             }
         }
 
-        protected class SubHUDSprite : Entity {
-            public Sprite sprite;
-            public SubHUDSprite(Sprite sprite) {
-                this.sprite = sprite;
-                Add(sprite);
-                AddTag(TagsExt.SubHUD);
-            }
-        }
-
         public static string[] TokenPaths = { "madeline/normal00", "badeline/normal00", "theo/excited00", "granny/normal00" };
 
         private List<BoardSpace> playerMovePath = null;
@@ -129,19 +123,18 @@ namespace MadelineParty {
 
         public static BoardController Instance;
 
-        public Dictionary<char, MTexture> spaceTextures = new Dictionary<char, MTexture>();
+        public static Dictionary<char, MTexture> spaceTextures = new Dictionary<char, MTexture> {
+            ['r'] = GFX.Game["decals/madelineparty/redspace"],
+            ['b'] = GFX.Game["decals/madelineparty/bluespace"],
+            ['g'] = GFX.Game["decals/madelineparty/greenspace"],
+            ['i'] = GFX.Game["decals/madelineparty/shopspace"]
+        };
         public MTexture heartTexture = GFX.Game["decals/madelineparty/heartstill"];
 
         public BoardController(EntityData data) : base(data.Position) {
             Instance = this;
             //boardDecals = new Dictionary<Vector2, Decal>();
             diceNumbers = GFX.Game.GetAtlasSubtextures("decals/madelineparty/dicenumbers/dice_");
-            spaceTextures = new Dictionary<char, MTexture> {
-                ['r'] = GFX.Game["decals/madelineparty/redspace"],
-                ['b'] = GFX.Game["decals/madelineparty/bluespace"],
-                ['g'] = GFX.Game["decals/madelineparty/greenspace"],
-                ['i'] = GFX.Game["decals/madelineparty/shopspace"]
-            };
             AddTag(Tags.PauseUpdate);
             AddTag(Tags.FrozenUpdate);
         }
@@ -153,19 +146,29 @@ namespace MadelineParty {
 
         public static List<BoardSpace> boardSpaces = new List<BoardSpace>();
 
+        private static Dictionary<string, GreenSpaceEvent> greenSpaces;
+
         static BoardController() {
-            boardSpaces.Add(new BoardSpace() { ID = 0, type = 's', x = 16, y = 52, heartSpace = false, destIDs_DONTUSE = new List<int> { 1, } });
-            boardSpaces.Add(new BoardSpace() { ID = 1, type = 'b', x = 33, y = 42, heartSpace = false, destIDs_DONTUSE = new List<int> { 2, } });
-            boardSpaces.Add(new BoardSpace() { ID = 2, type = 'b', x = 45, y = 23, heartSpace = true, destIDs_DONTUSE = new List<int> { 3, 10, } });
+            boardSpaces.Add(new BoardSpace() { ID = 0, type = 's', x = 16, y = 52, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 1, } });
+            boardSpaces.Add(new BoardSpace() { ID = 1, type = 'b', x = 33, y = 42, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 2, } });
+            boardSpaces.Add(new BoardSpace() { ID = 2, type = 'b', x = 45, y = 23, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 3, 10, } });
             boardSpaces.Add(new BoardSpace() { ID = 3, type = 'g', x = 78, y = 22, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 4, } });
-            boardSpaces.Add(new BoardSpace() { ID = 4, type = 'g', x = 105, y = 25, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 5, } });
+            boardSpaces.Add(new BoardSpace() { ID = 4, type = 'g', x = 106, y = 25, heartSpace = true, greenSpaceEvent = "badelineYeet", destIDs_DONTUSE = new List<int> { 5, } });
             boardSpaces.Add(new BoardSpace() { ID = 5, type = 'g', x = 117, y = 48, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 6, } });
-            boardSpaces.Add(new BoardSpace() { ID = 6, type = 'g', x = 103, y = 69, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 7, } });
+            boardSpaces.Add(new BoardSpace() { ID = 6, type = 'g', x = 106, y = 67, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 7, } });
             boardSpaces.Add(new BoardSpace() { ID = 7, type = 'g', x = 78, y = 74, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 8, } });
             boardSpaces.Add(new BoardSpace() { ID = 8, type = 'g', x = 51, y = 76, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 9, } });
-            boardSpaces.Add(new BoardSpace() { ID = 9, type = 'b', x = 37, y = 61, heartSpace = true, destIDs_DONTUSE = new List<int> { 1, } });
-            boardSpaces.Add(new BoardSpace() { ID = 10, type = 'b', x = 26, y = -4, heartSpace = false, destIDs_DONTUSE = new List<int> { 11, } });
-            boardSpaces.Add(new BoardSpace() { ID = 11, type = 'i', x = 63, y = -5, heartSpace = false, destIDs_DONTUSE = new List<int> { 4, } });
+            boardSpaces.Add(new BoardSpace() { ID = 9, type = 'b', x = 37, y = 61, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 1, } });
+            boardSpaces.Add(new BoardSpace() { ID = 10, type = 'b', x = 26, y = -4, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 11, } });
+            boardSpaces.Add(new BoardSpace() { ID = 11, type = 'i', x = 63, y = -5, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 4, } });
+        }
+
+        public static void LoadContent() {
+            var spaces = from assembly in AppDomain.CurrentDomain.GetAssemblies()
+                         from type in assembly.GetTypesSafe()
+                         where type.IsDefined(typeof(GreenSpaceAttribute), false) && typeof(GreenSpaceEvent).IsAssignableFrom(type)
+                         select type.GetConstructor(new Type[0]).Invoke(new object[0]) as GreenSpaceEvent;
+            greenSpaces = spaces.ToDictionary(space => space.GetType().GetCustomAttributes<GreenSpaceAttribute>().First().id);
         }
 
         public override void Added(Scene scene) {
@@ -180,7 +183,7 @@ namespace MadelineParty {
                     for (int k = 0; k < GameData.players.Length; k++) {
                         if (GameData.players[k] != null) {
                             if (!GameData.gameStarted) {
-                                PlayerToken token = new PlayerToken(TokenPaths[GameData.players[k].TokenSelected], space.screenPosition + new Vector2(0, tokensAdded * 18), new Vector2(.25f, .25f), -1, space);
+                                PlayerToken token = new PlayerToken(k, TokenPaths[GameData.players[k].TokenSelected], space.screenPosition + new Vector2(0, tokensAdded * 18), new Vector2(.25f, .25f), -1, space);
                                 playerTokens[k] = token;
                                 GameData.players[k].token = token;
                             } else {
@@ -336,8 +339,7 @@ namespace MadelineParty {
                             playerMovePath = null;
                             playerMoveProgress = 0;
                             status = BoardStatus.WAITING;
-                            HandleSpaceAction();
-                            EndTurn();
+                            HandleSpaceAction(EndTurn);
                         }
                         break;
                     }
@@ -346,20 +348,25 @@ namespace MadelineParty {
             }
         }
 
-        private void HandleSpaceAction() {
+        private void HandleSpaceAction(Action next) {
             switch (playerTokens[movingPlayerID].currentSpace.type) {
                 case 'b':
-                    scoreboards[movingPlayerID].StrawberryChange(3);
-                    GameData.players[movingPlayerID].ChangeStrawberries(3);
+                    ChangeStrawberries(movingPlayerID, 3);
+                    next();
                     break;
                 case 'r':
-                    scoreboards[movingPlayerID].StrawberryChange(-3);
-                    GameData.players[movingPlayerID].ChangeStrawberries(-3);
+                    ChangeStrawberries(movingPlayerID, -3);
+                    next();
                     break;
                 case 'g':
-                    DoGreenSpace(playerTokens[movingPlayerID].currentSpace);
+                    DoGreenSpace(playerTokens[movingPlayerID].currentSpace, next);
                     break;
             }
+        }
+
+        public void ChangeStrawberries(int playerID, int amt, float changeSpeed = 0.25f) {
+            scoreboards[playerID].StrawberryChange(amt, changeSpeed);
+            GameData.players[playerID].ChangeStrawberries(amt);
         }
 
         private void CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType type, int choice) {
@@ -418,8 +425,7 @@ namespace MadelineParty {
             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
 
-            scoreboards[turnOrder[playerTurn]].StrawberryChange(-GameData.itemPrices[itemBought], .08f);
-            GameData.players[turnOrder[playerTurn]].ChangeStrawberries(-GameData.itemPrices[itemBought]);
+            ChangeStrawberries(turnOrder[playerTurn], -GameData.itemPrices[itemBought], .08f);
             AfterChoice();
         }
 
@@ -466,8 +472,7 @@ namespace MadelineParty {
             if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
                 CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEART, 0);
             }
-            scoreboards[turnOrder[playerTurn]].StrawberryChange(-GameData.heartCost, .08f);
-            GameData.players[turnOrder[playerTurn]].ChangeStrawberries(-GameData.heartCost);
+            ChangeStrawberries(turnOrder[playerTurn], -GameData.heartCost, 0.08f);
             GameData.players[turnOrder[playerTurn]].hearts++;
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
@@ -502,8 +507,7 @@ namespace MadelineParty {
                 playerMovePath = null;
                 playerMoveProgress = 0;
                 status = BoardStatus.WAITING;
-                HandleSpaceAction();
-                EndTurn();
+                HandleSpaceAction(EndTurn);
             }
         }
 
@@ -599,7 +603,7 @@ namespace MadelineParty {
             Console.WriteLine("Host? " + GameData.gnetHost);
 
             Console.WriteLine("Begin minigame wait");
-            while (true || GameData.minigame == null /*|| minigameStartTime.CompareTo(DateTime.UtcNow) < 0*/) {
+            while (GameData.minigame == null /*|| minigameStartTime.CompareTo(DateTime.UtcNow) < 0*/) {
                 yield return null;
             }
 
@@ -807,7 +811,9 @@ namespace MadelineParty {
             foreach (BoardSpace space in boardSpaces) {
                 Vector2 spacePos = Position + new Vector2(space.x, space.y);
                 if (space.ID != GameData.heartSpaceID) {
-                    if (spaceTextures.ContainsKey(space.type)) {
+                    if(space.type == 'g' && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
+                        spaceEvent.Render(spacePos);
+                    } else if (spaceTextures.ContainsKey(space.type)) {
                         spaceTextures[space.type].DrawCentered(spacePos);
                     }
                 } else {
@@ -830,42 +836,10 @@ namespace MadelineParty {
             return leftButtons[playerID].GetCurrentMode() != LeftButton.Modes.Inactive || rightButtons[playerID].GetCurrentMode() != RightButton.Modes.Inactive;
         }
 
-        private void DoGreenSpace(BoardSpace space) {
-            switch (space.greenSpaceEvent) {
-                case "seeker":
-                default:
-                    Sprite seekerSprite = GFX.SpriteBank.Create("seeker");
-                    SubHUDSprite seeker = new SubHUDSprite(seekerSprite);
-                    seeker.Collider = new Hitbox(7, 7);
-                    seeker.Depth = -40000;
-                    Scene.Add(seeker);
-                    seeker.Position = space.screenPosition + new Vector2(100, -30);
-                    seekerSprite.FlipX = true;
-                    seekerSprite.Play("recover");
-                    seekerSprite.OnFinish += s => seekerSprite.Play("search");
-                    seekerSprite.Scale = new Vector2(2, 2);
-                    Add(new Coroutine(_SeekerCharge(seeker, seeker.Position, space.screenPosition - new Vector2(100, -30))));
-                    break;
+        public void DoGreenSpace(BoardSpace space, Action next) {
+            if(greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
+                spaceEvent.RunGreenSpace(this, space, next ?? (() => { }));
             }
-        }
-
-        private IEnumerator _SeekerCharge(SubHUDSprite seeker, Vector2 start, Vector2 end) {
-            yield return 0.6f;
-            float speed = -6;
-            while ((seeker.Position - end).Length() >= 1) {
-                speed = Calc.Approach(speed, 26f, 30f * Engine.DeltaTime);
-                seeker.Position += speed * (end - start).SafeNormalize();
-                yield return null;
-            }
-            while (speed > 2) {
-                speed = Calc.Approach(speed, 0, 40f * Engine.DeltaTime);
-                seeker.Position += speed * (end - start).SafeNormalize();
-                yield return null;
-            }
-            yield return 4f;
-            seeker.sprite.Play("takeHit");
-            yield return 10f;
-            seeker.RemoveSelf();
         }
     }
 }
