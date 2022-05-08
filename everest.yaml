@@ -1,0 +1,8 @@
+- Name: MadelineParty
+  Version: 0.1.0
+  DLL: bin/MadelineParty.dll
+  Dependencies:
+    - Name: Everest
+      Version: 1.3324.0
+    - Name: CelesteNet.Client
+      Version: 2.0.0
