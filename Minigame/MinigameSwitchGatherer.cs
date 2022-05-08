@@ -189,6 +189,7 @@ namespace MadelineParty {
             player.Speed = Vector2.Zero;
             startTime = -1;
             started = false;
+            didRespawn = false;
             level.CanRetry = false;
             Console.WriteLine("Touch Switch Count: " + switchCount);
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, switchCount));

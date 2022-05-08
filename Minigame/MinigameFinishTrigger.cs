@@ -30,6 +30,7 @@ namespace MadelineParty {
             float timeElapsed = (level.RawTimeActive - startTime) * 10000;
             startTime = -1;
             started = false;
+            didRespawn = false;
             level.CanRetry = false;
             foreach(SyncedKevin kevin in level.Tracker.GetEntities<SyncedKevin>()) {
                 kevin.deactivated = true;

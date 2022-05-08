@@ -12,6 +12,7 @@ namespace MadelineParty {
         protected Level level;
         protected int displayNum = -1;
         protected List<MTexture> diceNumbers;
+        public static bool didRespawn;
         public static bool started;
         public bool completed;
         public static float startTime = -1;
@@ -40,6 +41,13 @@ namespace MadelineParty {
 
         public override void Awake(Scene scene) {
             base.Awake(scene);
+            // FIXME hackfix for invis
+            if(!didRespawn) {
+                didRespawn = true;
+                Player player = level.Tracker.GetEntity<Player>();
+                player.Die(Vector2.Zero, true, false);
+                return;
+            }
             if (!started) {
                 Player player = level.Tracker.GetEntity<Player>();
                 player.StateMachine.State = 11;

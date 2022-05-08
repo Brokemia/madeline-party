@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace MadelineParty.GreenSpace {
     [GreenSpace("tentacleDrag")]
-    class GS_BadelineYeet : GreenSpaceEvent {
+    class GS_TentacleDrag : GreenSpaceEvent {
         private const float scaleFactor = 3;
 
         public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after) {
@@ -74,7 +74,7 @@ namespace MadelineParty.GreenSpace {
             tentacle.sprite.OnLastFrame = s => {
                 tentacle.sprite.OnLastFrame = null;
                 Tween fallTween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, 0.25f, true);
-                fallTween.OnUpdate = t => { tentacle.Position.Y = Calc.LerpClamp(tentacleStartY, Engine.ViewHeight + tentacle.sprite.Height * scaleFactor, t.Percent); Console.WriteLine(tentacleStartY + " " + tentacle.Position.Y); };
+                fallTween.OnUpdate = t => tentacle.Position.Y = Calc.LerpClamp(tentacleStartY, Engine.ViewHeight + tentacle.sprite.Height * scaleFactor, t.Percent);
                 fallTween.OnComplete = t => {
                     tentacle.RemoveSelf();
                     after();

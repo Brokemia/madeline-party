@@ -174,6 +174,7 @@ namespace MadelineParty {
             player.Speed = Vector2.Zero;
             startTime = -1;
             started = false;
+            didRespawn = false;
             level.CanRetry = false;
             dist = calculateDist(loops, player.X);
             Console.WriteLine("Minigame Distance: " + dist);

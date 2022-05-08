@@ -6,9 +6,11 @@ namespace MadelineParty.GreenSpace {
 
         public abstract void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after);
 
-        public virtual void Render(Vector2 center) {
-            BoardController.spaceTextures['g'].DrawCentered(center);
+        public virtual void Render(BoardController.BoardSpace space) {
+            BoardController.spaceTextures['g'].DrawCentered(BoardController.Instance.Position + space.position);
         }
+
+        public virtual void RenderSubHUD(BoardController.BoardSpace space) { }
 
     }
 }

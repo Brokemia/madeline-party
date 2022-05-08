@@ -7,18 +7,20 @@ using System.Collections;
 namespace MadelineParty.GreenSpace {
     [GreenSpace("seeker")]
     class GS_Seeker : GreenSpaceEvent {
+        private static Vector2 startOffset = new Vector2(120, -36);
+
         public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after) {
             Sprite seekerSprite = GFX.SpriteBank.Create("seeker");
             SubHUDSprite seeker = new SubHUDSprite(seekerSprite);
             seeker.Collider = new Hitbox(50, 50, -25, -25);
             seeker.Depth = -40000;
             board.Scene.Add(seeker);
-            seeker.Position = space.screenPosition + new Vector2(120, -36);
+            seeker.Position = space.screenPosition + startOffset;
             seekerSprite.FlipX = true;
             seekerSprite.Play("recover");
             seekerSprite.OnFinish += s => seekerSprite.Play("windUp");
             seekerSprite.Scale = new Vector2(2, 2);
-            board.Add(new Coroutine(SeekerCharge(board, after, seeker, seeker.Position, space.screenPosition - new Vector2(60, -18))));
+            board.Add(new Coroutine(SeekerCharge(board, after, seeker, seeker.Position, space.screenPosition - startOffset / 2)));
         }
 
         private IEnumerator SeekerCharge(BoardController board, Action after, SubHUDSprite seeker, Vector2 start, Vector2 end) {
