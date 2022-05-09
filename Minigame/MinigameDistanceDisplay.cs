@@ -4,7 +4,7 @@ using Monocle;
 using System.Linq;
 
 namespace MadelineParty {
-    public class MinigameDistanceDisplay : MinigameCountdownDisplay {
+    public class MinigameDistanceDisplay : MinigameTimeDisplay {
 		MinigameInfinityTrigger infinityMinigame;
 
         public MinigameDistanceDisplay(MinigameEntity minigame) : base(minigame) {

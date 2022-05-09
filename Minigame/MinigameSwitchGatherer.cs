@@ -179,16 +179,7 @@ namespace MadelineParty {
         }
 
         protected IEnumerator FinishMinigame() {
-            Player player = level.Tracker.GetEntity<Player>();
-            // This check is probably unnecessary, but I left it in for safety
-            while (player == null) {
-                yield return null;
-                player = level.Tracker.GetEntity<Player>();
-            }
             completed = true;
-            // Freeze the player so they can't do any more collecting until everyone else is done
-            player.StateMachine.State = Player.StFrozen;
-            player.Speed = Vector2.Zero;
             startTime = -1;
             started = false;
             didRespawn = false;
@@ -199,7 +190,7 @@ namespace MadelineParty {
                 CelesteNetSendMinigameResults(switchCount);
             }
 
-            yield return new SwapImmediately(EndMinigame(player, HIGHEST_WINS, () => {
+            yield return new SwapImmediately(EndMinigame(HIGHEST_WINS, () => {
                 switchCount = 0;
             }));
         }

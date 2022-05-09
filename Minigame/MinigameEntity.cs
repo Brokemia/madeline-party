@@ -114,9 +114,15 @@ namespace MadelineParty {
 
         }
 
-        protected IEnumerator EndMinigame(Player player, Comparison<Tuple<int, uint>> placeOrderer, Action cleanup) {
+        protected IEnumerator EndMinigame(Comparison<Tuple<int, uint>> placeOrderer, Action cleanup) {
+            Player player = level.Tracker.GetEntity<Player>();
             // Wait until all players have finished
             while (GameData.minigameResults.Count < GameData.playerNumber) {
+                if(player != null || (player = level.Tracker.GetEntity<Player>()) != null) {
+                    // Freeze the player so they can't do anything else until everyone else is done
+                    player.StateMachine.State = Player.StFrozen;
+                    player.Speed = Vector2.Zero;
+                }
                 yield return null;
             }
 
@@ -130,7 +136,6 @@ namespace MadelineParty {
                 // TODO animate this change in strawberries, maybe just move it so it happens immediately after the second teleport
                 GameData.players[winnerID].ChangeStrawberries(10);
                 level.OnEndOfFrame += delegate {
-                    Leader.StoreStrawberries(player.Leader);
                     level.Remove(player);
                     level.UnloadLevel();
 
@@ -141,8 +146,6 @@ namespace MadelineParty {
                     level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));
 
                     level.LoadLevel(Player.IntroTypes.None);
-
-                    Leader.RestoreStrawberries(player.Leader);
                 };
             }
         }

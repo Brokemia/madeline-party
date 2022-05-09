@@ -40,7 +40,7 @@ namespace MadelineParty {
                 CelesteNetSendMinigameResults((uint)timeElapsed);
             }
 
-            Add(new Coroutine(EndMinigame(player, LOWEST_WINS, () => {})));
+            Add(new Coroutine(EndMinigame(LOWEST_WINS, () => {})));
         }
     }
 }

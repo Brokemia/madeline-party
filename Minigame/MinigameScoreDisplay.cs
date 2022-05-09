@@ -8,9 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MadelineParty {
-    public class MinigameScoreDisplay : MinigameCountdownDisplay {
+    public class MinigameScoreDisplay : MinigameTimeDisplay {
+		private int max;
 
-		public MinigameScoreDisplay(MinigameEntity minigame) : base(minigame) {
+		public MinigameScoreDisplay(MinigameEntity minigame, int max = -1, bool countDown = true) : base(minigame, countDown) {
+			this.max = max;
 			Y = 120;
         }
 
@@ -28,7 +30,8 @@ namespace MadelineParty {
 
 						PixelFont font = Dialog.Languages["english"].Font;
 						float fontFaceSize = Dialog.Languages["english"].FontFaceSize;
-						font.DrawOutline(fontFaceSize, GameData.minigameStatus.ContainsKey(i) ? GameData.minigameStatus[i].ToString() : "0", new Vector2(num + 120, Y + 44f * (index + 2)), new Vector2(0.5f, 1f), Vector2.One * (1f + wiggler.Value * 0.15f), Color.White, 2f, Color.Black);
+						string text = (GameData.minigameStatus.ContainsKey(i) ? GameData.minigameStatus[i].ToString() : "0") + (max > 0 ? "/" + max : "");
+						font.DrawOutline(fontFaceSize, text, new Vector2(num + 120, Y + 44f * (index + 2)), new Vector2(0.5f, 1f), Vector2.One * (1f + wiggler.Value * 0.15f), Color.White, 2f, Color.Black);
 						index++;
 					}
 				}

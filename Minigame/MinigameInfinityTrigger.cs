@@ -184,7 +184,7 @@ namespace MadelineParty {
                 CelesteNetSendMinigameResults(dist);
             }
 
-            yield return new SwapImmediately(EndMinigame(player, HIGHEST_WINS, () => {
+            yield return new SwapImmediately(EndMinigame(HIGHEST_WINS, () => {
                 dist = 0;
                 loops = 0;
             }));
