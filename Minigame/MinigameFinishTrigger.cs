@@ -26,7 +26,9 @@ namespace MadelineParty {
             if (GameData.minigameResults.Exists((obj) => obj.Item1 == GameData.realPlayerID))
                 return;
             completed = true;
-            level.Entities.FindFirst<MinigameTimeDisplay>().finalTime = level.RawTimeActive - startTime;
+            MinigameTimeDisplay display = level.Entities.FindFirst<MinigameTimeDisplay>();
+            if (display != null)
+                display.finalTime = level.RawTimeActive - startTime;
             float timeElapsed = (level.RawTimeActive - startTime) * 10000;
             startTime = -1;
             started = false;

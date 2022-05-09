@@ -44,7 +44,9 @@ namespace MadelineParty {
 
         protected IEnumerator EndMinigame() {
             completed = true;
-            level.Entities.FindFirst<MinigameScoreDisplay>().finalTime = level.RawTimeActive - startTime;
+            MinigameTimeDisplay display = level.Entities.FindFirst<MinigameScoreDisplay>();
+            if (display != null)
+                display.finalTime = level.RawTimeActive - startTime;
             uint timeElapsed = theoCount < THEOS_NEEDED ? uint.MaxValue : (uint)((level.RawTimeActive - startTime) * 10000);
             startTime = -1;
             started = false;
