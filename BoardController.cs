@@ -403,6 +403,10 @@ namespace MadelineParty {
         }
 
         private void HandleSpaceAction(Action next) {
+            // Don't do an action if we're on the heart space
+            if(GameData.heartSpaceID == playerTokens[movingPlayerID].currentSpace.ID) {
+                next();
+            }
             switch (playerTokens[movingPlayerID].currentSpace.type) {
                 case 'b':
                     ChangeStrawberries(movingPlayerID, 3);
