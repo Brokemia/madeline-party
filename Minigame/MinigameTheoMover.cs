@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Celeste;
+using Celeste.Mod;
 using Celeste.Mod.CelesteNet.Client;
 using MadelineParty.CelesteNet;
 using Microsoft.Xna.Framework;
@@ -17,7 +18,7 @@ namespace MadelineParty {
 
         public MinigameTheoMover(EntityData data, Vector2 offset) : base(data, offset) {
             theoRespawnPoint = data.Nodes[0];
-            Add(new HoldableCollider(OnHoldable, null));
+            Add(new HoldableCollider(OnHoldable));
         }
 
         public override void Added(Scene scene) {
@@ -60,35 +61,9 @@ namespace MadelineParty {
                 CelesteNetSendMinigameResults(theoCount);
             }
 
-            // Wait until all players have finished
-            while (GameData.minigameResults.Count < GameData.playerNumber) {
-                yield return null;
-            }
-
-            GameData.minigameResults.Sort((x, y) => { return y.Item2.CompareTo(x.Item2); });
-
-            int winnerID = GameData.minigameResults[0].Item1;
-            int realPlayerPlace = GameData.minigameResults.FindIndex((obj) => obj.Item1 == GameData.realPlayerID);
-            // A check to stop the game from crashing when I hit one of these while testing
-            if (winnerID >= 0 && GameData.players[winnerID] != null) {
+            yield return new SwapImmediately(EndMinigame(player, HIGHEST_WINS, () => {
                 theoCount = 0;
-                GameData.players[winnerID].ChangeStrawberries(10);
-                level.OnEndOfFrame += delegate {
-                    Leader.StoreStrawberries(player.Leader);
-                    level.Remove(player);
-                    level.UnloadLevel();
-
-                    level.Session.Level = "Game_PlayerRanking";
-                    List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns.ToArray());
-                    // Sort the spawns so the highest ones are first
-                    spawns.Sort((x, y) => { return x.Y.CompareTo(y.Y); });
-                    level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));
-
-                    level.LoadLevel(Player.IntroTypes.None);
-
-                    Leader.RestoreStrawberries(player.Leader);
-                };
-            }
+            }));
         }
 
         private void OnHoldable(Holdable h) {

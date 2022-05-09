@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Celeste;
+using Celeste.Mod;
 using Celeste.Mod.CelesteNet.Client;
 using Celeste.Mod.Entities;
 using MadelineParty.CelesteNet;
@@ -104,6 +105,7 @@ namespace MadelineParty {
                     DeactivateSwitch(ts);
                 }
             }
+            // TODO It would be really nice if we could zoom out to see the whole level, but it would probably require HDleste to be released
             //Add(new Coroutine(level.ZoomTo(new Vector2(level.Bounds.Width/2f, level.Bounds.Height/2f), 8*22.5f/level.Bounds.Height, 3f)));
         }
 
@@ -172,11 +174,11 @@ namespace MadelineParty {
         public override void Update() {
             base.Update();
             if (level.RawTimeActive - startTime >= 30 && endCoroutine == null) {
-                Add(endCoroutine = new Coroutine(EndMinigame()));
+                Add(endCoroutine = new Coroutine(FinishMinigame()));
             }
         }
 
-        protected IEnumerator EndMinigame() {
+        protected IEnumerator FinishMinigame() {
             Player player = level.Tracker.GetEntity<Player>();
             // This check is probably unnecessary, but I left it in for safety
             while (player == null) {
@@ -197,35 +199,9 @@ namespace MadelineParty {
                 CelesteNetSendMinigameResults(switchCount);
             }
 
-            // Wait until all players have finished
-            while (GameData.minigameResults.Count < GameData.playerNumber) {
-                yield return null;
-            }
-
-            GameData.minigameResults.Sort((x, y) => { return y.Item2.CompareTo(x.Item2); });
-
-            int winnerID = GameData.minigameResults[0].Item1;
-            int realPlayerPlace = GameData.minigameResults.FindIndex((obj) => obj.Item1 == GameData.realPlayerID);
-            // A check to stop the game from crashing when I hit one of these while testing
-            if (winnerID >= 0 && GameData.players[winnerID] != null) {
+            yield return new SwapImmediately(EndMinigame(player, HIGHEST_WINS, () => {
                 switchCount = 0;
-                GameData.players[winnerID].ChangeStrawberries(10);
-                level.OnEndOfFrame += delegate {
-                    Leader.StoreStrawberries(player.Leader);
-                    level.Remove(player);
-                    level.UnloadLevel();
-
-                    level.Session.Level = "Game_PlayerRanking";
-                    List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns.ToArray());
-                    // Sort the spawns so the highest ones are first
-                    spawns.Sort((x, y) => { return x.Y.CompareTo(y.Y); });
-                    level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));
-
-                    level.LoadLevel(Player.IntroTypes.None);
-
-                    Leader.RestoreStrawberries(player.Leader);
-                };
-            }
+            }));
         }
     }
 }

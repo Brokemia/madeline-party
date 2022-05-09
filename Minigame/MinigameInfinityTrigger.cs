@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Celeste;
+using Celeste.Mod;
 using Celeste.Mod.CelesteNet.Client;
 using Celeste.Mod.CelesteNet.Client.Components;
 using Celeste.Mod.Entities;
@@ -136,7 +137,7 @@ namespace MadelineParty {
         public override void Update() {
             base.Update();
             if (level.RawTimeActive - startTime >= 30 && endCoroutine == null) {
-                Add(endCoroutine = new Coroutine(EndMinigame()));
+                Add(endCoroutine = new Coroutine(FinishMinigame()));
             }
 
             Player player = level.Tracker.GetEntity<Player>();
@@ -161,7 +162,7 @@ namespace MadelineParty {
             return (uint)Math.Max(loops * xDiff + x - backwardsSpot.X - 10, 0);
         }
 
-        protected IEnumerator EndMinigame() {
+        protected IEnumerator FinishMinigame() {
             Player player = level.Tracker.GetEntity<Player>();
             // This check is probably unnecessary, but I left it in for safety
             while (player == null) {
@@ -183,36 +184,10 @@ namespace MadelineParty {
                 CelesteNetSendMinigameResults(dist);
             }
 
-            // Wait until all players have finished
-            while (GameData.minigameResults.Count < GameData.playerNumber) {
-                yield return null;
-            }
-
-            GameData.minigameResults.Sort((x, y) => { return y.Item2.CompareTo(x.Item2); });
-
-            int winnerID = GameData.minigameResults[0].Item1;
-            int realPlayerPlace = GameData.minigameResults.FindIndex((obj) => obj.Item1 == GameData.realPlayerID);
-            // A check to stop the game from crashing when I hit one of these while testing
-            if (winnerID >= 0 && GameData.players[winnerID] != null) {
+            yield return new SwapImmediately(EndMinigame(player, HIGHEST_WINS, () => {
                 dist = 0;
                 loops = 0;
-                GameData.players[winnerID].ChangeStrawberries(10);
-                level.OnEndOfFrame += delegate {
-                    Leader.StoreStrawberries(player.Leader);
-                    level.Remove(player);
-                    level.UnloadLevel();
-
-                    level.Session.Level = "Game_PlayerRanking";
-                    List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns.ToArray());
-                    // Sort the spawns so the highest ones are first
-                    spawns.Sort((x, y) => { return x.Y.CompareTo(y.Y); });
-                    level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));
-
-                    level.LoadLevel(Player.IntroTypes.None);
-
-                    Leader.RestoreStrawberries(player.Leader);
-                };
-            }
+            }));
         }
 
         public override void OnEnter(Player player) {
