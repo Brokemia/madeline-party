@@ -96,6 +96,13 @@ namespace MadelineParty.Tools {
 			}
 		}
 
+		private void DeleteSelected() {
+			foreach(BoardSpaceTemplate space in selection) {
+				spaces.Remove(space);
+            }
+			selection.Clear();
+        }
+
 		private void Save() {
 			int nextID = 0;
 			boardSpaces.Clear();
@@ -220,6 +227,10 @@ namespace MadelineParty.Tools {
 							SelectAll();
 						}
 					}
+
+					if(MInput.Keyboard.Check(Keys.Delete)) {
+						DeleteSelected();
+                    }
 				}
 			} else if (mouseMode == MouseModes.Pan) {
 				Camera.Position += vector;

@@ -52,6 +52,7 @@ namespace MadelineParty {
             player.Speed = Vector2.Zero;
             startTime = -1;
             started = false;
+            didRespawn = false;
             level.CanRetry = false;
             Console.WriteLine("Theo Count: " + theoCount);
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, theoCount));

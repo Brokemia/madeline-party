@@ -131,7 +131,6 @@ namespace MadelineParty {
         }
 
         private bool playerInStartRoom(uint id) {
-            Console.WriteLine(CelesteNetClientModule.Instance.Client.Data.TryGetRef(id, out DataPlayerState state1));
             if (CelesteNetClientModule.Instance?.Client?.Data != null && CelesteNetClientModule.Instance.Client.Data.TryGetRef(id, out DataPlayerState state)) {
                 Console.WriteLine(state + " " + state.Level);
                 return state?.Level?.Equals(START_ROOM) ?? true;
