@@ -113,7 +113,7 @@ namespace MadelineParty {
         // turnOrder[0] == 2 means player[2] goes first
         public int[] turnOrder = { 0, 0, 0, 0 };
         public static int[] turnOrderRolls = { 0, 0, 0, 0 };
-        private static int[] oneToTen = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        public static int[] oneToTen = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
         private int playerTurn = 0;
         private int turnDisplay = -1;

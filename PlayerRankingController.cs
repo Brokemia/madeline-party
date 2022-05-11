@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Celeste;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -30,27 +31,63 @@ namespace MadelineParty {
                 return y.hearts.CompareTo(x.hearts);
             });
 
-            int winnerID = playerList[0].TokenSelected;
-            int realPlayerPlace = playerList.FindIndex((obj) => obj.TokenSelected == GameData.realPlayerID);
-            level.OnEndOfFrame += delegate {
-                Player player = level.Tracker.GetEntity<Player>();
-                Leader.StoreStrawberries(player.Leader);
-                level.Remove(player);
-                level.UnloadLevel();
+            int tieCount = 1;
+            for(int i = 1; i < playerList.Count; i++) {
+                if(playerList[i].hearts == playerList[0].hearts && playerList[i].strawberries == playerList[0].strawberries) {
+                    tieCount++;
+                }
+            }
 
-                level.Session.Level = "Game_VictoryRoyale";
-                GameData.minigameResults.Clear();
-                GameData.minigameStatus.Clear();
+            if (tieCount == 1) {
+                int realPlayerPlace = playerList.FindIndex((obj) => obj.TokenSelected == GameData.realPlayerID);
+                level.OnEndOfFrame += delegate {
+                    Player player = level.Tracker.GetEntity<Player>();
+                    Leader.StoreStrawberries(player.Leader);
+                    level.Remove(player);
+                    level.UnloadLevel();
 
-                List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns.ToArray());
-                // Sort the spawns so the highest one is first
-                spawns.Sort((x, y) => { return x.Y.CompareTo(y.Y); });
-                level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));
+                    level.Session.Level = "Game_Tiebreaker";
+                    GameData.minigameResults.Clear();
+                    GameData.minigameStatus.Clear();
 
-                level.LoadLevel(Player.IntroTypes.Jump);
+                    List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns.ToArray());
+                    // Sort the spawns so the highest one is first
+                    spawns.Sort((x, y) => { return x.Y.CompareTo(y.Y); });
+                    if (realPlayerPlace < tieCount) {
+                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));
+                    } else {
+                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[spawns.Count - 1].X, spawns[spawns.Count - 1].Y));
+                    }
 
-                Leader.RestoreStrawberries(player.Leader);
-            };
+                    level.LoadLevel(Player.IntroTypes.None);
+                    playerList.Add(playerList[0]);
+                    level.Entities.FindFirst<TiebreakerController>().Initialize(tieCount + 1, playerList);
+
+                    Leader.RestoreStrawberries(player.Leader);
+                };
+            } else {
+                int winnerID = playerList[0].TokenSelected;
+                int realPlayerPlace = playerList.FindIndex((obj) => obj.TokenSelected == GameData.realPlayerID);
+                level.OnEndOfFrame += delegate {
+                    Player player = level.Tracker.GetEntity<Player>();
+                    Leader.StoreStrawberries(player.Leader);
+                    level.Remove(player);
+                    level.UnloadLevel();
+
+                    level.Session.Level = "Game_VictoryRoyale";
+                    GameData.minigameResults.Clear();
+                    GameData.minigameStatus.Clear();
+
+                    List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns.ToArray());
+                    // Sort the spawns so the highest one is first
+                    spawns.Sort((x, y) => { return x.Y.CompareTo(y.Y); });
+                    level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));
+
+                    level.LoadLevel(Player.IntroTypes.Jump);
+
+                    Leader.RestoreStrawberries(player.Leader);
+                };
+            }
         }
 
         private IEnumerator SendBack() {

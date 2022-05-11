@@ -129,7 +129,7 @@ namespace MadelineParty
         private double DistanceBetween(Entity e1, Entity e2)
         {
             if (e1 == null || e2 == null)
-                return Double.MaxValue;
+                return double.MaxValue;
             return Math.Sqrt(Math.Pow(e1.CenterX - e2.CenterX, 2) + Math.Pow(e1.CenterY - e2.CenterY, 2));
         }
 
@@ -169,8 +169,12 @@ namespace MadelineParty
             switch (currentMode)
             {
                 case Modes.Dice:
-                    SetCurrentMode(Modes.Inactive);
-                    board.RollDice(GetTokenID());
+                    //SetCurrentMode(Modes.Inactive);
+                    if (board != null) {
+                        board.RollDice(GetTokenID());
+                    } else if(level.Entities.FindFirst<TiebreakerController>() is TiebreakerController controller) {
+                        controller.RollDice(Position, GameData.realPlayerID);
+                    }
                     break;
                 case Modes.ConfirmHeartBuy:
                     board.BuyHeart();
@@ -206,7 +210,7 @@ namespace MadelineParty
             {
                 associatedDecal.RemoveSelf();
                 associatedDecal = new Decal(name, associatedDecal.Position, associatedDecal.Scale, associatedDecal.Depth);
-                base.Scene.Add(associatedDecal);
+                Scene.Add(associatedDecal);
             }
         }
 

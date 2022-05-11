@@ -49,5 +49,20 @@ namespace MadelineParty.Tools {
 			token.currentSpace = space;
 			token.Position = space.screenPosition;
         }
+
+		[Command("set_berries", "set the strawberries of a player in madeline party")]
+		private static void SetBerries(int playerID, int amount) {
+			GameData.players[playerID].ChangeStrawberries(amount - GameData.players[playerID].strawberries);
+        }
+
+		[Command("set_hearts", "set the hearts of a player in madeline party")]
+		private static void SetHearts(int playerID, int amount) {
+			GameData.players[playerID].hearts = amount;
+		}
+
+		[Command("set_turn", "set the current turn in madeline party")]
+		private static void SetTurn(int turn) {
+			GameData.turn = turn;
+		}
 	}
 }
