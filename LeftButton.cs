@@ -169,7 +169,7 @@ namespace MadelineParty
             switch (currentMode)
             {
                 case Modes.Dice:
-                    //SetCurrentMode(Modes.Inactive);
+                    SetCurrentMode(Modes.Inactive);
                     if (board != null) {
                         board.RollDice(GetTokenID());
                     } else if(level.Entities.FindFirst<TiebreakerController>() is TiebreakerController controller) {
