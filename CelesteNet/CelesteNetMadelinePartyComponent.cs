@@ -192,5 +192,22 @@ namespace MadelineParty.CelesteNet {
                 BoardController.generateTurnOrderRolls();
             }
         }
+
+        public void Handle(CelesteNetConnection con, TiebreakerRolledData data) {
+            // If another player in our party has rolled a tiebreaker die
+            if (GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
+                if (Engine.Scene is not Level level) {
+                    return;
+                }
+                foreach(LeftButton button in level.Entities.FindAll<LeftButton>()) {
+                    // Find a close button
+                    if((button.Position - data.ButtonPosition).LengthSquared() < 1) {
+                        button.SetCurrentMode(LeftButton.Modes.Inactive);
+                        level.Entities.FindFirst<TiebreakerController>()?.RollDice(data.ButtonPosition, GameData.playerSelectTriggers[data.Player.ID]);
+                        return;
+                    }
+                }
+            }
+        }
     }
 }
