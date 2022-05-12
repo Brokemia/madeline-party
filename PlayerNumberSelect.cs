@@ -34,7 +34,7 @@ namespace MadelineParty {
                     Audio.Play("event:/game/general/wall_break_ice", Position);
                 }
 
-                if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                if (MadelinePartyModule.CelesteNetConnected()) {
                     parent.playerNumber++;
                     if (parent.playerNumber > MAXPLAYERS) {
                         parent.playerNumber = 1;
@@ -73,7 +73,7 @@ namespace MadelineParty {
                     Audio.Play("event:/game/general/wall_break_ice", Position);
                 }
 
-                if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                if (MadelinePartyModule.CelesteNetConnected()) {
                     parent.playerNumber--;
                     if (parent.playerNumber < 1) {
                         parent.playerNumber = MAXPLAYERS;
@@ -142,7 +142,7 @@ namespace MadelineParty {
 
         public override void Update() {
             base.Update();
-            if (!MadelinePartyModule.IsCelesteNetInstalled() && playerNumber != 1) {
+            if (!MadelinePartyModule.CelesteNetConnected() && playerNumber != 1) {
                 playerNumber = 1;
             }
 
@@ -154,7 +154,7 @@ namespace MadelineParty {
             }
             Player player = Scene.Tracker.GetEntity<Player>();
             GameData.playerNumber = playerNumber;
-            if (MadelinePartyModule.IsCelesteNetInstalled() && playerNumber != 1) {
+            if (MadelinePartyModule.CelesteNetConnected() && playerNumber != 1) {
                 SendPartySearch();
             }
 

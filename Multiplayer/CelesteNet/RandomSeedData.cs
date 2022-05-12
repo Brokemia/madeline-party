@@ -1,10 +1,9 @@
-﻿using System;
-using System.IO;
-using Celeste.Mod.CelesteNet;
+﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
+using System.Collections.Generic;
 
-namespace MadelineParty.CelesteNet {
-    public class RandomSeedData : DataType<RandomSeedData> {
+namespace MadelineParty.Multiplayer.CelesteNet {
+    public class RandomSeedData : DataType<RandomSeedData>, MultiplayerData {
         static RandomSeedData() {
             DataID = "mPartyRandomSeed";
         }
@@ -13,6 +12,11 @@ namespace MadelineParty.CelesteNet {
 
         public uint turnOrderSeed;
         public uint tieBreakerSeed;
+
+        public void Initialize(Dictionary<string, object> args) {
+            turnOrderSeed = args.OrDefault("turnOrderSeed", turnOrderSeed);
+            tieBreakerSeed = args.OrDefault("tieBreakerSeed", tieBreakerSeed);
+        }
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {

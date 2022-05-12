@@ -302,7 +302,7 @@ namespace MadelineParty {
                     });
                 }
 
-                if(MadelinePartyModule.IsCelesteNetInstalled()) {
+                if(MadelinePartyModule.CelesteNetConnected()) {
                     CelesteNetHandleDelayedRoll();
                 }
             }
@@ -461,7 +461,7 @@ namespace MadelineParty {
 
         public void SkipItem() {
             // Only send out data if we are the player that skipped the item
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendPlayerChoice(PlayerChoiceData.SHOPITEM, 1);
             }
             shopItemViewing++;
@@ -482,7 +482,7 @@ namespace MadelineParty {
 
         public void BuyItem() {
             // Only send out data if we are the player that bought the item
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendPlayerChoice(PlayerChoiceData.SHOPITEM, 0);
             }
             GameData.Item itemBought = GameData.shopContents[shopItemViewing];
@@ -498,7 +498,7 @@ namespace MadelineParty {
 
         public void SkipShop() {
             // Only send out data if we are the player that skipped the shop
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendPlayerChoice(PlayerChoiceData.ENTERSHOP, 1);
             }
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
@@ -509,7 +509,7 @@ namespace MadelineParty {
 
         public void EnterShop() {
             // Only send out data if we are the player that entered the shop
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendPlayerChoice(PlayerChoiceData.ENTERSHOP, 0);
             }
             shopItemViewing = 0;
@@ -525,7 +525,7 @@ namespace MadelineParty {
 
         public void SkipHeart() {
             // Only send out data if we are the player that skipped the heart
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendPlayerChoice(PlayerChoiceData.HEART, 1);
             }
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
@@ -536,7 +536,7 @@ namespace MadelineParty {
 
         public void BuyHeart() {
             // Only send out data if we are the player that bought the heart
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendPlayerChoice(PlayerChoiceData.HEART, 0);
             }
             ChangeStrawberries(turnOrder[playerTurn], -GameData.heartCost, 0.08f);
@@ -549,7 +549,7 @@ namespace MadelineParty {
             if (turnOrder[playerTurn] == GameData.realPlayerID) {
                 List<BoardSpace> possibleHeartSpaces = boardSpaces.FindAll((s) => s.heartSpace && GameData.players[turnOrder[playerTurn]].token.currentSpace.ID != s.ID);
                 GameData.heartSpaceID = possibleHeartSpaces[rand.Next(possibleHeartSpaces.Count)].ID;
-                if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                if (MadelinePartyModule.CelesteNetConnected()) {
                     CelesteNetSendPlayerChoice(PlayerChoiceData.HEARTSPACEID, (int)GameData.heartSpaceID);
                 }
             }
@@ -599,7 +599,7 @@ namespace MadelineParty {
 
         public void ContinueMovementAfterIntersection(Direction chosen) {
             // Only send out data if we are the player that chose the direction
-            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendPlayerChoice(PlayerChoiceData.DIRECTION, (int)chosen);
             }
             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
@@ -664,7 +664,7 @@ namespace MadelineParty {
                 minigameStartTime = DateTime.UtcNow.AddSeconds(3);
                 Console.WriteLine("Minigame chosen: " + chosenMinigame);
                 ChoseMinigame(chosenMinigame);
-                if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                if (MadelinePartyModule.CelesteNetConnected()) {
                     CelesteNetSendMinigameStart(chosenMinigame, minigameStartTime.ToFileTimeUtc());
                 }
             }
@@ -753,7 +753,7 @@ namespace MadelineParty {
 
         // Usually called only due to Celestenet messages
         public void RollDice(int playerID, int[] rolls) {
-            if (MadelinePartyModule.IsCelesteNetInstalled() && playerID == GameData.realPlayerID) {
+            if (MadelinePartyModule.CelesteNetConnected() && playerID == GameData.realPlayerID) {
                 CelesteNetSendDieRolls(rolls);
             }
             Add(new Coroutine(DieRollAnimation(playerID, rolls)));
@@ -770,7 +770,7 @@ namespace MadelineParty {
                     GameData.players[playerID].items.Remove(GameData.Item.DOUBLEDICE);
                 }
             }
-            if (MadelinePartyModule.IsCelesteNetInstalled() && playerID == GameData.realPlayerID) {
+            if (MadelinePartyModule.CelesteNetConnected() && playerID == GameData.realPlayerID) {
                 CelesteNetSendDieRolls(rolls.ToArray());
             }
             Add(new Coroutine(DieRollAnimation(playerID, rolls.ToArray())));

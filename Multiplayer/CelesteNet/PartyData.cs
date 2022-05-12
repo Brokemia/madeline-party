@@ -1,10 +1,9 @@
-﻿using System;
-using System.IO;
-using Celeste.Mod.CelesteNet;
+﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
+using System.Collections.Generic;
 
-namespace MadelineParty.CelesteNet {
-    public class PartyData : DataType<PartyData> {
+namespace MadelineParty.Multiplayer.CelesteNet {
+    public class PartyData : DataType<PartyData>, MultiplayerData {
         static PartyData() {
             DataID = "mPartyParty";
         }
@@ -19,6 +18,14 @@ namespace MadelineParty.CelesteNet {
         public DataPlayerInfo Player;
 
         public bool partyHost = true;
+
+        public void Initialize(Dictionary<string, object> args) {
+            lookingForParty = args.OrDefault("lookingForParty", lookingForParty);
+            version = args.OrDefault("version", version);
+            playerSelectTrigger = args.OrDefault("playerSelectTrigger", playerSelectTrigger);
+            respondingTo = args.OrDefault("respondingTo", respondingTo);
+            partyHost = args.OrDefault("partyHost", partyHost);
+        }
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {

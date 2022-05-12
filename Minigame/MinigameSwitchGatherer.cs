@@ -59,7 +59,7 @@ namespace MadelineParty {
                 float num = Calc.Random.NextFloat((float)Math.PI * 2f);
                 level.Particles.Emit(TouchSwitch.P_FireWhite, ts.Position + Calc.AngleToVector(num, 6f), num);
             }
-            if (MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendMinigameStatus(switchCount);
                 CelesteNetSendVector2(pos, -1);
             }
@@ -83,7 +83,7 @@ namespace MadelineParty {
 
                 ActivateSwitch(newSwitch2);
             }
-            if (MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (MadelinePartyModule.CelesteNetConnected()) {
                 foreach (Vector2 switchPos in switchesOn) {
                     CelesteNetSendVector2(switchPos, 1);
                 }
@@ -117,7 +117,7 @@ namespace MadelineParty {
             if(GameData.gnetHost) {
                 TouchSwitch ts = switches[rand.Next(switches.Count)];
                 ActivateSwitch(ts);
-                if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                if (MadelinePartyModule.CelesteNetConnected()) {
                     CelesteNetSendVector2(ts.Position, 1);
                 }
             }
@@ -186,7 +186,7 @@ namespace MadelineParty {
             level.CanRetry = false;
             Console.WriteLine("Touch Switch Count: " + switchCount);
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, switchCount));
-            if (MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendMinigameResults(switchCount);
             }
 

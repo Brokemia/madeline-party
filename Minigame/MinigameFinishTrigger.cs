@@ -38,7 +38,7 @@ namespace MadelineParty {
                 kevin.deactivated = true;
             }
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, (uint)timeElapsed));
-            if (MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendMinigameResults((uint)timeElapsed);
             }
 

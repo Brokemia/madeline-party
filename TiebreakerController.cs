@@ -31,7 +31,7 @@ namespace MadelineParty {
         }
 
         public void RollDice(Vector2 buttonPos, int playerID) {
-            if (MadelinePartyModule.IsCelesteNetInstalled() && playerID == GameData.realPlayerID) {
+            if (MadelinePartyModule.CelesteNetConnected() && playerID == GameData.realPlayerID) {
                 CelesteNetSendTiebreakerRoll(buttonPos);
             }
 

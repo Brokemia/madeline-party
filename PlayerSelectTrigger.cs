@@ -34,7 +34,7 @@ namespace MadelineParty {
             base.OnEnter(player);
             occupied = true;
             GameData.currentPlayerSelection = this;
-            if (MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendOnEnterExit(playerID);
             }
 
@@ -83,7 +83,7 @@ namespace MadelineParty {
             GameData.turnOrderSeed = (uint)rand.Next(2, 100000);
             GameData.tieBreakerSeed = (uint)rand.Next(2, 100000);
             BoardController.generateTurnOrderRolls();
-            if (MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetOccupiedAction();
             } else {
                 GameData.players[playerID] = new PlayerData(playerID);
@@ -120,7 +120,7 @@ namespace MadelineParty {
             base.OnLeave(player);
             if (GameData.realPlayerID == -1) {
                 occupied = false;
-                if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                if (MadelinePartyModule.CelesteNetConnected()) {
                     CelesteNetSendOnEnterExit(-1);
                 }
                 GameData.currentPlayerSelection = null;

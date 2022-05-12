@@ -1,14 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Celeste;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Celeste.Mod;
 using MonoMod.RuntimeDetour;
-using Monocle;
-using Celeste.Mod.CelesteNet;
-using MadelineParty.CelesteNet;
-using Logger = Celeste.Mod.Logger;
 using Celeste.Mod.CelesteNet.Client;
 using Celeste.Mod.CelesteNet.DataTypes;
 
@@ -25,19 +20,9 @@ namespace MadelineParty {
 
         public Level level;
 
-        public static bool celesteNetInstalled;
-        private static bool celesteNetConnected {
-            get {
-                return CelesteNetClientModule.Instance?.Client?.Con != null;
-            }
-        }
-        
         public MadelinePartyModule() {
             Instance = this;
         }
-
-        // The secret code that goes in front of emotes to signify they're from this mod
-        public const string emotePrefix = "g:mparty";
 
         // If you don't need to store any settings, => null
         public override Type SettingsType => null;
@@ -86,10 +71,6 @@ namespace MadelineParty {
             }) {
 
             }
-        }
-
-        public static bool IsCelesteNetInstalled() {
-            return celesteNetInstalled && celesteNetConnected;
         }
 
         public static bool IsSIDMadelineParty(string sid) {
@@ -200,7 +181,6 @@ namespace MadelineParty {
         // Optional, do anything requiring either the Celeste or mod content here.
         [Obsolete]
         public override void LoadContent() {
-            celesteNetInstalled = Everest.Modules.Any(mod => mod.GetType().Name.Equals("CelesteNetClientModule"));
             BoardController.LoadContent();
         }
 

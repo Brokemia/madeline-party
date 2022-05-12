@@ -1,9 +1,10 @@
 ﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
-namespace MadelineParty.CelesteNet {
-    public class TiebreakerRolledData : DataType<TiebreakerRolledData> {
+namespace MadelineParty.Multiplayer.CelesteNet {
+    public class TiebreakerRolledData : DataType<TiebreakerRolledData>, MultiplayerData {
         static TiebreakerRolledData() {
             DataID = "mPartyTiebreakerRolled";
         }
@@ -11,6 +12,10 @@ namespace MadelineParty.CelesteNet {
         public DataPlayerInfo Player;
 
         public Vector2 ButtonPosition;
+
+        public void Initialize(Dictionary<string, object> args) {
+            ButtonPosition = args.OrDefault("ButtonPosition", ButtonPosition);
+        }
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {

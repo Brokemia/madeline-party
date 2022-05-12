@@ -1,10 +1,9 @@
-﻿using System;
-using System.IO;
+﻿using System.Collections.Generic;
 using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
 
-namespace MadelineParty.CelesteNet {
-    public class PlayerChoiceData : DataType<PlayerChoiceData> {
+namespace MadelineParty.Multiplayer.CelesteNet {
+    public class PlayerChoiceData : DataType<PlayerChoiceData>, MultiplayerData {
         static PlayerChoiceData() {
             DataID = "mPartyPlayerChoice";
         }
@@ -21,6 +20,11 @@ namespace MadelineParty.CelesteNet {
         // For buttons, 0 = left, 1 = right
         // For Direction, UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3
         public int choice;
+
+        public void Initialize(Dictionary<string, object> args) {
+            choiceType = args.OrDefault("choiceType", choiceType);
+            choice = args.OrDefault("choice", choice);
+        }
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {

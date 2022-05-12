@@ -1,10 +1,9 @@
-﻿using System;
-using System.IO;
-using Celeste.Mod.CelesteNet;
+﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
+using System.Collections.Generic;
 
-namespace MadelineParty.CelesteNet {
-    public class MinigameStartData : DataType<MinigameStartData> {
+namespace MadelineParty.Multiplayer.CelesteNet {
+    public class MinigameStartData : DataType<MinigameStartData>, MultiplayerData {
         static MinigameStartData() {
             DataID = "mPartyMinigameStart";
         }
@@ -15,6 +14,11 @@ namespace MadelineParty.CelesteNet {
         public int choice;
         // The time to start the minigame
         public long gameStart;
+
+        public void Initialize(Dictionary<string, object> args) {
+            choice = args.OrDefault("choice", choice);
+            gameStart = args.OrDefault("gameStart", gameStart);
+        }
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {

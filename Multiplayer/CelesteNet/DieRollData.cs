@@ -1,9 +1,9 @@
-﻿using System.IO;
-using Celeste.Mod.CelesteNet;
+﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
+using System.Collections.Generic;
 
-namespace MadelineParty.CelesteNet {
-    public class DieRollData : DataType<DieRollData> {
+namespace MadelineParty.Multiplayer.CelesteNet {
+    public class DieRollData : DataType<DieRollData>, MultiplayerData {
         static DieRollData() {
             DataID = "mPartyDieRoll";
         }
@@ -11,6 +11,10 @@ namespace MadelineParty.CelesteNet {
         public DataPlayerInfo Player;
 
         public int[] rolls;
+
+        public void Initialize(Dictionary<string, object> args) {
+            rolls = args.OrDefault("rolls", rolls);
+        }
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {

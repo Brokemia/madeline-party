@@ -54,7 +54,7 @@ namespace MadelineParty {
             level.CanRetry = false;
             Console.WriteLine("Theo Count: " + theoCount);
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, timeElapsed));
-            if (MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendMinigameResults(timeElapsed);
             }
 
@@ -70,7 +70,7 @@ namespace MadelineParty {
                 theoCount++;
                 
                 GameData.minigameStatus[GameData.realPlayerID] = theoCount;
-                if (MadelinePartyModule.IsCelesteNetInstalled()) {
+                if (MadelinePartyModule.CelesteNetConnected()) {
                     CelesteNetSendMinigameStatus(theoCount);
                 }
                 if (theoCount >= THEOS_NEEDED && endCoroutine == null) {

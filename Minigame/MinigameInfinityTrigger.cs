@@ -147,7 +147,7 @@ namespace MadelineParty {
                 Teleport(player, xDiff);
             }
 
-            if(everyOtherFrame && MadelinePartyModule.IsCelesteNetInstalled()) {
+            if(everyOtherFrame && MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendMinigameStatus(dist);
             }
             everyOtherFrame = !everyOtherFrame;
@@ -180,7 +180,7 @@ namespace MadelineParty {
             dist = calculateDist(loops, player.X);
             Console.WriteLine("Minigame Distance: " + dist);
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, dist));
-            if (MadelinePartyModule.IsCelesteNetInstalled()) {
+            if (MadelinePartyModule.CelesteNetConnected()) {
                 CelesteNetSendMinigameResults(dist);
             }
 
