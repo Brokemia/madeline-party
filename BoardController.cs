@@ -302,22 +302,28 @@ namespace MadelineParty {
                     });
                 }
 
-                if (delayedDieRoll != null) {
-                    if (isWaitingOnPlayer(GameData.playerSelectTriggers[delayedDieRoll.Player.ID])) {
-                        string rollString = "";
-                        foreach (int i in delayedDieRoll.rolls) {
-                            rollString += i + ", ";
-                        }
-                        Logger.Log("MadelineParty", "Delayed emote interpreted as die roll from player " + delayedDieRoll.Player.ID + ". Rolls: " + rollString);
-
-                        if (delayedDieRoll.rolls.Length == 2)
-                            GameData.players[GameData.playerSelectTriggers[delayedDieRoll.Player.ID]].items.Remove(GameData.Item.DOUBLEDICE);
-                        RollDice(GameData.playerSelectTriggers[delayedDieRoll.Player.ID], delayedDieRoll.rolls);
-                    }
-                    delayedDieRoll = null;
+                if(MadelinePartyModule.IsCelesteNetInstalled()) {
+                    CelesteNetHandleDelayedRoll();
                 }
             }
             GameData.gameStarted = true;
+        }
+
+        private void CelesteNetHandleDelayedRoll() {
+            if (delayedDieRoll != null) {
+                if (isWaitingOnPlayer(GameData.playerSelectTriggers[delayedDieRoll.Player.ID])) {
+                    string rollString = "";
+                    foreach (int i in delayedDieRoll.rolls) {
+                        rollString += i + ", ";
+                    }
+                    Logger.Log("MadelineParty", "Delayed emote interpreted as die roll from player " + delayedDieRoll.Player.ID + ". Rolls: " + rollString);
+
+                    if (delayedDieRoll.rolls.Length == 2)
+                        GameData.players[GameData.playerSelectTriggers[delayedDieRoll.Player.ID]].items.Remove(GameData.Item.DOUBLEDICE);
+                    RollDice(GameData.playerSelectTriggers[delayedDieRoll.Player.ID], delayedDieRoll.rolls);
+                }
+                delayedDieRoll = null;
+            }
         }
 
         private void SetDice(int player) {

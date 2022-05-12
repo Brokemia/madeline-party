@@ -38,7 +38,7 @@ namespace MadelineParty {
                 }
             }
 
-            if (tieCount == 1) {
+            if (tieCount > 1) {
                 int realPlayerPlace = playerList.FindIndex((obj) => obj.TokenSelected == GameData.realPlayerID);
                 level.OnEndOfFrame += delegate {
                     Player player = level.Tracker.GetEntity<Player>();
@@ -61,7 +61,7 @@ namespace MadelineParty {
 
                     level.LoadLevel(Player.IntroTypes.None);
                     playerList.Add(playerList[0]);
-                    level.Entities.FindFirst<TiebreakerController>().Initialize(tieCount + 1, playerList);
+                    level.Entities.FindFirst<TiebreakerController>().Initialize(tieCount, playerList);
 
                     Leader.RestoreStrawberries(player.Leader);
                 };

@@ -147,7 +147,7 @@ namespace MadelineParty {
                 Teleport(player, xDiff);
             }
 
-            if(everyOtherFrame) {
+            if(everyOtherFrame && MadelinePartyModule.IsCelesteNetInstalled()) {
                 CelesteNetSendMinigameStatus(dist);
             }
             everyOtherFrame = !everyOtherFrame;
