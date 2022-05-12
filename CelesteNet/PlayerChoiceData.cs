@@ -9,17 +9,15 @@ namespace MadelineParty.CelesteNet {
             DataID = "mPartyPlayerChoice";
         }
 
-        public enum ChoiceType {
-            HEART,
-            HEARTSPACEID,
-            ENTERSHOP,
-            SHOPITEM,
-            DIRECTION
-        }
+        public const int HEART = 0;
+        public const int HEARTSPACEID = 1;
+        public const int ENTERSHOP = 2;
+        public const int SHOPITEM = 3;
+        public const int DIRECTION = 4;
 
         public DataPlayerInfo Player;
 
-        public ChoiceType choiceType;
+        public int choiceType;
         // For buttons, 0 = left, 1 = right
         // For Direction, UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3
         public int choice;
@@ -34,12 +32,12 @@ namespace MadelineParty.CelesteNet {
         }
 
         protected override void Read(CelesteNetBinaryReader reader) {
-            choiceType = (ChoiceType)reader.ReadInt32();
+            choiceType = reader.ReadInt32();
             choice = reader.ReadInt32();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write((int)choiceType);
+            writer.Write(choiceType);
             writer.Write(choice);
         }
     }

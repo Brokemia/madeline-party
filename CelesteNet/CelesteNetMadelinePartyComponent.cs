@@ -116,31 +116,31 @@ namespace MadelineParty.CelesteNet {
             if (GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
                 Logger.Log("MadelineParty", "Choice detected of type " + data.choiceType + " with value " + data.choice);
                 switch (data.choiceType) {
-                    case PlayerChoiceData.ChoiceType.HEART:
+                    case PlayerChoiceData.HEART:
                         if (data.choice == 0) {
                             BoardController.Instance.BuyHeart();
                         } else {
                             BoardController.Instance.SkipHeart();
                         }
                         break;
-                    case PlayerChoiceData.ChoiceType.ENTERSHOP:
+                    case PlayerChoiceData.ENTERSHOP:
                         if (data.choice == 0) {
                             BoardController.Instance.EnterShop();
                         } else {
                             BoardController.Instance.SkipShop();
                         }
                         break;
-                    case PlayerChoiceData.ChoiceType.SHOPITEM:
+                    case PlayerChoiceData.SHOPITEM:
                         if (data.choice == 0) {
                             BoardController.Instance.BuyItem();
                         } else {
                             BoardController.Instance.SkipItem();
                         }
                         break;
-                    case PlayerChoiceData.ChoiceType.DIRECTION:
+                    case PlayerChoiceData.DIRECTION:
                         BoardController.Instance.ContinueMovementAfterIntersection((BoardController.Direction)data.choice);
                         break;
-                    case PlayerChoiceData.ChoiceType.HEARTSPACEID:
+                    case PlayerChoiceData.HEARTSPACEID:
                         GameData.heartSpaceID = data.choice;
                         break;
                     default:

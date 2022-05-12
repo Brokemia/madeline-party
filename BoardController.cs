@@ -430,7 +430,7 @@ namespace MadelineParty {
             GameData.players[playerID].ChangeStrawberries(amt);
         }
 
-        private void CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType type, int choice) {
+        private void CelesteNetSendPlayerChoice(int type, int choice) {
             CelesteNetClientModule.Instance.Client?.Send(new PlayerChoiceData {
                 Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
                 choiceType = type,
@@ -456,7 +456,7 @@ namespace MadelineParty {
         public void SkipItem() {
             // Only send out data if we are the player that skipped the item
             if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
-                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.SHOPITEM, 1);
+                CelesteNetSendPlayerChoice(PlayerChoiceData.SHOPITEM, 1);
             }
             shopItemViewing++;
             if (shopItemViewing < GameData.shopContents.Count) {
@@ -477,7 +477,7 @@ namespace MadelineParty {
         public void BuyItem() {
             // Only send out data if we are the player that bought the item
             if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
-                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.SHOPITEM, 0);
+                CelesteNetSendPlayerChoice(PlayerChoiceData.SHOPITEM, 0);
             }
             GameData.Item itemBought = GameData.shopContents[shopItemViewing];
             GameData.players[turnOrder[playerTurn]].items.Add(itemBought);
@@ -493,7 +493,7 @@ namespace MadelineParty {
         public void SkipShop() {
             // Only send out data if we are the player that skipped the shop
             if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
-                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.ENTERSHOP, 1);
+                CelesteNetSendPlayerChoice(PlayerChoiceData.ENTERSHOP, 1);
             }
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
@@ -504,7 +504,7 @@ namespace MadelineParty {
         public void EnterShop() {
             // Only send out data if we are the player that entered the shop
             if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
-                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.ENTERSHOP, 0);
+                CelesteNetSendPlayerChoice(PlayerChoiceData.ENTERSHOP, 0);
             }
             shopItemViewing = 0;
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, GameData.shopContents[shopItemViewing]);
@@ -520,7 +520,7 @@ namespace MadelineParty {
         public void SkipHeart() {
             // Only send out data if we are the player that skipped the heart
             if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
-                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEART, 1);
+                CelesteNetSendPlayerChoice(PlayerChoiceData.HEART, 1);
             }
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
@@ -531,7 +531,7 @@ namespace MadelineParty {
         public void BuyHeart() {
             // Only send out data if we are the player that bought the heart
             if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
-                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEART, 0);
+                CelesteNetSendPlayerChoice(PlayerChoiceData.HEART, 0);
             }
             ChangeStrawberries(turnOrder[playerTurn], -GameData.heartCost, 0.08f);
             GameData.players[turnOrder[playerTurn]].hearts++;
@@ -544,7 +544,7 @@ namespace MadelineParty {
                 List<BoardSpace> possibleHeartSpaces = boardSpaces.FindAll((s) => s.heartSpace && GameData.players[turnOrder[playerTurn]].token.currentSpace.ID != s.ID);
                 GameData.heartSpaceID = possibleHeartSpaces[rand.Next(possibleHeartSpaces.Count)].ID;
                 if (MadelinePartyModule.IsCelesteNetInstalled()) {
-                    CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.HEARTSPACEID, (int)GameData.heartSpaceID);
+                    CelesteNetSendPlayerChoice(PlayerChoiceData.HEARTSPACEID, (int)GameData.heartSpaceID);
                 }
             }
             Add(new Coroutine(WaitForNewHeartSpaceCoroutine()));
@@ -594,7 +594,7 @@ namespace MadelineParty {
         public void ContinueMovementAfterIntersection(Direction chosen) {
             // Only send out data if we are the player that chose the direction
             if (turnOrder[playerTurn] == GameData.realPlayerID && MadelinePartyModule.IsCelesteNetInstalled()) {
-                CelesteNetSendPlayerChoice(PlayerChoiceData.ChoiceType.DIRECTION, (int)chosen);
+                CelesteNetSendPlayerChoice(PlayerChoiceData.DIRECTION, (int)chosen);
             }
             leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
