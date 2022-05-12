@@ -73,7 +73,7 @@ namespace MadelineParty {
         }
 
         public static bool IsSIDMadelineParty(string sid) {
-            return sid.Equals("Brokemia/MadelineParty/madelineparty");
+            return sid.StartsWith("Brokemia/MadelineParty/madelineparty");
         }
 
         void Player_Update(On.Celeste.Player.orig_Update orig, Player self) {
