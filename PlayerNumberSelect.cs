@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod;
-using Celeste.Mod.CelesteNet.Client;
-using MadelineParty.CelesteNet;
+using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -34,7 +34,7 @@ namespace MadelineParty {
                     Audio.Play("event:/game/general/wall_break_ice", Position);
                 }
 
-                if (MadelinePartyModule.CelesteNetConnected()) {
+                if (MultiplayerSingleton.Instance.BackendConnected()) {
                     parent.playerNumber++;
                     if (parent.playerNumber > MAXPLAYERS) {
                         parent.playerNumber = 1;
@@ -73,7 +73,7 @@ namespace MadelineParty {
                     Audio.Play("event:/game/general/wall_break_ice", Position);
                 }
 
-                if (MadelinePartyModule.CelesteNetConnected()) {
+                if (MultiplayerSingleton.Instance.BackendConnected()) {
                     parent.playerNumber--;
                     if (parent.playerNumber < 1) {
                         parent.playerNumber = MAXPLAYERS;
@@ -142,7 +142,7 @@ namespace MadelineParty {
 
         public override void Update() {
             base.Update();
-            if (!MadelinePartyModule.CelesteNetConnected() && playerNumber != 1) {
+            if (playerNumber != 1 && !MultiplayerSingleton.Instance.BackendConnected()) {
                 playerNumber = 1;
             }
 
@@ -154,8 +154,8 @@ namespace MadelineParty {
             }
             Player player = Scene.Tracker.GetEntity<Player>();
             GameData.playerNumber = playerNumber;
-            if (MadelinePartyModule.CelesteNetConnected() && playerNumber != 1) {
-                SendPartySearch();
+            if (playerNumber != 1) {
+                MultiplayerSingleton.Instance.Send("PartyData", new Dictionary<string, object> { { "respondingTo", -1 }, { "lookingForParty", (byte)GameData.playerNumber } });
             }
 
             level.OnEndOfFrame += delegate {
@@ -169,14 +169,6 @@ namespace MadelineParty {
 
                 Leader.RestoreStrawberries(level.Tracker.GetEntity<Player>().Leader);
             };
-        }
-
-        private void SendPartySearch() {
-            CelesteNetClientModule.Instance?.Client?.Send(new PartyData {
-                Player = CelesteNetClientModule.Instance?.Client?.PlayerInfo,
-                respondingTo = CelesteNetClientModule.Instance.Client.PlayerInfo.ID,
-                lookingForParty = (byte)GameData.playerNumber
-            });
         }
 
         private DashCollisionResults OnDashed(Player player, Vector2 direction) {

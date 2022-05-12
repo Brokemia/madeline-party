@@ -3,9 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod;
-using Celeste.Mod.CelesteNet.Client;
 using Celeste.Mod.Entities;
-using MadelineParty.CelesteNet;
+using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
@@ -59,10 +58,8 @@ namespace MadelineParty {
                 float num = Calc.Random.NextFloat((float)Math.PI * 2f);
                 level.Particles.Emit(TouchSwitch.P_FireWhite, ts.Position + Calc.AngleToVector(num, 6f), num);
             }
-            if (MadelinePartyModule.CelesteNetConnected()) {
-                CelesteNetSendMinigameStatus(switchCount);
-                CelesteNetSendVector2(pos, -1);
-            }
+            MultiplayerSingleton.Instance.Send("MinigameStatusData", new Dictionary<string, object> { { "results", switchCount } });
+            MultiplayerSingleton.Instance.Send("MinigameVector2Data", new Dictionary<string, object> { { "vec", pos }, { "extra", -1 } });
             if (GameData.gnetHost && switchesOn.Count == 0) {
                 NewSwitcheDistribution(ts);
             }
@@ -83,10 +80,8 @@ namespace MadelineParty {
 
                 ActivateSwitch(newSwitch2);
             }
-            if (MadelinePartyModule.CelesteNetConnected()) {
-                foreach (Vector2 switchPos in switchesOn) {
-                    CelesteNetSendVector2(switchPos, 1);
-                }
+            foreach (Vector2 switchPos in switchesOn) {
+                MultiplayerSingleton.Instance.Send("MinigameVector2Data", new Dictionary<string, object> { { "vec", switchPos }, { "extra", 1 } });
             }
         }
 
@@ -115,11 +110,7 @@ namespace MadelineParty {
             startTime = level.RawTimeActive;
             level.Add(display = new MinigameScoreDisplay(this));
             if(GameData.gnetHost) {
-                TouchSwitch ts = switches[rand.Next(switches.Count)];
-                ActivateSwitch(ts);
-                if (MadelinePartyModule.CelesteNetConnected()) {
-                    CelesteNetSendVector2(ts.Position, 1);
-                }
+                ActivateSwitch(switches[rand.Next(switches.Count)]);
             }
         }
 
@@ -129,6 +120,7 @@ namespace MadelineParty {
             ts.Active = true;
             ts.Collidable = true;
             Add(new Coroutine(ActivateSwitchCoroutine(ts)));
+            MultiplayerSingleton.Instance.Send("MinigameVector2Data", new Dictionary<string, object> { { "vec", ts.Position }, { "extra", 1 } });
         }
 
         protected IEnumerator ActivateSwitchCoroutine(TouchSwitch ts) {
@@ -151,8 +143,8 @@ namespace MadelineParty {
             ts.Collidable = false;
         }
 
-        public override void CelesteNetReceiveVector2(Vector2 vec, int extra) {
-            base.CelesteNetReceiveVector2(vec, extra);
+        public override void MultiplayerReceiveVector2(Vector2 vec, int extra) {
+            base.MultiplayerReceiveVector2(vec, extra);
             foreach (TouchSwitch ts in switches) {
                 if (ts.Position == vec) {
                     if(extra < 0) {
@@ -186,9 +178,7 @@ namespace MadelineParty {
             level.CanRetry = false;
             Console.WriteLine("Touch Switch Count: " + switchCount);
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, switchCount));
-            if (MadelinePartyModule.CelesteNetConnected()) {
-                CelesteNetSendMinigameResults(switchCount);
-            }
+            MultiplayerSingleton.Instance.Send("MinigameEndData", new Dictionary<string, object> { { "results", switchCount } });
 
             yield return new SwapImmediately(EndMinigame(HIGHEST_WINS, () => {
                 switchCount = 0;

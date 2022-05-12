@@ -1,7 +1,6 @@
 ﻿using Celeste;
-using Celeste.Mod.CelesteNet.Client;
 using Celeste.Mod.Entities;
-using MadelineParty.CelesteNet;
+using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
@@ -31,8 +30,8 @@ namespace MadelineParty {
         }
 
         public void RollDice(Vector2 buttonPos, int playerID) {
-            if (MadelinePartyModule.CelesteNetConnected() && playerID == GameData.realPlayerID) {
-                CelesteNetSendTiebreakerRoll(buttonPos);
+            if (playerID == GameData.realPlayerID) {
+                MultiplayerSingleton.Instance.Send("TiebreakerRolledData", new Dictionary<string, object> { { "ButtonPosition", buttonPos } });
             }
 
             Add(new Coroutine(DieRollAnimation(buttonPos, playersSorted.FindIndex(pd => pd.TokenSelected == playerID), rolls[playerID])));
@@ -100,13 +99,6 @@ namespace MadelineParty {
             for(int i = 0; i < tieCount; i++) {
                 buttons[i].SetCurrentMode(LeftButton.Modes.Dice);
             }
-        }
-
-        private void CelesteNetSendTiebreakerRoll(Vector2 buttonPos) {
-            CelesteNetClientModule.Instance.Client?.Send(new TiebreakerRolledData {
-                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
-                ButtonPosition = buttonPos
-            });
         }
 
     }

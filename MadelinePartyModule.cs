@@ -4,8 +4,7 @@ using System;
 using System.Linq;
 using Celeste.Mod;
 using MonoMod.RuntimeDetour;
-using Celeste.Mod.CelesteNet.Client;
-using Celeste.Mod.CelesteNet.DataTypes;
+using MadelineParty.Multiplayer;
 
 // TODO minigames for most bounces of oshiro, seekers, snowballs, etc...
 // TODO survive the longest minigames
@@ -82,9 +81,9 @@ namespace MadelineParty {
             orig(self);
 
             if (l != null && IsSIDMadelineParty(l.Session.Area.GetSID())) {
-                if (celesteNetInstalled) {
+                if (MultiplayerSingleton.Instance.BackendInstalled()) {
                     // If the player disconnects from a multiplayer game
-                    if (GameData.playerNumber > 1 && !celesteNetConnected) {
+                    if (GameData.playerNumber > 1 && !MultiplayerSingleton.Instance.BackendConnected()) {
                         Player player = level.Tracker.GetEntity<Player>();
                         sendToStart(player);
                     }
@@ -95,12 +94,13 @@ namespace MadelineParty {
                         Player player = l.Tracker.GetEntity<Player>();
                         sendToStart(player);
                     } else {
-                        foreach (uint id in GameData.celestenetIDs) {
-                            if (playerInStartRoom(id)) {
-                                Player player = l.Tracker.GetEntity<Player>();
-                                sendToStart(player);
-                            }
-                        }
+                        // FIXME Use new Multiplayer
+                        //foreach (uint id in GameData.celestenetIDs) {
+                        //    if (playerInStartRoom(id)) {
+                        //        Player player = l.Tracker.GetEntity<Player>();
+                        //        sendToStart(player);
+                        //    }
+                        //}
                     }
                 }
 
@@ -111,13 +111,13 @@ namespace MadelineParty {
 
         }
 
-        private bool playerInStartRoom(uint id) {
-            if (CelesteNetClientModule.Instance?.Client?.Data != null && CelesteNetClientModule.Instance.Client.Data.TryGetRef(id, out DataPlayerState state)) {
-                Console.WriteLine(state + " " + state.Level);
-                return state?.Level?.Equals(START_ROOM) ?? true;
-            }
-            return false;
-        }
+        //private bool playerInStartRoom(uint id) {
+        //    if (CelesteNetClientModule.Instance?.Client?.Data != null && CelesteNetClientModule.Instance.Client.Data.TryGetRef(id, out DataPlayerState state)) {
+        //        Console.WriteLine(state + " " + state.Level);
+        //        return state?.Level?.Equals(START_ROOM) ?? true;
+        //    }
+        //    return false;
+        //}
 
         private void sendToStart(Player p) {
             level.OnEndOfFrame += delegate {

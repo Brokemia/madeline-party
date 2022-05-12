@@ -8,7 +8,7 @@ using Logger = Celeste.Mod.Logger;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace MadelineParty.CelesteNet {
+namespace MadelineParty.Multiplayer.CelesteNet {
     public class CelesteNetMadelinePartyComponent : CelesteNetGameComponent {
         public CelesteNetMadelinePartyComponent(CelesteNetClientContext context, Game game) : base(context, game) {
             Visible = false;
@@ -20,10 +20,10 @@ namespace MadelineParty.CelesteNet {
             // Check if they want the same party size, our versions match, we aren't full up, they aren't in our party, and they aren't us
             if (data.lookingForParty == GameData.playerNumber && data.version.Equals(MadelinePartyModule.Instance.Metadata.VersionString) && GameData.celestenetIDs.Count < GameData.playerNumber - 1 && !GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
                 // If they think they're the host and are broadcasting
-                if (data.Player.ID == data.respondingTo && data.partyHost) {
+                if (data.respondingTo < 0 && data.partyHost) {
                     Client.Send(new PartyData {
                         Player = CelesteNetClientModule.Instance?.Client?.PlayerInfo,
-                        respondingTo = data.Player.ID,
+                        respondingTo = (int)data.Player.ID,
                         lookingForParty = (byte)GameData.playerNumber,
                         partyHost = GameData.gnetHost
                     });
@@ -39,7 +39,7 @@ namespace MadelineParty.CelesteNet {
                     if (GameData.currentPlayerSelection != null) {
                         Client.Send(new PartyData {
                             Player = CelesteNetClientModule.Instance?.Client?.PlayerInfo,
-                            respondingTo = data.Player.ID,
+                            respondingTo = (int)data.Player.ID,
                             playerSelectTrigger = GameData.currentPlayerSelection.playerID
                         });
                     }
@@ -94,7 +94,7 @@ namespace MadelineParty.CelesteNet {
                 if (!MadelinePartyModule.Instance.level.Session.Level.Equals(MadelinePartyModule.MAIN_ROOM)) {
                     // Activate it once in the right room
                     // This is so players that roll before everyone shows up don't break everything
-                    BoardController.delayedDieRoll = data;
+                    BoardController.delayedDieRoll = new Tuple<uint, int[]>(data.Player.ID, data.rolls);
                 } else {
                     if (BoardController.Instance.isWaitingOnPlayer(GameData.playerSelectTriggers[data.Player.ID])) {
                         string rollString = "";
@@ -116,31 +116,31 @@ namespace MadelineParty.CelesteNet {
             if (GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
                 Logger.Log("MadelineParty", "Choice detected of type " + data.choiceType + " with value " + data.choice);
                 switch (data.choiceType) {
-                    case PlayerChoiceData.HEART:
+                    case "HEART":
                         if (data.choice == 0) {
                             BoardController.Instance.BuyHeart();
                         } else {
                             BoardController.Instance.SkipHeart();
                         }
                         break;
-                    case PlayerChoiceData.ENTERSHOP:
+                    case "ENTERSHOP":
                         if (data.choice == 0) {
                             BoardController.Instance.EnterShop();
                         } else {
                             BoardController.Instance.SkipShop();
                         }
                         break;
-                    case PlayerChoiceData.SHOPITEM:
+                    case "SHOPITEM":
                         if (data.choice == 0) {
                             BoardController.Instance.BuyItem();
                         } else {
                             BoardController.Instance.SkipItem();
                         }
                         break;
-                    case PlayerChoiceData.DIRECTION:
+                    case "DIRECTION":
                         BoardController.Instance.ContinueMovementAfterIntersection((BoardController.Direction)data.choice);
                         break;
-                    case PlayerChoiceData.HEARTSPACEID:
+                    case "HEARTSPACEID":
                         GameData.heartSpaceID = data.choice;
                         break;
                     default:
@@ -179,7 +179,7 @@ namespace MadelineParty.CelesteNet {
             if (GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
                 MinigameEntity mge;
                 if((mge = Engine.Scene?.Tracker.GetEntity<MinigameEntity>()) != null) {
-                    mge.CelesteNetReceiveVector2(data.vec, data.extra);
+                    mge.MultiplayerReceiveVector2(data.vec, data.extra);
                 }
             }
         }

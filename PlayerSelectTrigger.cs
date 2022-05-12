@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Celeste;
-using Celeste.Mod.CelesteNet.Client;
-using MadelineParty.CelesteNet;
+using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -22,21 +21,11 @@ namespace MadelineParty {
             AddTag(Tags.FrozenUpdate);
         }
 
-        private void CelesteNetSendOnEnterExit(int status) {
-            CelesteNetClientModule.Instance?.Client?.Send(new PartyData {
-                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
-                respondingTo = CelesteNetClientModule.Instance.Client.PlayerInfo.ID,
-                playerSelectTrigger = status
-            });
-        }
-
         public override void OnEnter(Player player) {
             base.OnEnter(player);
             occupied = true;
             GameData.currentPlayerSelection = this;
-            if (MadelinePartyModule.CelesteNetConnected()) {
-                CelesteNetSendOnEnterExit(playerID);
-            }
+            MultiplayerSingleton.Instance.Send("PartyData", new Dictionary<string, object> { { "respondingTo", -1 }, { "playerSelectTrigger", playerID } });
 
             // -1 so it doesn't count me as a player
             int left = GameData.playerNumber - 1;
@@ -56,8 +45,8 @@ namespace MadelineParty {
             }
         }
 
-        private void CelesteNetOccupiedAction() {
-            GameData.players[playerID] = new PlayerData(playerID, CelesteNetClientModule.Instance.Client.PlayerInfo.ID);
+        private void MultiplayerOccupiedAction() {
+            GameData.players[playerID] = new PlayerData(playerID, MultiplayerSingleton.Instance.GetPlayerID());
             foreach (KeyValuePair<uint, int> pair in GameData.playerSelectTriggers) {
                 if (pair.Value != playerID && pair.Value >= 0) {
                     GameData.players[pair.Value] = new PlayerData(pair.Value, pair.Key);
@@ -66,11 +55,7 @@ namespace MadelineParty {
             // Host determines the random seeds for the game
             // Seeds are determined in advance to avoid duplicate rolls when it matters
             if (GameData.gnetHost) {
-                CelesteNetClientModule.Instance.Client?.Send(new RandomSeedData {
-                    Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
-                    turnOrderSeed = GameData.turnOrderSeed,
-                    tieBreakerSeed = GameData.tieBreakerSeed
-                });
+                MultiplayerSingleton.Instance.Send("RandomSeedData", new Dictionary<string, object> { { "turnOrderSeed", GameData.turnOrderSeed }, { "tieBreakerSeed", GameData.tieBreakerSeed } });
             }
         }
 
@@ -83,8 +68,8 @@ namespace MadelineParty {
             GameData.turnOrderSeed = (uint)rand.Next(2, 100000);
             GameData.tieBreakerSeed = (uint)rand.Next(2, 100000);
             BoardController.generateTurnOrderRolls();
-            if (MadelinePartyModule.CelesteNetConnected()) {
-                CelesteNetOccupiedAction();
+            if (MultiplayerSingleton.Instance.BackendConnected()) {
+                MultiplayerOccupiedAction();
             } else {
                 GameData.players[playerID] = new PlayerData(playerID);
             }
@@ -120,9 +105,7 @@ namespace MadelineParty {
             base.OnLeave(player);
             if (GameData.realPlayerID == -1) {
                 occupied = false;
-                if (MadelinePartyModule.CelesteNetConnected()) {
-                    CelesteNetSendOnEnterExit(-1);
-                }
+                MultiplayerSingleton.Instance.Send("PartyData", new Dictionary<string, object> { { "respondingTo", -1 }, { "playerSelectTrigger", -1 } });
                 GameData.currentPlayerSelection = null;
             }
         }

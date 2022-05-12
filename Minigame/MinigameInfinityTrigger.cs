@@ -5,9 +5,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Celeste;
 using Celeste.Mod;
-using Celeste.Mod.CelesteNet.Client;
-using Celeste.Mod.CelesteNet.Client.Components;
 using Celeste.Mod.Entities;
+using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -147,8 +146,8 @@ namespace MadelineParty {
                 Teleport(player, xDiff);
             }
 
-            if(everyOtherFrame && MadelinePartyModule.CelesteNetConnected()) {
-                CelesteNetSendMinigameStatus(dist);
+            if(everyOtherFrame) {
+                MultiplayerSingleton.Instance.Send("MinigameStatusData", new Dictionary<string, object> { { "results", dist } });
             }
             everyOtherFrame = !everyOtherFrame;
 
@@ -180,9 +179,7 @@ namespace MadelineParty {
             dist = calculateDist(loops, player.X);
             Console.WriteLine("Minigame Distance: " + dist);
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, dist));
-            if (MadelinePartyModule.CelesteNetConnected()) {
-                CelesteNetSendMinigameResults(dist);
-            }
+            MultiplayerSingleton.Instance.Send("MinigameEndData", new Dictionary<string, object> { { "results", dist } });
 
             yield return new SwapImmediately(EndMinigame(HIGHEST_WINS, () => {
                 dist = 0;

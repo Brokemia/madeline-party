@@ -8,15 +8,9 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             DataID = "mPartyPlayerChoice";
         }
 
-        public const int HEART = 0;
-        public const int HEARTSPACEID = 1;
-        public const int ENTERSHOP = 2;
-        public const int SHOPITEM = 3;
-        public const int DIRECTION = 4;
-
         public DataPlayerInfo Player;
 
-        public int choiceType;
+        public string choiceType;
         // For buttons, 0 = left, 1 = right
         // For Direction, UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3
         public int choice;
@@ -36,7 +30,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         }
 
         protected override void Read(CelesteNetBinaryReader reader) {
-            choiceType = reader.ReadInt32();
+            choiceType = reader.ReadString();
             choice = reader.ReadInt32();
         }
 

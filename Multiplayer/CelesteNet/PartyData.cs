@@ -13,8 +13,8 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         public string version = MadelinePartyModule.Instance.Metadata.VersionString;
         public int playerSelectTrigger = -2;
 
-        // If respondingTo == playerID, it's a broadcast to anyone
-        public uint respondingTo;
+        // If respondingTo == -1, it's a broadcast to anyone
+        public int respondingTo;
         public DataPlayerInfo Player;
 
         public bool partyHost = true;
@@ -40,7 +40,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             lookingForParty = reader.ReadByte();
             version = reader.ReadNetString();
             playerSelectTrigger = reader.ReadInt32();
-            respondingTo = reader.ReadUInt32();
+            respondingTo = reader.ReadInt32();
             partyHost = reader.ReadBoolean();
         }
 

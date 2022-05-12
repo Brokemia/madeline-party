@@ -2,8 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using Celeste;
-using Celeste.Mod.CelesteNet.Client;
-using MadelineParty.CelesteNet;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -47,6 +45,7 @@ namespace MadelineParty {
             // FIXME hackfix for invis
             if(!didRespawn) {
                 didRespawn = true;
+                startTime = level.RawTimeActive;
                 Player player = level.Tracker.GetEntity<Player>();
                 player.Die(Vector2.Zero, true, false);
                 return;
@@ -88,29 +87,7 @@ namespace MadelineParty {
 
         }
 
-        protected void CelesteNetSendMinigameResults(uint results) {
-            CelesteNetClientModule.Instance.Client?.Send(new MinigameEndData {
-                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
-                results = results
-            });
-        }
-
-        protected void CelesteNetSendMinigameStatus(uint status) {
-            CelesteNetClientModule.Instance.Client?.Send(new MinigameStatusData {
-                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
-                results = status
-            });
-        }
-
-        protected void CelesteNetSendVector2(Vector2 vec, int extra = 0) {
-            CelesteNetClientModule.Instance.Client?.Send(new MinigameVector2Data {
-                Player = CelesteNetClientModule.Instance.Client.PlayerInfo,
-                vec = vec,
-                extra = extra
-            });
-        }
-
-        public virtual void CelesteNetReceiveVector2(Vector2 vec, int extra) {
+        public virtual void MultiplayerReceiveVector2(Vector2 vec, int extra) {
 
         }
 
