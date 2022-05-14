@@ -655,13 +655,10 @@ namespace MadelineParty {
                 level.Session.Level = GameData.minigame.Name;
                 level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
                 level.LoadLevel(Player.IntroTypes.None);
+                level.Session.Audio.Music.Event = "event:/music/remix/01_forsaken_city";
 
                 Leader.RestoreStrawberries(player.Leader);
             };
-        }
-
-        public bool IsLandableSpace(char space) {
-            return space != ' ';
         }
 
         // Returns which number player this is, ignoring unpicked characters
