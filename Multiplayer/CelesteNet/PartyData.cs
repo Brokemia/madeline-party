@@ -1,5 +1,6 @@
 ﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
+using MadelineParty.Multiplayer.General;
 using System.Collections.Generic;
 
 namespace MadelineParty.Multiplayer.CelesteNet {
@@ -8,24 +9,18 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             DataID = "mPartyParty";
         }
 
-        // The size of the party being looked for
-        public byte lookingForParty;
-        public string version = MadelinePartyModule.Instance.Metadata.VersionString;
-        public int playerSelectTrigger = -2;
-
-        // If respondingTo == -1, it's a broadcast to anyone
-        public int respondingTo;
         public DataPlayerInfo Player;
 
-        public bool partyHost = true;
+        private Party data;
 
-        public void Initialize(Dictionary<string, object> args) {
-            lookingForParty = args.OrDefault("lookingForParty", lookingForParty);
-            version = args.OrDefault("version", version);
-            playerSelectTrigger = args.OrDefault("playerSelectTrigger", playerSelectTrigger);
-            respondingTo = args.OrDefault("respondingTo", respondingTo);
-            partyHost = args.OrDefault("partyHost", partyHost);
+        public Party Data {
+            get {
+                data.ID = Player.ID;
+                return data;
+            }
         }
+
+        public void Initialize(MPData args) => data = args as Party;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -37,19 +32,19 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         }
 
         protected override void Read(CelesteNetBinaryReader reader) {
-            lookingForParty = reader.ReadByte();
-            version = reader.ReadNetString();
-            playerSelectTrigger = reader.ReadInt32();
-            respondingTo = reader.ReadInt32();
-            partyHost = reader.ReadBoolean();
+            data.lookingForParty = reader.ReadByte();
+            data.version = reader.ReadNetString();
+            data.playerSelectTrigger = reader.ReadInt32();
+            data.respondingTo = reader.ReadInt32();
+            data.partyHost = reader.ReadBoolean();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(lookingForParty);
-            writer.WriteNetString(version);
-            writer.Write(playerSelectTrigger);
-            writer.Write(respondingTo);
-            writer.Write(partyHost);
+            writer.Write(data.lookingForParty);
+            writer.WriteNetString(data.version);
+            writer.Write(data.playerSelectTrigger);
+            writer.Write(data.respondingTo);
+            writer.Write(data.partyHost);
         }
     }
 }

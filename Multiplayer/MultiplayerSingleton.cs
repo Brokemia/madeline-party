@@ -2,6 +2,7 @@
 using Celeste.Mod;
 using Celeste.Mod.CelesteNet.Client;
 using Celeste.Mod.CelesteNet.DataTypes;
+using MadelineParty.Multiplayer.General;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
@@ -44,7 +45,7 @@ namespace MadelineParty.Multiplayer {
 
         private MultiplayerSingleton() { }
 
-        public void Send(string id, Dictionary<string, object> args) {
+        public void Send(string id, MPData args) {
             if(BackendConnected()) {
                 MultiplayerData data = GetData(id);
                 data.Initialize(args);

@@ -1,5 +1,6 @@
 ﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
+using MadelineParty.Multiplayer.General;
 using System.Collections.Generic;
 
 namespace MadelineParty.Multiplayer.CelesteNet {
@@ -10,15 +11,16 @@ namespace MadelineParty.Multiplayer.CelesteNet {
 
         public DataPlayerInfo Player;
 
-        // The minigame selected
-        public int choice;
-        // The time to start the minigame
-        public long gameStart;
+        private MinigameStart data;
 
-        public void Initialize(Dictionary<string, object> args) {
-            choice = args.OrDefault("choice", choice);
-            gameStart = args.OrDefault("gameStart", gameStart);
+        public MinigameStart Data {
+            get {
+                data.ID = Player.ID;
+                return data;
+            }
         }
+
+        public void Initialize(MPData args) => data = args as MinigameStart;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -30,13 +32,13 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         }
 
         protected override void Read(CelesteNetBinaryReader reader) {
-            choice = reader.ReadInt32();
-            gameStart = reader.ReadInt64();
+            data.choice = reader.ReadInt32();
+            data.gameStart = reader.ReadInt64();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(choice);
-            writer.Write(gameStart);
+            writer.Write(data.choice);
+            writer.Write(data.gameStart);
         }
     }
 }

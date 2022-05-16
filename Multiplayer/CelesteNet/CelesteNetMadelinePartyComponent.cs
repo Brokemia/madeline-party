@@ -7,6 +7,7 @@ using Celeste.Mod.CelesteNet.DataTypes;
 using Logger = Celeste.Mod.Logger;
 using Microsoft.Xna.Framework;
 using Monocle;
+using MadelineParty.Multiplayer.General;
 
 namespace MadelineParty.Multiplayer.CelesteNet {
     public class CelesteNetMadelinePartyComponent : CelesteNetGameComponent {
@@ -16,17 +17,17 @@ namespace MadelineParty.Multiplayer.CelesteNet {
 
         public void Handle(CelesteNetConnection con, PartyData data) {
             if (!MadelinePartyModule.IsSIDMadelineParty(MadelinePartyModule.Instance.level.Session.Area.GetSID())) return;
-            Logger.Log("MadelineParty", "Recieved PartyData. My ID: " + Client.PlayerInfo.ID + " Player ID: " + data.Player.ID + " Looking for party of size " + data.lookingForParty);
+            Logger.Log("MadelineParty", "Recieved PartyData. My ID: " + Client.PlayerInfo.ID + " Player ID: " + data.Player.ID + " Looking for party of size " + data.Data.lookingForParty);
             // Check if they want the same party size, our versions match, we aren't full up, they aren't in our party, and they aren't us
-            if (data.lookingForParty == GameData.playerNumber && data.version.Equals(MadelinePartyModule.Instance.Metadata.VersionString) && GameData.celestenetIDs.Count < GameData.playerNumber - 1 && !GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
+            if (data.Data.lookingForParty == GameData.playerNumber && data.Data.version.Equals(MadelinePartyModule.Instance.Metadata.VersionString) && GameData.celestenetIDs.Count < GameData.playerNumber - 1 && !GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
                 // If they think they're the host and are broadcasting
-                if (data.respondingTo < 0 && data.partyHost) {
-                    Client.Send(new PartyData {
-                        Player = CelesteNetClientModule.Instance?.Client?.PlayerInfo,
+                if (data.Data.respondingTo < 0 && data.Data.partyHost) {
+                    MultiplayerSingleton.Instance.Send("PartyData", new Party {
                         respondingTo = (int)data.Player.ID,
                         lookingForParty = (byte)GameData.playerNumber,
                         partyHost = GameData.gnetHost
                     });
+
                     GameData.celestenetIDs.Add(data.Player.ID);
 
                     string joinMsg = data.Player.DisplayName + " has joined the party!";
@@ -37,13 +38,12 @@ namespace MadelineParty.Multiplayer.CelesteNet {
                     Context.Chat.Log.Add(chat);
                     Context.Chat.LogSpecial.Add(chat);
                     if (GameData.currentPlayerSelection != null) {
-                        Client.Send(new PartyData {
-                            Player = CelesteNetClientModule.Instance?.Client?.PlayerInfo,
+                        MultiplayerSingleton.Instance.Send("PartyData", new Party {
                             respondingTo = (int)data.Player.ID,
                             playerSelectTrigger = GameData.currentPlayerSelection.playerID
                         });
                     }
-                } else if (data.respondingTo == Client.PlayerInfo.ID) {
+                } else if (data.Data.respondingTo == Client.PlayerInfo.ID) {
                     GameData.gnetHost = false;
                     GameData.celestenetIDs.Add(data.Player.ID);
                     string joinMsg = data.Player.DisplayName + " has joined the party!";
@@ -57,14 +57,14 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             }
 
             // If the other player entered a player select trigger
-            if (data.playerSelectTrigger != -2 && GameData.celestenetIDs.Contains(data.Player.ID) && (data.respondingTo == data.Player.ID || data.respondingTo == Client.PlayerInfo.ID)) {
+            if (data.Data.playerSelectTrigger != -2 && GameData.celestenetIDs.Contains(data.Player.ID) && (data.Data.respondingTo == data.Player.ID || data.Data.respondingTo == Client.PlayerInfo.ID)) {
                 //if (chunk.playerSelectTrigger == -1)
                 //{
                 //    GameData.playerSelectTriggers.Remove(chunk.playerID);
                 //}
                 //else
                 //{
-                GameData.playerSelectTriggers[data.Player.ID] = data.playerSelectTrigger;
+                GameData.playerSelectTriggers[data.Player.ID] = data.Data.playerSelectTrigger;
                 if (GameData.currentPlayerSelection != null) {
                     // -1 so it doesn't count me as a player
                     int left = GameData.playerNumber - 1;
@@ -94,18 +94,18 @@ namespace MadelineParty.Multiplayer.CelesteNet {
                 if (!MadelinePartyModule.Instance.level.Session.Level.Equals(MadelinePartyModule.MAIN_ROOM)) {
                     // Activate it once in the right room
                     // This is so players that roll before everyone shows up don't break everything
-                    BoardController.delayedDieRoll = new Tuple<uint, int[]>(data.Player.ID, data.rolls);
+                    BoardController.delayedDieRoll = new Tuple<uint, int[]>(data.Player.ID, data.Data.rolls);
                 } else {
                     if (BoardController.Instance.isWaitingOnPlayer(GameData.playerSelectTriggers[data.Player.ID])) {
                         string rollString = "";
-                        foreach (int i in data.rolls) {
+                        foreach (int i in data.Data.rolls) {
                             rollString += i + ", ";
                         }
                         Logger.Log("MadelineParty", "Received die roll from player " + data.Player.ID + ". Rolls: " + rollString);
 
-                        if (data.rolls.Length == 2)
+                        if (data.Data.rolls.Length == 2)
                             GameData.players[GameData.playerSelectTriggers[data.Player.ID]].items.Remove(GameData.Item.DOUBLEDICE);
-                        BoardController.Instance.RollDice(GameData.playerSelectTriggers[data.Player.ID], data.rolls);
+                        BoardController.Instance.RollDice(GameData.playerSelectTriggers[data.Player.ID], data.Data.rolls);
                     }
                 }
             }
@@ -114,37 +114,37 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         public void Handle(CelesteNetConnection con, PlayerChoiceData data) {
             // If another player in our party has made a choice
             if (GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
-                Logger.Log("MadelineParty", "Choice detected of type " + data.choiceType + " with value " + data.choice);
-                switch (data.choiceType) {
+                Logger.Log("MadelineParty", "Choice detected of type " + data.Data.choiceType + " with value " + data.Data.choice);
+                switch (data.Data.choiceType) {
                     case "HEART":
-                        if (data.choice == 0) {
+                        if (data.Data.choice == 0) {
                             BoardController.Instance.BuyHeart();
                         } else {
                             BoardController.Instance.SkipHeart();
                         }
                         break;
                     case "ENTERSHOP":
-                        if (data.choice == 0) {
+                        if (data.Data.choice == 0) {
                             BoardController.Instance.EnterShop();
                         } else {
                             BoardController.Instance.SkipShop();
                         }
                         break;
                     case "SHOPITEM":
-                        if (data.choice == 0) {
+                        if (data.Data.choice == 0) {
                             BoardController.Instance.BuyItem();
                         } else {
                             BoardController.Instance.SkipItem();
                         }
                         break;
                     case "DIRECTION":
-                        BoardController.Instance.ContinueMovementAfterIntersection((BoardController.Direction)data.choice);
+                        BoardController.Instance.ContinueMovementAfterIntersection((BoardController.Direction)data.Data.choice);
                         break;
                     case "HEARTSPACEID":
-                        GameData.heartSpaceID = data.choice;
+                        GameData.heartSpaceID = data.Data.choice;
                         break;
                     default:
-                        Logger.Log("MadelineParty", "Unhandled choice (" + data.choiceType + ") from " + data.Player.FullName + "#" + data.Player.ID);
+                        Logger.Log("MadelineParty", "Unhandled choice (" + data.Data.choiceType + ") from " + data.Player.FullName + "#" + data.Player.ID);
                         break;
                 }
 
@@ -154,23 +154,23 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         public void Handle(CelesteNetConnection con, MinigameStartData data) {
             // If we've received information about a minigame starting from another player in our party
             if (GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
-                BoardController.Instance.ChoseMinigame(data.choice, data.gameStart);
+                BoardController.Instance.ChoseMinigame(data.Data.choice, data.Data.gameStart);
             }
         }
 
         public void Handle(CelesteNetConnection con, MinigameEndData data) {
             // If another player in our party has beaten a minigame
             if (GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
-                GameData.minigameResults.Add(new Tuple<int, uint>(GameData.playerSelectTriggers[data.Player.ID], data.results));
-                Logger.Log("MadelineParty", "Player " + data.Player.FullName + " has finished the minigame with a result of " + data.results);
+                GameData.minigameResults.Add(new Tuple<int, uint>(GameData.playerSelectTriggers[data.Player.ID], data.Data.results));
+                Logger.Log("MadelineParty", "Player " + data.Player.FullName + " has finished the minigame with a result of " + data.Data.results);
             }
         }
 
         public void Handle(CelesteNetConnection con, MinigameStatusData data) {
             // If another player in our party is sending out a minigame status update
             if (GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
-                GameData.minigameStatus[GameData.playerSelectTriggers[data.Player.ID]] = data.results;
-                Logger.Log("MadelineParty", "Player " + data.Player.FullName + " has updated their minigame status with a result of " + data.results);
+                GameData.minigameStatus[GameData.playerSelectTriggers[data.Player.ID]] = data.Data.results;
+                Logger.Log("MadelineParty", "Player " + data.Player.FullName + " has updated their minigame status with a result of " + data.Data.results);
             }
         }
 
@@ -179,7 +179,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             if (GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
                 MinigameEntity mge;
                 if((mge = Engine.Scene?.Tracker.GetEntity<MinigameEntity>()) != null) {
-                    mge.MultiplayerReceiveVector2(data.vec, data.extra);
+                    mge.MultiplayerReceiveVector2(data.Data.vec, data.Data.extra);
                 }
             }
         }
@@ -187,8 +187,8 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         public void Handle(CelesteNetConnection con, RandomSeedData data) {
             // If another player in our party is distributing the randomization seeds
             if (GameData.celestenetIDs.Contains(data.Player.ID) && data.Player.ID != Client.PlayerInfo.ID) {
-                GameData.turnOrderSeed = data.turnOrderSeed;
-                GameData.tieBreakerSeed = data.tieBreakerSeed;
+                GameData.turnOrderSeed = data.Data.turnOrderSeed;
+                GameData.tieBreakerSeed = data.Data.tieBreakerSeed;
                 BoardController.generateTurnOrderRolls();
             }
         }
@@ -201,9 +201,9 @@ namespace MadelineParty.Multiplayer.CelesteNet {
                 }
                 foreach(LeftButton button in level.Entities.FindAll<LeftButton>()) {
                     // Find a close button
-                    if((button.Position - data.ButtonPosition).LengthSquared() < 1) {
+                    if((button.Position - data.Data.ButtonPosition).LengthSquared() < 1) {
                         button.SetCurrentMode(LeftButton.Modes.Inactive);
-                        level.Entities.FindFirst<TiebreakerController>()?.RollDice(data.ButtonPosition, GameData.playerSelectTriggers[data.Player.ID]);
+                        level.Entities.FindFirst<TiebreakerController>()?.RollDice(data.Data.ButtonPosition, GameData.playerSelectTriggers[data.Player.ID]);
                         return;
                     }
                 }

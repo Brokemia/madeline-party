@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Celeste.Mod.CelesteNet;
+﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
-using Microsoft.Xna.Framework;
+using MadelineParty.Multiplayer.General;
 
 namespace MadelineParty.Multiplayer.CelesteNet {
     public class MinigameVector2Data : DataType<MinigameVector2Data>, MultiplayerData {
@@ -12,16 +9,16 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         }
         public DataPlayerInfo Player;
 
-        // Can represent touch switches etc
-        public Vector2 vec;
+        private MinigameVector2 data;
 
-        // Any extra data, used for on/off in touch switch game
-        public int extra = 0;
-
-        public void Initialize(Dictionary<string, object> args) {
-            vec = args.OrDefault("vec", vec);
-            extra = args.OrDefault("extra", extra);
+        public MinigameVector2 Data {
+            get {
+                data.ID = Player.ID;
+                return data;
+            }
         }
+
+        public void Initialize(MPData args) => data = args as MinigameVector2;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -33,13 +30,13 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         }
 
         protected override void Read(CelesteNetBinaryReader reader) {
-            vec = reader.ReadVector2();
-            extra = reader.ReadInt32();
+            data.vec = reader.ReadVector2();
+            data.extra = reader.ReadInt32();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(vec);
-            writer.Write(extra);
+            writer.Write(data.vec);
+            writer.Write(data.extra);
         }
     }
 }

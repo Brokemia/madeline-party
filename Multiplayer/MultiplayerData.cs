@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using MadelineParty.Multiplayer.General;
 
 namespace MadelineParty.Multiplayer {
-    interface MultiplayerData {
-        void Initialize(Dictionary<string, object> args);
+    public interface MultiplayerData {
+        public void Initialize(MPData data);
     }
 }
