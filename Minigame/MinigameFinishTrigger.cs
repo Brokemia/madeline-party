@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Celeste;
 using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -39,7 +40,7 @@ namespace MadelineParty {
                 kevin.deactivated = true;
             }
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, (uint)timeElapsed));
-            MultiplayerSingleton.Instance.Send("MinigameEndData", new Dictionary<string, object> { { "results", (uint)timeElapsed } });
+            MultiplayerSingleton.Instance.Send(new MinigameEnd { results = (uint)timeElapsed });
 
             Add(new Coroutine(EndMinigame(LOWEST_WINS, () => {})));
         }

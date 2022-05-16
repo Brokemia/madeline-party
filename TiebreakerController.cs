@@ -1,6 +1,7 @@
 ﻿using Celeste;
 using Celeste.Mod.Entities;
 using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
@@ -31,7 +32,7 @@ namespace MadelineParty {
 
         public void RollDice(Vector2 buttonPos, int playerID) {
             if (playerID == GameData.realPlayerID) {
-                MultiplayerSingleton.Instance.Send("TiebreakerRolledData", new Dictionary<string, object> { { "ButtonPosition", buttonPos } });
+                MultiplayerSingleton.Instance.Send(new TiebreakerRolled { ButtonPosition = buttonPos });
             }
 
             Add(new Coroutine(DieRollAnimation(buttonPos, playersSorted.FindIndex(pd => pd.TokenSelected == playerID), rolls[playerID])));
@@ -98,6 +99,28 @@ namespace MadelineParty {
             List<LeftButton> buttons = level.Entities.FindAll<LeftButton>().OrderBy(a => a.X).ToList();
             for(int i = 0; i < tieCount; i++) {
                 buttons[i].SetCurrentMode(LeftButton.Modes.Dice);
+            }
+        }
+
+        public static void Load() {
+            MultiplayerSingleton.Instance.RegisterHandler<TiebreakerRolled>(HandleTiebreakerRolled);
+        }
+
+        private static void HandleTiebreakerRolled(MPData data) {
+            if (data is not TiebreakerRolled rolled) return;
+            // If another player in our party has rolled a tiebreaker die
+            if (GameData.celestenetIDs.Contains(rolled.ID) && rolled.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+                if (Engine.Scene is not Level level) {
+                    return;
+                }
+                foreach (LeftButton button in level.Entities.FindAll<LeftButton>()) {
+                    // Find a close button
+                    if ((button.Position - rolled.ButtonPosition).LengthSquared() < 1) {
+                        button.SetCurrentMode(LeftButton.Modes.Inactive);
+                        level.Entities.FindFirst<TiebreakerController>()?.RollDice(rolled.ButtonPosition, GameData.playerSelectTriggers[rolled.ID]);
+                        return;
+                    }
+                }
             }
         }
 

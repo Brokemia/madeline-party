@@ -16,6 +16,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         public Party Data {
             get {
                 data.ID = Player.ID;
+                data.DisplayName = Player.DisplayName;
                 return data;
             }
         }

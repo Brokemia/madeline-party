@@ -14,6 +14,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         public MinigameVector2 Data {
             get {
                 data.ID = Player.ID;
+                data.DisplayName = Player.DisplayName;
                 return data;
             }
         }

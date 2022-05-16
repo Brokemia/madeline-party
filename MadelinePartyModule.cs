@@ -3,8 +3,9 @@ using Celeste;
 using System;
 using System.Linq;
 using Celeste.Mod;
-using MonoMod.RuntimeDetour;
 using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
+using System.Collections.Generic;
 
 // TODO minigames for most bounces of oshiro, seekers, snowballs, etc...
 // TODO survive the longest minigames
@@ -35,9 +36,7 @@ namespace MadelineParty {
             // Stuff that runs orig(self) always
             /* ************************************************ */
             Everest.Events.Level.OnLoadEntity += Level_OnLoadEntity;
-            Everest.Events.Level.OnLoadLevel += (level, playerIntro, isFromLoader) => {
-                this.level = level;
-            };
+            Everest.Events.Level.OnLoadLevel += (level, playerIntro, isFromLoader) => this.level = level;
             DreamBlockRNGSyncer.Load();
             MinigameInfinityTrigger.Load();
             On.Celeste.LevelEnter.Go += (orig, session, fromSaveData) => {
@@ -62,14 +61,12 @@ namespace MadelineParty {
                 orig(self);
             };
             MinigameSwitchGatherer.Load();
-
-            // Stuff that doesn't always run orig(self)
-            /* ******************************************* */
-            using (new DetourContext("MadelineParty") {
-                After = { "*" }
-            }) {
-
-            }
+            BoardController.Load();
+            TiebreakerController.Load();
+            MultiplayerSingleton.Instance.RegisterHandler<Party>(HandleParty);
+            MultiplayerSingleton.Instance.RegisterHandler<MinigameEnd>(HandleMinigameEnd);
+            MultiplayerSingleton.Instance.RegisterHandler<MinigameStatus>(HandleMinigameStatus);
+            MultiplayerSingleton.Instance.RegisterHandler<RandomSeed>(HandleRandomSeed);
         }
 
         public static bool IsSIDMadelineParty(string sid) {
@@ -181,6 +178,7 @@ namespace MadelineParty {
         // Optional, do anything requiring either the Celeste or mod content here.
         [Obsolete]
         public override void LoadContent() {
+            MultiplayerSingleton.Instance.LoadContent();
             BoardController.LoadContent();
         }
 
@@ -189,6 +187,99 @@ namespace MadelineParty {
             Everest.Events.Level.OnLoadEntity -= Level_OnLoadEntity;
             On.Celeste.Player.Update -= Player_Update;
             MinigameSwitchGatherer.Unload();
+        }
+
+        private void HandleParty(MPData data) {
+            if(data is not Party party) return;
+            if (!IsSIDMadelineParty(level.Session.Area.GetSID())) return;
+            Logger.Log("MadelineParty", "Recieved PartyData. My ID: " + MultiplayerSingleton.Instance.GetPlayerID() + " Player ID: " + party.ID + " Looking for party of size " + party.lookingForParty);
+            if (party.lookingForParty == GameData.playerNumber // if they want the same party size
+                && party.version.Equals(Metadata.VersionString) // and our versions match
+                && GameData.celestenetIDs.Count < GameData.playerNumber - 1 // and we aren't full up
+                && !GameData.celestenetIDs.Contains(party.ID) // and they aren't in our party
+                && party.ID != MultiplayerSingleton.Instance.GetPlayerID()) { // and they aren't us
+
+                string joinMsg = party.DisplayName + " has joined the party!";
+                // If they think they're the host and are broadcasting
+                if (party.respondingTo < 0 && party.partyHost) {
+                    // Tell them that they aren't the host and are instead joining our party
+                    MultiplayerSingleton.Instance.Send(new Party {
+                        respondingTo = (int)party.ID,
+                        lookingForParty = (byte)GameData.playerNumber,
+                        partyHost = GameData.gnetHost
+                    });
+
+                    GameData.celestenetIDs.Add(party.ID);
+
+                    
+                    Logger.Log("MadelineParty", joinMsg);
+                    MultiplayerSingleton.Instance.SendChat(joinMsg);
+
+                    if (GameData.currentPlayerSelection != null) {
+                        MultiplayerSingleton.Instance.Send(new Party {
+                            respondingTo = (int)party.ID,
+                            playerSelectTrigger = GameData.currentPlayerSelection.playerID
+                        });
+                    }
+                } else if (party.respondingTo == MultiplayerSingleton.Instance.GetPlayerID()) {
+                    GameData.gnetHost = false;
+                    GameData.celestenetIDs.Add(party.ID);
+
+                    Logger.Log("MadelineParty", joinMsg);
+                    MultiplayerSingleton.Instance.SendChat(joinMsg);
+                }
+            }
+
+            // If the other player entered a player select trigger
+            if (party.playerSelectTrigger != -2 && GameData.celestenetIDs.Contains(party.ID) && (party.respondingTo == party.ID || party.respondingTo == MultiplayerSingleton.Instance.GetPlayerID())) {
+                GameData.playerSelectTriggers[party.ID] = party.playerSelectTrigger;
+                if (GameData.currentPlayerSelection != null) {
+                    // -1 so it doesn't count me as a player
+                    int left = GameData.playerNumber - 1;
+                    foreach (KeyValuePair<uint, int> kvp1 in GameData.playerSelectTriggers) {
+                        // Check if another player is trying to choose the same spot
+                        bool duplicate = false;
+                        foreach (KeyValuePair<uint, int> kvp2 in GameData.playerSelectTriggers) {
+                            duplicate |= (kvp2.Key != kvp1.Key && kvp2.Value == kvp1.Value);
+                        }
+                        if (!duplicate && kvp1.Value != -1 && kvp1.Value != GameData.currentPlayerSelection.playerID) {
+                            left--;
+                        }
+                    }
+
+                    if (left <= 0) {
+                        GameData.currentPlayerSelection.AllTriggersOccupied();
+                    }
+                }
+            }
+        }
+
+        private void HandleMinigameEnd(MPData data) {
+            if (data is not MinigameEnd end) return;
+            // If another player in our party has beaten a minigame
+            if (GameData.celestenetIDs.Contains(end.ID) && end.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+                GameData.minigameResults.Add(new Tuple<int, uint>(GameData.playerSelectTriggers[end.ID], end.results));
+                Logger.Log("MadelineParty", "Player " + end.DisplayName + " has finished the minigame with a result of " + end.results);
+            }
+        }
+
+        private void HandleMinigameStatus(MPData data) {
+            if (data is not MinigameStatus status) return;
+            // If another player in our party is sending out a minigame status update
+            if (GameData.celestenetIDs.Contains(status.ID) && status.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+                GameData.minigameStatus[GameData.playerSelectTriggers[status.ID]] = status.results;
+                Logger.Log("MadelineParty", "Player " + status.DisplayName + " has updated their minigame status with a result of " + status.results);
+            }
+        }
+
+        private void HandleRandomSeed(MPData data) {
+            if (data is not RandomSeed seed) return;
+            // If another player in our party is distributing the randomization seeds
+            if (GameData.celestenetIDs.Contains(seed.ID) && seed.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+                GameData.turnOrderSeed = seed.turnOrderSeed;
+                GameData.tieBreakerSeed = seed.tieBreakerSeed;
+                BoardController.generateTurnOrderRolls();
+            }
         }
 
     }

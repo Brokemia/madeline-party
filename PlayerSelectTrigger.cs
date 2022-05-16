@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Celeste;
 using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -25,7 +26,7 @@ namespace MadelineParty {
             base.OnEnter(player);
             occupied = true;
             GameData.currentPlayerSelection = this;
-            MultiplayerSingleton.Instance.Send("PartyData", new Dictionary<string, object> { { "respondingTo", -1 }, { "playerSelectTrigger", playerID } });
+            MultiplayerSingleton.Instance.Send(new Party { respondingTo = -1, playerSelectTrigger = playerID });
 
             // -1 so it doesn't count me as a player
             int left = GameData.playerNumber - 1;
@@ -55,7 +56,7 @@ namespace MadelineParty {
             // Host determines the random seeds for the game
             // Seeds are determined in advance to avoid duplicate rolls when it matters
             if (GameData.gnetHost) {
-                MultiplayerSingleton.Instance.Send("RandomSeedData", new Dictionary<string, object> { { "turnOrderSeed", GameData.turnOrderSeed }, { "tieBreakerSeed", GameData.tieBreakerSeed } });
+                MultiplayerSingleton.Instance.Send(new RandomSeed { turnOrderSeed = GameData.turnOrderSeed, tieBreakerSeed = GameData.tieBreakerSeed });
             }
         }
 
@@ -105,7 +106,7 @@ namespace MadelineParty {
             base.OnLeave(player);
             if (GameData.realPlayerID == -1) {
                 occupied = false;
-                MultiplayerSingleton.Instance.Send("PartyData", new Dictionary<string, object> { { "respondingTo", -1 }, { "playerSelectTrigger", -1 } });
+                MultiplayerSingleton.Instance.Send(new Party { respondingTo = -1, playerSelectTrigger = -1 });
                 GameData.currentPlayerSelection = null;
             }
         }

@@ -7,6 +7,7 @@ using Celeste;
 using Celeste.Mod;
 using Celeste.Mod.Entities;
 using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -105,7 +106,7 @@ namespace MadelineParty {
 
         private static List<IDetour> hooks_DreamParticle_Properties = new List<IDetour>();
 
-        public static void Load() {
+        public static new void Load() {
             foreach (PropertyInfo prop in typeof(DreamParticle).GetProperties()) {
                 FieldInfo targetField = DreamParticle.t_DreamParticle.GetField(prop.Name);
                 if (targetField != null) {
@@ -147,7 +148,7 @@ namespace MadelineParty {
             }
 
             if(everyOtherFrame) {
-                MultiplayerSingleton.Instance.Send("MinigameStatusData", new Dictionary<string, object> { { "results", dist } });
+                MultiplayerSingleton.Instance.Send(new MinigameStatus { results = dist });
             }
             everyOtherFrame = !everyOtherFrame;
 
@@ -179,7 +180,7 @@ namespace MadelineParty {
             dist = calculateDist(loops, player.X);
             Console.WriteLine("Minigame Distance: " + dist);
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, dist));
-            MultiplayerSingleton.Instance.Send("MinigameEndData", new Dictionary<string, object> { { "results", dist } });
+            MultiplayerSingleton.Instance.Send(new MinigameEnd { results = dist });
 
             yield return new SwapImmediately(EndMinigame(HIGHEST_WINS, () => {
                 dist = 0;

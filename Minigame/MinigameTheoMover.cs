@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod;
 using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -53,7 +54,7 @@ namespace MadelineParty {
             level.CanRetry = false;
             Console.WriteLine("Theo Count: " + theoCount);
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, timeElapsed));
-            MultiplayerSingleton.Instance.Send("MinigameEndData", new Dictionary<string, object> { { "results", timeElapsed } });
+            MultiplayerSingleton.Instance.Send(new MinigameEnd { results = timeElapsed });
 
             yield return new SwapImmediately(EndMinigame(LOWEST_WINS, () => {
                 theoCount = 0;
@@ -67,7 +68,7 @@ namespace MadelineParty {
                 theoCount++;
                 
                 GameData.minigameStatus[GameData.realPlayerID] = theoCount;
-                MultiplayerSingleton.Instance.Send("MinigameStatusData", new Dictionary<string, object> { { "results", theoCount } });
+                MultiplayerSingleton.Instance.Send(new MinigameStatus { results = theoCount });
                 if (theoCount >= THEOS_NEEDED && endCoroutine == null) {
                     Add(endCoroutine = new Coroutine(EndMinigame()));
                 } else {

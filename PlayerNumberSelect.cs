@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod;
 using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -155,7 +156,7 @@ namespace MadelineParty {
             Player player = Scene.Tracker.GetEntity<Player>();
             GameData.playerNumber = playerNumber;
             if (playerNumber != 1) {
-                MultiplayerSingleton.Instance.Send("PartyData", new Dictionary<string, object> { { "respondingTo", -1 }, { "lookingForParty", (byte)GameData.playerNumber } });
+                MultiplayerSingleton.Instance.Send(new Party { respondingTo = -1, lookingForParty = (byte)GameData.playerNumber });
             }
 
             level.OnEndOfFrame += delegate {

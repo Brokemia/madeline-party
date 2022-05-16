@@ -15,6 +15,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         public DieRoll Data {
             get {
                 data.ID = Player.ID;
+                data.DisplayName = Player.DisplayName;
                 return data;
             }
         }

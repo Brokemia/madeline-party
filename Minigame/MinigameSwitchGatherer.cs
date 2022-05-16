@@ -5,6 +5,7 @@ using Celeste;
 using Celeste.Mod;
 using Celeste.Mod.Entities;
 using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
@@ -24,7 +25,7 @@ namespace MadelineParty {
         public MinigameSwitchGatherer(EntityData data, Vector2 offset) : base(data, offset) {
         }
 
-        public static void Load() {
+        public static new void Load() {
             On.Celeste.TouchSwitch.TurnOn += TouchSwitch_TurnOn;
         }
 
@@ -58,8 +59,8 @@ namespace MadelineParty {
                 float num = Calc.Random.NextFloat((float)Math.PI * 2f);
                 level.Particles.Emit(TouchSwitch.P_FireWhite, ts.Position + Calc.AngleToVector(num, 6f), num);
             }
-            MultiplayerSingleton.Instance.Send("MinigameStatusData", new Dictionary<string, object> { { "results", switchCount } });
-            MultiplayerSingleton.Instance.Send("MinigameVector2Data", new Dictionary<string, object> { { "vec", pos }, { "extra", -1 } });
+            MultiplayerSingleton.Instance.Send(new MinigameStatus { results = switchCount });
+            MultiplayerSingleton.Instance.Send(new MinigameVector2 { vec = pos, extra = -1 });
             if (GameData.gnetHost && switchesOn.Count == 0) {
                 NewSwitcheDistribution(ts);
             }
@@ -81,7 +82,7 @@ namespace MadelineParty {
                 ActivateSwitch(newSwitch2);
             }
             foreach (Vector2 switchPos in switchesOn) {
-                MultiplayerSingleton.Instance.Send("MinigameVector2Data", new Dictionary<string, object> { { "vec", switchPos }, { "extra", 1 } });
+                MultiplayerSingleton.Instance.Send(new MinigameVector2 { vec = switchPos, extra = 1 });
             }
         }
 
@@ -120,7 +121,7 @@ namespace MadelineParty {
             ts.Active = true;
             ts.Collidable = true;
             Add(new Coroutine(ActivateSwitchCoroutine(ts)));
-            MultiplayerSingleton.Instance.Send("MinigameVector2Data", new Dictionary<string, object> { { "vec", ts.Position }, { "extra", 1 } });
+            MultiplayerSingleton.Instance.Send(new MinigameVector2 { vec = ts.Position, extra  = 1 });
         }
 
         protected IEnumerator ActivateSwitchCoroutine(TouchSwitch ts) {
@@ -178,7 +179,7 @@ namespace MadelineParty {
             level.CanRetry = false;
             Console.WriteLine("Touch Switch Count: " + switchCount);
             GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, switchCount));
-            MultiplayerSingleton.Instance.Send("MinigameEndData", new Dictionary<string, object> { { "results", switchCount } });
+            MultiplayerSingleton.Instance.Send(new MinigameEnd { results = switchCount });
 
             yield return new SwapImmediately(EndMinigame(HIGHEST_WINS, () => {
                 switchCount = 0;

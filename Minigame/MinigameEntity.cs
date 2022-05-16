@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using Celeste;
+using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -24,6 +26,10 @@ namespace MadelineParty {
             Depth = -99999;
             AddTag(Tags.PauseUpdate);
             AddTag(Tags.FrozenUpdate);
+        }
+
+        public static void Load() {
+            MultiplayerSingleton.Instance.RegisterHandler<MinigameVector2>(HandleMinigameVector2);
         }
 
         public override void Render() {
@@ -124,6 +130,17 @@ namespace MadelineParty {
 
                     level.LoadLevel(Player.IntroTypes.None);
                 };
+            }
+        }
+
+        private static void HandleMinigameVector2(MPData data) {
+            if (data is not MinigameVector2 vector2) return;
+            // If another player in our party is sending out minigame vector2 data
+            if (GameData.celestenetIDs.Contains(vector2.ID) && vector2.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+                MinigameEntity mge;
+                if ((mge = Engine.Scene?.Tracker.GetEntity<MinigameEntity>()) != null) {
+                    mge.MultiplayerReceiveVector2(vector2.vec, vector2.extra);
+                }
             }
         }
     }
