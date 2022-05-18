@@ -129,6 +129,8 @@ namespace MadelineParty {
         // id, rolls
         public static DieRoll delayedDieRoll;
 
+        private static Dictionary<int, int> queuedStrawberries = new();
+
         private DateTime minigameStartTime;
 
         public static LevelData riggedMinigame;
@@ -325,6 +327,13 @@ namespace MadelineParty {
                     }
                     delayedDieRoll = null;
                 }
+
+                if(queuedStrawberries.Count > 0) {
+                    foreach(var kvp in queuedStrawberries) {
+                        ChangeStrawberries(kvp.Key, kvp.Value);
+                    }
+                    queuedStrawberries.Clear();
+                }
             }
             GameData.gameStarted = true;
         }
@@ -437,6 +446,14 @@ namespace MadelineParty {
         public void ChangeStrawberries(int playerID, int amt, float changeSpeed = 0.25f) {
             scoreboards[playerID].StrawberryChange(amt, changeSpeed);
             GameData.players[playerID].ChangeStrawberries(amt);
+        }
+
+        public static void QueueStrawberryChange(int playerID, int amt) {
+            if(!queuedStrawberries.ContainsKey(playerID)) {
+                queuedStrawberries[playerID] = amt;
+            } else {
+                queuedStrawberries[playerID] += amt;
+            }
         }
 
         public void SkipItem() {

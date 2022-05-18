@@ -111,13 +111,22 @@ namespace MadelineParty {
 
             GameData.minigameResults.Sort(placeOrderer);
 
-            int winnerID = GameData.minigameResults[0].Item1;
-            int realPlayerPlace = GameData.minigameResults.FindIndex((obj) => obj.Item1 == GameData.realPlayerID);
+            List<int> winners = new() { GameData.minigameResults[0].Item1 };
+            for (int i = 1; i < GameData.minigameResults.Count; i++) {
+                if (GameData.minigameResults[i].Item2 == GameData.minigameResults[0].Item2) {
+                    winners.Add(GameData.minigameResults[i].Item1);
+                }
+            }
+
+            foreach (int winnerID in winners) {
+                BoardController.QueueStrawberryChange(winnerID, 10);
+            }
+
+            // Winners share the top pedestal, everyone else is placed below that
+            int realPlayerPlace = winners.Contains(GameData.realPlayerID) ? 0 : GameData.minigameResults.FindIndex((obj) => obj.Item1 == GameData.realPlayerID) - winners.Count + 2;
             // A check to stop the game from crashing when I hit one of these while testing
-            if (winnerID >= 0 && GameData.players[winnerID] != null) {
+            if (winners[0] >= 0 && GameData.players[winners[0]] != null) {
                 cleanup();
-                // TODO animate this change in strawberries, maybe just move it so it happens immediately after the second teleport
-                GameData.players[winnerID].ChangeStrawberries(10);
                 level.OnEndOfFrame += delegate {
                     level.Remove(player);
                     level.UnloadLevel();
