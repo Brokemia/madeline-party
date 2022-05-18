@@ -231,7 +231,8 @@ namespace MadelineParty {
             }
 
             // If the other player entered a player select trigger
-            if (party.playerSelectTrigger != -2 && GameData.celestenetIDs.Contains(party.ID) && (party.respondingTo == party.ID || party.respondingTo == MultiplayerSingleton.Instance.GetPlayerID())) {
+            if (party.playerSelectTrigger != -2 && GameData.celestenetIDs.Contains(party.ID) && (party.respondingTo < 0 || party.respondingTo == MultiplayerSingleton.Instance.GetPlayerID())) {
+                Logger.Log("MadelineParty", "Player ID: " + party.ID + " entered player select trigger " + party.playerSelectTrigger);
                 GameData.playerSelectTriggers[party.ID] = party.playerSelectTrigger;
                 if (GameData.currentPlayerSelection != null) {
                     // -1 so it doesn't count me as a player

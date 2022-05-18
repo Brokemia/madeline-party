@@ -33,6 +33,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         }
 
         protected override void Read(CelesteNetBinaryReader reader) {
+            data = new();
             data.choice = reader.ReadInt32();
             data.gameStart = reader.ReadInt64();
         }
