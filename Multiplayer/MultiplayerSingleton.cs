@@ -33,7 +33,12 @@ namespace MadelineParty.Multiplayer {
 
         private static void loadCelesteNet() => CelesteNetMadelinePartyComponent.handleAction = Instance.Handle;
 
-        private static void sendChatCelesteNet(string msg) => CelesteNetClientModule.Instance.Context.Chat.Log.Add(new DataChat { Text = msg, Date = DateTime.Now });
+        private static void sendChatCelesteNet(string msg) {
+            // FIXME Temporary workaround, CelesteNet team should be putting out a new API for me eventually
+            DataChat chat = new DataChat { Text = msg, ID = 5 };
+            CelesteNetClientModule.Instance.Context.Chat.Handle(CelesteNetClientModule.Instance.Context.Client.Con, chat);
+
+        }
 
         // General
 

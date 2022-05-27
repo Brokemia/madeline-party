@@ -177,7 +177,7 @@ namespace MadelineParty {
             boardSpaces.Add(new BoardSpace() { ID = 1, type = 'b', x = 52, y = 107, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 2, } });
             boardSpaces.Add(new BoardSpace() { ID = 2, type = 'b', x = 33, y = 101, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 16, 3, } });
             boardSpaces.Add(new BoardSpace() { ID = 3, type = 'r', x = 20, y = 91, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 4, } });
-            boardSpaces.Add(new BoardSpace() { ID = 4, type = 'b', x = 3, y = 82, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 5, } });
+            boardSpaces.Add(new BoardSpace() { ID = 4, type = 'g', x = 3, y = 82, heartSpace = true, greenSpaceEvent = "gondola", destIDs_DONTUSE = new List<int> { 5, } });
             boardSpaces.Add(new BoardSpace() { ID = 5, type = 'b', x = -5, y = 61, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 6, } });
             boardSpaces.Add(new BoardSpace() { ID = 6, type = 'i', x = -10, y = 43, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 7, } });
             boardSpaces.Add(new BoardSpace() { ID = 7, type = 'g', x = 3, y = 29, heartSpace = true, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 8, } });
@@ -338,12 +338,28 @@ namespace MadelineParty {
             GameData.gameStarted = true;
         }
 
+        public void SetLeftButtonStatus(PlayerToken player, LeftButton.Modes mode) {
+            SetLeftButtonStatus(player.id, mode);
+        }
+
+        public void SetLeftButtonStatus(int player, LeftButton.Modes mode) {
+            leftButtons[player].SetCurrentMode(mode);
+        }
+
+        public void SetRightButtonStatus(PlayerToken player, RightButton.Modes mode) {
+            SetRightButtonStatus(player.id, mode);
+        }
+
+        public void SetRightButtonStatus(int player, RightButton.Modes mode) {
+            rightButtons[player].SetCurrentMode(mode);
+        }
+
         private void SetDice(int player) {
-            leftButtons[player].SetCurrentMode(LeftButton.Modes.Dice);
+            SetLeftButtonStatus(player, LeftButton.Modes.Dice);
         }
 
         private void SetDoubleDice(int player) {
-            rightButtons[player].SetCurrentMode(RightButton.Modes.DoubleDice);
+            SetRightButtonStatus(player, RightButton.Modes.DoubleDice);
         }
 
         private Vector2 ScreenCoordsFromBoardCoords(Vector2 boardCoords) {
@@ -367,7 +383,7 @@ namespace MadelineParty {
                     if (playerMoveProgress == playerMovePath.Count - 1) {
                         playerMoveDistance -= playerMoveProgress;
                         playerMoveProgress = 0;
-                        playerMovePath = new List<BoardSpace> { playerTokens[movingPlayerID].currentSpace };
+                        playerMovePath = new List<BoardSpace> { CurrentPlayerToken.currentSpace };
                         status = BoardStatus.WAITING;
 
                         if (playerMovePath[playerMoveProgress].destinations.Count > 2) {
@@ -378,9 +394,9 @@ namespace MadelineParty {
                             Direction dir = getCardinalDirection(playerMovePath[playerMoveProgress].x, playerMovePath[playerMoveProgress].y, dest.x, dest.y);
 
                             if (leftUsed) {
-                                rightButtons[turnOrder[playerTurn]].SetCurrentMode((RightButton.Modes)Enum.Parse(typeof(RightButton.Modes), dir.ToString()));
+                                SetRightButtonStatus(CurrentPlayerToken, (RightButton.Modes)Enum.Parse(typeof(RightButton.Modes), dir.ToString()));
                             } else {
-                                leftButtons[turnOrder[playerTurn]].SetCurrentMode((LeftButton.Modes)Enum.Parse(typeof(LeftButton.Modes), dir.ToString()));
+                                SetLeftButtonStatus(CurrentPlayerToken, (LeftButton.Modes)Enum.Parse(typeof(LeftButton.Modes), dir.ToString()));
                                 leftUsed = true;
                             }
                         }
@@ -389,22 +405,22 @@ namespace MadelineParty {
                     // If we're not at an intersection
                     BoardSpace approaching = playerMovePath[playerMoveProgress + 1];
                     // Check if we've hit our next space
-                    if (playerTokens[movingPlayerID].Position.Equals(approaching.screenPosition)) {
+                    if (CurrentPlayerToken.Position.Equals(approaching.screenPosition)) {
                         playerMoveProgress++;
-                        playerTokens[movingPlayerID].currentSpace = playerMovePath[playerMoveProgress];
+                        CurrentPlayerToken.currentSpace = playerMovePath[playerMoveProgress];
 
                         // If we're on the heart space
-                        if (GameData.heartSpaceID == playerTokens[movingPlayerID].currentSpace.ID && GameData.players[movingPlayerID].strawberries >= GameData.heartCost) {
+                        if (GameData.heartSpaceID == CurrentPlayerToken.currentSpace.ID && GameData.players[movingPlayerID].strawberries >= GameData.heartCost) {
                             status = BoardStatus.WAITING;
-                            leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.ConfirmHeartBuy);
-                            rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.CancelHeartBuy);
+                            SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmHeartBuy);
+                            SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelHeartBuy);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYHEART);
                         }
                         // If we're at the item shop and have enough free space
-                        else if (playerTokens[movingPlayerID].currentSpace.type == 'i' && GameData.players[movingPlayerID].items.Count < GameData.maxItems) {
+                        else if (CurrentPlayerToken.currentSpace.type == 'i' && GameData.players[movingPlayerID].items.Count < GameData.maxItems) {
                             status = BoardStatus.WAITING;
-                            leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.ConfirmShopEnter);
-                            rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.CancelShopEnter);
+                            SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmShopEnter);
+                            SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelShopEnter);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.ENTERSHOP);
                         } else if (playerMoveProgress == playerMoveDistance) { // Check if we've hit our destination
                             playerMoveDistance = 0;
@@ -415,17 +431,17 @@ namespace MadelineParty {
                         }
                         break;
                     }
-                    playerTokens[movingPlayerID].Position = Calc.Approach(playerTokens[movingPlayerID].Position, approaching.screenPosition, 80f * Engine.DeltaTime);
+                    CurrentPlayerToken.Position = Calc.Approach(CurrentPlayerToken.Position, approaching.screenPosition, 80f * Engine.DeltaTime);
                     break;
             }
         }
 
         private void HandleSpaceAction(Action next) {
             // Don't do an action if we're on the heart space
-            if(GameData.heartSpaceID == playerTokens[movingPlayerID].currentSpace.ID) {
+            if(GameData.heartSpaceID == CurrentPlayerToken.currentSpace.ID) {
                 next();
             }
-            switch (playerTokens[movingPlayerID].currentSpace.type) {
+            switch (CurrentPlayerToken.currentSpace.type) {
                 case 'b':
                     ChangeStrawberries(movingPlayerID, 3);
                     next();
@@ -435,7 +451,7 @@ namespace MadelineParty {
                     next();
                     break;
                 case 'g':
-                    DoGreenSpace(playerTokens[movingPlayerID].currentSpace, next);
+                    DoGreenSpace(CurrentPlayerToken.currentSpace, next);
                     break;
                 default:
                     next();
@@ -465,14 +481,14 @@ namespace MadelineParty {
             if (shopItemViewing < GameData.shopContents.Count) {
                 scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, GameData.shopContents[shopItemViewing]);
                 if (GameData.players[turnOrder[playerTurn]].strawberries >= GameData.itemPrices[GameData.shopContents[shopItemViewing]]) {
-                    leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.ConfirmItemBuy);
+                    SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmItemBuy);
                 } else {
-                    leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
+                    SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
                 }
             } else {
                 scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
-                leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
-                rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
+                SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
+                SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.Inactive);
                 AfterChoice();
             }
         }
@@ -486,8 +502,8 @@ namespace MadelineParty {
             GameData.players[turnOrder[playerTurn]].items.Add(itemBought);
             shopItemViewing = 0;
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL, GameData.shopContents[shopItemViewing]);
-            leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
-            rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
+            SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
+            SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.Inactive);
 
             ChangeStrawberries(turnOrder[playerTurn], -GameData.itemPrices[itemBought], .08f);
             AfterChoice();
@@ -499,7 +515,7 @@ namespace MadelineParty {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "ENTERSHOP", choice = 1 });
             }
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
-            leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
+            SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
 
             AfterChoice();
         }
@@ -511,12 +527,12 @@ namespace MadelineParty {
             }
             shopItemViewing = 0;
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, GameData.shopContents[shopItemViewing]);
-            rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.CancelItemBuy);
+            SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelItemBuy);
             Console.WriteLine(GameData.players[turnOrder[playerTurn]].strawberries + " " + GameData.itemPrices[GameData.shopContents[shopItemViewing]]);
             if (GameData.players[turnOrder[playerTurn]].strawberries >= GameData.itemPrices[GameData.shopContents[shopItemViewing]]) {
-                leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.ConfirmItemBuy);
+                SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmItemBuy);
             } else {
-                leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
+                SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
             }
         }
 
@@ -526,7 +542,7 @@ namespace MadelineParty {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "HEART", choice = 1 });
             }
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
-            leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
+            SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
 
             AfterChoice();
         }
@@ -561,8 +577,8 @@ namespace MadelineParty {
 
         private void AfterChoice() {
             status = BoardStatus.PLAYERMOVE;
-            leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
-            rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
+            SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
+            SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.Inactive);
 
             if (playerMoveProgress == playerMoveDistance) {
                 playerMoveDistance = 0;
@@ -597,8 +613,8 @@ namespace MadelineParty {
             if (turnOrder[playerTurn] == GameData.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "DIRECTION", choice = (int)chosen });
             }
-            leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Inactive);
-            rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
+            SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
+            SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.Inactive);
             bool found = false;
             foreach (BoardSpace dest in playerMovePath[playerMoveProgress].destinations) {
                 if (getCardinalDirection(playerMovePath[playerMoveProgress].x, playerMovePath[playerMoveProgress].y, dest.x, dest.y) == chosen) {
@@ -631,9 +647,9 @@ namespace MadelineParty {
                 GameData.turn++;
                 Add(new Coroutine(InitiateMinigame()));
             } else {
-                leftButtons[turnOrder[playerTurn]].SetCurrentMode(LeftButton.Modes.Dice);
+                SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Dice);
                 if (GameData.players[turnOrder[playerTurn]].items.Contains(GameData.Item.DOUBLEDICE)) {
-                    rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.DoubleDice);
+                    SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.DoubleDice);
                 }
             }
         }
@@ -702,8 +718,8 @@ namespace MadelineParty {
         }
 
         private IEnumerator DieRollAnimation(int playerID, int[] rolls) {
-            leftButtons[playerID].SetCurrentMode(LeftButton.Modes.Inactive);
-            rightButtons[playerID].SetCurrentMode(RightButton.Modes.Inactive);
+            SetLeftButtonStatus(playerID, LeftButton.Modes.Inactive);
+            SetRightButtonStatus(playerID, RightButton.Modes.Inactive);
             while (removingDieRolls) yield return null;
             foreach (int roll in rolls) {
                 if (roll == 0) continue;
@@ -767,8 +783,8 @@ namespace MadelineParty {
         }
 
         public void RollDice(int playerID, int roll) {
-            leftButtons[playerID].SetCurrentMode(LeftButton.Modes.Inactive);
-            rightButtons[playerID].SetCurrentMode(RightButton.Modes.Inactive);
+            SetLeftButtonStatus(playerID, LeftButton.Modes.Inactive);
+            SetRightButtonStatus(playerID, RightButton.Modes.Inactive);
             if (status == BoardStatus.GAMESTART) {
                 GameData.players[playerID].StartingRoll = roll;
                 Console.WriteLine("Roll: " + playerID + " " + roll);
@@ -786,9 +802,9 @@ namespace MadelineParty {
                         playersGoneThrough++;
                     }
                     status = BoardStatus.WAITING;
-                    leftButtons[turnOrder[0]].SetCurrentMode(LeftButton.Modes.Dice);
+                    SetLeftButtonStatus(turnOrder[0], LeftButton.Modes.Dice);
                     if (GameData.players[turnOrder[0]].items.Contains(GameData.Item.DOUBLEDICE)) {
-                        rightButtons[turnOrder[0]].SetCurrentMode(RightButton.Modes.DoubleDice);
+                        SetRightButtonStatus(turnOrder[0], RightButton.Modes.DoubleDice);
                     }
                 }
                 return;
@@ -857,6 +873,8 @@ namespace MadelineParty {
         public bool isWaitingOnPlayer(int playerID) {
             return leftButtons[playerID].GetCurrentMode() != LeftButton.Modes.Inactive || rightButtons[playerID].GetCurrentMode() != RightButton.Modes.Inactive;
         }
+
+        public PlayerToken CurrentPlayerToken => playerTokens[turnOrder[playerTurn]];
 
         public void DoGreenSpace(BoardSpace space, Action next) {
             if(greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {

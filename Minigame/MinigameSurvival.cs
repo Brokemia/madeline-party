@@ -17,13 +17,18 @@ namespace MadelineParty {
         private static FieldInfo diedInGBJInfo = typeof(Player).GetField("diedInGBJ", BindingFlags.Static | BindingFlags.NonPublic);
         private List<Vector2> seekerSpawns = new();
         private Random rand;
-        private float nextSpawnTime = 6;
+        private float nextSpawnTime = 6.2f;
         private float spawnTimer = 5.2f;
         protected Vector2 deadRespawn;
         public MinigameTimeDisplay display;
 
+        private bool spawnSeekers;
+        private bool spawnOshiro;
+
         public MinigameSurvival(EntityData data, Vector2 offset) : base(data, offset) {
             deadRespawn = data.Nodes[0];
+            spawnSeekers = data.Bool("spawnSeekers", true);
+            spawnOshiro = data.Bool("spawnOshiro", false);
         }
 
         public override void Added(Scene scene) {
@@ -45,15 +50,17 @@ namespace MadelineParty {
                 level.CanRetry = false;
                 GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, (uint)timeElapsed));
                 MultiplayerSingleton.Instance.Send(new MinigameEnd { results = (uint)timeElapsed });
-
+                
                 Add(new Coroutine(EndMinigame(HIGHEST_WINS, () => { })));
             } else {
                 level.PauseLock = true;
                 diedInGBJInfo.SetValue(null, 0);
-                List<Entity> seekers = level.Tracker.GetEntities<Seeker>();
-                seekerSpawns.AddRange(seekers.ConvertAll(e => e.Position));
-                foreach(Seeker seeker in seekers) {
-                    seeker.RemoveSelf();
+                if (spawnSeekers) {
+                    List<Entity> seekers = level.Tracker.GetEntities<Seeker>();
+                    seekerSpawns.AddRange(seekers.ConvertAll(e => e.Position));
+                    foreach (Seeker seeker in seekers) {
+                        seeker.RemoveSelf();
+                    }
                 }
                 rand = new Random((int)GameData.turnOrderSeed + (int)Y);
             }
@@ -76,7 +83,11 @@ namespace MadelineParty {
                 if(nextSpawnTime > 1.2) {
                     nextSpawnTime -= 0.5f;
                 }
-                level.Add(new Seeker(seekerSpawns[rand.Next(seekerSpawns.Count)], null));
+                if (spawnSeekers && (!spawnOshiro || rand.Next(2) == 0)) {
+                    level.Add(new Seeker(seekerSpawns[rand.Next(seekerSpawns.Count)], null));
+                } else if(spawnOshiro) {
+                    level.Add(new AngryOshiro(new Vector2(-64, 0), false));
+                }
             }
         }
     }

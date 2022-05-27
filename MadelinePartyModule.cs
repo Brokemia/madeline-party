@@ -6,6 +6,7 @@ using Celeste.Mod;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using System.Collections.Generic;
+using Monocle;
 
 // TODO minigames for most bounces of oshiro, seekers, snowballs, etc...
 // TODO survive the longest minigames
@@ -67,6 +68,29 @@ namespace MadelineParty {
             MultiplayerSingleton.Instance.RegisterHandler<MinigameEnd>(HandleMinigameEnd);
             MultiplayerSingleton.Instance.RegisterHandler<MinigameStatus>(HandleMinigameStatus);
             MultiplayerSingleton.Instance.RegisterHandler<RandomSeed>(HandleRandomSeed);
+            On.Celeste.Player.Die += Player_Die;
+        }
+
+        private PlayerDeadBody Player_Die(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats) {
+            Strawberry galaxyBerry = null;
+            foreach (Follower follower in self.Leader.Followers) {
+                if (follower.Entity is Strawberry berry && berry.Golden) {
+                    galaxyBerry = berry;
+                }
+            }
+            var session = self.SceneAs<Level>().Session;
+            var deadBody = orig(self, direction, evenIfInvincible, registerDeathInStats);
+            if (galaxyBerry != null) {
+                deadBody.DeathAction = delegate
+                {
+                    session.Area = new AreaKey(0);
+                    Engine.Scene = new LevelExit(LevelExit.Mode.GoldenBerryRestart, session) {
+                        GoldenStrawberryEntryLevel = "0"
+                    };
+                };
+            }
+
+            return deadBody;
         }
 
         public static bool IsSIDMadelineParty(string sid) {
