@@ -12,6 +12,8 @@ namespace MadelineParty
 
         public enum Modes
         {
+            Confirm,
+            // TODO remove in favor of general Confirm mode paired with OnPressButton
             ConfirmHeartBuy,
             ConfirmShopEnter,
             ConfirmItemBuy,
@@ -56,6 +58,8 @@ namespace MadelineParty
 
         private Level level;
 
+        public event Action<Modes> OnPressButton;
+
         public LeftButton(Vector2 position, float width, float height, Modes startingMode)
             : base(position, width, height, safe: true)
         {
@@ -92,7 +96,9 @@ namespace MadelineParty
                     SwapDecal(decalPrefix + currentMode.ToString().ToLower());
                     break;
             }
-
+            if(mode == Modes.Inactive) {
+                OnPressButton = null;
+            }
         }
 
         public override void Added(Scene scene)
@@ -166,6 +172,7 @@ namespace MadelineParty
 
         private void DoBreakAction()
         {
+            OnPressButton?.Invoke(currentMode);
             switch (currentMode)
             {
                 case Modes.Dice:

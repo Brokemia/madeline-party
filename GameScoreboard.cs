@@ -20,7 +20,7 @@ namespace MadelineParty {
 
             public override void Render() {
                 base.Render();
-                if (parent.currentMode == Modes.NORMAL || parent.currentMode == Modes.BUYHEART || parent.currentMode == Modes.BUYITEM) {
+                if (parent.currentMode != Modes.ENTERSHOP) {
                     if (parent == null || GameData.players[parent.PlayerID] == null) return;
                     string strawberryText = ((parent.tempStrawberries == -1) ? GameData.players[parent.PlayerID].strawberries : parent.tempStrawberries) + "";
                     string heartText = GameData.players[parent.PlayerID].hearts + "";
@@ -31,9 +31,14 @@ namespace MadelineParty {
                         ActiveFont.DrawOutline("-" + GameData.itemPrices[parent.itemBeingBought], (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 34) * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Red, 2f, Color.Black);
                         ActiveFont.DrawOutline("+1", (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x1E, 34) * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.LimeGreen, 2f, Color.Black);
                         heartText = GameData.players[parent.PlayerID].items.Count((i) => i == parent.itemBeingBought) + "";
+                    } else if (parent.currentMode == Modes.BUYARBITRARY) {
+                        ActiveFont.DrawOutline("-" + parent.arbitraryCost, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 34) * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Red, 2f, Color.Black);
+                        ActiveFont.DrawOutline("+" + parent.arbitraryPurchaseAmount, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x1E, 34) * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.LimeGreen, 2f, Color.Black);
                     }
                     ActiveFont.DrawOutline(strawberryText, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 26) * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.White, 2f, Color.Black);
-                    ActiveFont.DrawOutline(heartText, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x1E, 26) * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.White, 2f, Color.Black);
+                    if (parent.currentMode != Modes.BUYARBITRARY) {
+                        ActiveFont.DrawOutline(heartText, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x1E, 26) * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.White, 2f, Color.Black);
+                    }
                 }
 
                 // Display items
@@ -59,9 +64,10 @@ namespace MadelineParty {
 
         public enum Modes {
             NORMAL,
-            BUYITEM,
+            BUYITEM, // TODO Maybe refactor BUYITEM code to use BUYARBITRARY
             ENTERSHOP,
-            BUYHEART
+            BUYHEART,
+            BUYARBITRARY
         }
 
         private Level level;
@@ -76,7 +82,7 @@ namespace MadelineParty {
         public Vector2 Dimensions = new Vector2(40, 40);
 
         private MTexture baseTexture, arrowTexture, shopTexture, doubleDiceTexture;
-        private Sprite strawberrySprite, heartSprite, strawberrySpriteShop;
+        private Sprite strawberrySprite, heartSprite;
 
         private ScoreboardText text;
 
@@ -85,6 +91,10 @@ namespace MadelineParty {
 
         private Modes currentMode = Modes.NORMAL;
         private GameData.Item itemBeingBought = GameData.Item.DOUBLEDICE;
+
+        private MTexture arbitraryPurchase;
+        private int arbitraryPurchaseAmount;
+        private int arbitraryCost;
 
         public GameScoreboard(Vector2 pos, int playerID) : base(pos) {
             Depth = -10000;
@@ -117,13 +127,6 @@ namespace MadelineParty {
                 heartSprite.Play("spin");
                 heartSprite.Position += new Vector2(0x1D, 0x10);
                 heartSprite.Scale = new Vector2(.75f, .75f);
-
-                strawberrySpriteShop = GFX.SpriteBank.Create("strawberry");
-                Add(strawberrySpriteShop);
-                strawberrySpriteShop.Rate = 1f;
-                strawberrySpriteShop.Position += new Vector2(0x08, 0x20);
-                strawberrySpriteShop.Play("idle");
-                strawberrySpriteShop.Visible = false;
             }
         }
 
@@ -141,6 +144,10 @@ namespace MadelineParty {
                         break;
                 }
 
+            }
+            if(currentMode == Modes.BUYARBITRARY) {
+                arrowTexture.Draw(Position + new Vector2(0x0F, 0x0C));
+                arbitraryPurchase?.Draw(Position + new Vector2(0x16, 0x06));
             }
             base.Render();
         }
@@ -178,6 +185,13 @@ namespace MadelineParty {
             return 0;
         }
 
+        public void BuyArbitrary(MTexture buyingTex, int strawberryCost, int buyingCount = 1) {
+            arbitraryPurchase = buyingTex;
+            arbitraryCost = strawberryCost;
+            arbitraryPurchaseAmount = buyingCount;
+            SetCurrentMode(Modes.BUYARBITRARY);
+        }
+
         // Also sets the item to display that we're buying
         public void SetCurrentMode(Modes mode, GameData.Item item) {
             SetCurrentMode(mode);
@@ -186,17 +200,12 @@ namespace MadelineParty {
 
         public void SetCurrentMode(Modes mode) {
             currentMode = mode;
-            if (mode == Modes.BUYITEM || mode == Modes.ENTERSHOP) {
-                strawberrySprite.Visible = false;
+            strawberrySprite.Visible = mode != Modes.ENTERSHOP;
+            if (mode == Modes.BUYITEM || mode == Modes.ENTERSHOP || mode == Modes.BUYARBITRARY) {
                 heartSprite.Visible = false;
-                strawberrySpriteShop.Visible = false;
-                if (mode == Modes.BUYITEM) {
-                    strawberrySprite.Visible = true;
-                }
             } else {
                 strawberrySprite.Visible = true;
                 heartSprite.Visible = true;
-                strawberrySpriteShop.Visible = false;
             }
         }
 

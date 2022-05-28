@@ -9,6 +9,8 @@ namespace MadelineParty {
         private const string decalPrefix = "madelineparty/rightbutton";
 
         public enum Modes {
+            Cancel,
+            // TODO remove in favor of general Cancel mode paired with OnPressButton
             CancelHeartBuy,
             CancelShopEnter,
             CancelItemBuy,
@@ -48,6 +50,8 @@ namespace MadelineParty {
 
         private Level level;
 
+        public event Action<Modes> OnPressButton;
+
         public RightButton(Vector2 position, float width, float height, Modes startingMode)
             : base(position, width, height, safe: true) {
             this.width = width;
@@ -79,6 +83,9 @@ namespace MadelineParty {
                     SwapDecal(decalPrefix + currentMode.ToString().ToLower());
                     break;
             }
+            if (mode == Modes.Inactive) {
+                OnPressButton = null;
+            }
         }
 
         public override void Added(Scene scene) {
@@ -108,7 +115,7 @@ namespace MadelineParty {
 
         private double DistanceBetween(Entity e1, Entity e2) {
             if (e1 == null || e2 == null)
-                return Double.MaxValue;
+                return double.MaxValue;
             return Math.Sqrt(Math.Pow(e1.CenterX - e2.CenterX, 2) + Math.Pow(e1.CenterY - e2.CenterY, 2));
         }
 
@@ -134,6 +141,7 @@ namespace MadelineParty {
         }
 
         private void DoBreakAction() {
+            OnPressButton?.Invoke(currentMode);
             switch (currentMode) {
                 case Modes.DoubleDice:
                     SetCurrentMode(Modes.Inactive);

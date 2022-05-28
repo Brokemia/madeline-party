@@ -65,5 +65,10 @@ namespace MadelineParty.Tools {
         private static void SetTurn(int turn) {
             GameData.turn = turn;
         }
+
+        [Command("rig_roll", "rig the next roll this player will get")]
+        private static void SetNextRoll(int roll) {
+            BoardController.riggedRoll = roll;
+        }
     }
 }
