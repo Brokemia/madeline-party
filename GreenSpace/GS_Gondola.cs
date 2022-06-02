@@ -110,7 +110,7 @@ namespace MadelineParty.GreenSpace {
             Vector2 rightPos = destPos + new Vector2(-8, -spaceWidth / 2 - left.Height / 2 + 1);
             Vector2 gondolaTopLeft = CalcGondolaPosition(space.screenPosition, destPos, progress.OrDefault(space.screenPosition, 0));
             RenderRope(leftPos + new Vector2(10, 3),
-                rightPos + new Vector2(-10, -3),
+                rightPos + new Vector2(-10, -10),
                 gondolaTopLeft + new Vector2(39, 9),
                 gondolaTopLeft + new Vector2(40, 9));
 
