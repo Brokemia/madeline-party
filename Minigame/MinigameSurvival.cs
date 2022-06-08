@@ -70,6 +70,7 @@ namespace MadelineParty {
             base.AfterStart();
             // Reset timer so it starts at 0 instead of 4.2
             startTime = level.RawTimeActive;
+            level.Tracker.GetEntity<Player>().JustRespawned = false;
             level.Session.RespawnPoint = deadRespawn;
             level.Add(display = new MinigameTimeDisplay(this));
         }

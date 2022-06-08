@@ -1,0 +1,181 @@
+[1mdiff --git a/BoardController.cs b/BoardController.cs[m
+[1mindex 349eb76..4685fb6 100644[m
+[1m--- a/BoardController.cs[m
+[1m+++ b/BoardController.cs[m
+[36m@@ -37,8 +37,10 @@[m [mnamespace MadelineParty {[m
+                 get {[m
+                     if (_destinations == null) {[m
+                         _destinations = new List<BoardSpace>();[m
+[31m-                        foreach (int id in destIDs_DONTUSE) {[m
+[31m-                            _destinations.Add(boardSpaces.Find(m => m.ID == id));[m
+[32m+[m[32m                        if (destIDs_DONTUSE != null) {[m[41m[m
+[32m+[m[32m                            foreach (int id in destIDs_DONTUSE) {[m[41m[m
+[32m+[m[32m                                _destinations.Add(boardSpaces.Find(m => m.ID == id));[m[41m[m
+[32m+[m[32m                            }[m[41m[m
+                         }[m
+                     }[m
+                     return _destinations;[m
+[36m@@ -228,14 +230,14 @@[m [mnamespace MadelineParty {[m
+             boardSpaces.Add(new BoardSpace() { ID = 15, type = 'i', x = 107, y = -10, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 16, } });[m
+             boardSpaces.Add(new BoardSpace() { ID = 16, type = 'g', x = 104, y = 12, heartSpace = false, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 23, } });[m
+             boardSpaces.Add(new BoardSpace() { ID = 17, type = 'g', x = 70, y = 33, heartSpace = false, greenSpaceEvent = "gondola", destIDs_DONTUSE = new List<int> { 25, } });[m
+[31m-            boardSpaces.Add(new BoardSpace() { ID = 18, type = 'r', x = 112, y = 71, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 20, } });[m
+[31m-            boardSpaces.Add(new BoardSpace() { ID = 19, type = 'b', x = 111, y = 46, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 18, } });[m
+[31m-            boardSpaces.Add(new BoardSpace() { ID = 20, type = 'b', x = 92, y = 86, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 21, } });[m
+[32m+[m[32m            boardSpaces.Add(new BoardSpace() { ID = 18, type = 'r', x = 115, y = 71, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 20, } });[m[41m[m
+[32m+[m[32m            boardSpaces.Add(new BoardSpace() { ID = 19, type = 'b', x = 119, y = 52, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 18, } });[m[41m[m
+[32m+[m[32m            boardSpaces.Add(new BoardSpace() { ID = 20, type = 'b', x = 98, y = 86, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 21, } });[m[41m[m
+             boardSpaces.Add(new BoardSpace() { ID = 21, type = 'r', x = 74, y = 87, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 22, } });[m
+             boardSpaces.Add(new BoardSpace() { ID = 22, type = 'b', x = 63, y = 72, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 24, } });[m
+             boardSpaces.Add(new BoardSpace() { ID = 23, type = 'b', x = 84, y = 18, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 27, } });[m
+             boardSpaces.Add(new BoardSpace() { ID = 24, type = 'g', x = 52, y = 40, heartSpace = false, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 17, } });[m
+[31m-            boardSpaces.Add(new BoardSpace() { ID = 25, type = 'b', x = 94, y = 33, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 19, } });[m
+[32m+[m[32m            boardSpaces.Add(new BoardSpace() { ID = 25, type = 'b', x = 104, y = 33, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 19, } });[m[41m[m
+             boardSpaces.Add(new BoardSpace() { ID = 26, type = 'b', x = 38, y = 63, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 2, } });[m
+             boardSpaces.Add(new BoardSpace() { ID = 27, type = 'b', x = 55, y = 22, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 11, } });[m
+         }[m
+[36m@@ -254,14 +256,18 @@[m [mnamespace MadelineParty {[m
+                 ['i'] = GFX.Game["decals/madelineparty/shopspace"][m
+             };[m
+ [m
+[31m-            var spaces = from assembly in AppDomain.CurrentDomain.GetAssemblies()[m
+[31m-                         from type in assembly.GetTypesSafe()[m
+[31m-                         where type.IsDefined(typeof(GreenSpaceAttribute), false) && typeof(GreenSpaceEvent).IsAssignableFrom(type)[m
+[31m-                         select type.GetConstructor(new Type[0]).Invoke(new object[0]) as GreenSpaceEvent;[m
+[31m-            foreach(var space in spaces) {[m
+[32m+[m[32m            greenSpaces = new();[m[41m[m
+[32m+[m[32m            foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies()) {[m[41m[m
+[32m+[m[32m                foreach(var type in assembly.GetTypesSafe()) {[m[41m[m
+[32m+[m[32m                    if(type.IsDefined(typeof(GreenSpaceAttribute), false) && typeof(GreenSpaceEvent).IsAssignableFrom(type)) {[m[41m[m
+[32m+[m[32m                        GreenSpaceEvent gse = type.GetConstructor(new Type[0]).Invoke(new object[0]) as GreenSpaceEvent;[m[41m[m
+[32m+[m[32m                        greenSpaces[type.GetCustomAttributes<GreenSpaceAttribute>().First().id] = gse;[m[41m[m
+[32m+[m[32m                    }[m[41m[m
+[32m+[m[32m                }[m[41m[m
+[32m+[m[32m            }[m[41m[m
+[32m+[m[32m            foreach (var space in greenSpaces.Values) {[m[41m[m
+                 space.LoadContent();[m
+             }[m
+[31m-            greenSpaces = spaces.ToDictionary(space => space.GetType().GetCustomAttributes<GreenSpaceAttribute>().First().id);[m
+         }[m
+ [m
+         public override void Added(Scene scene) {[m
+[36m@@ -896,6 +902,7 @@[m [mnamespace MadelineParty {[m
+         private static DynData<SpriteBatch> spriteBatchData = new DynData<SpriteBatch>(Draw.SpriteBatch);[m
+         public void SubHUDRender() {[m
+             Draw.SpriteBatch.End();[m
+[32m+[m[32m            spriteBatchData = new DynData<SpriteBatch>(Draw.SpriteBatch); // TODO this is probably laggy[m[41m[m
+             SamplerState before = spriteBatchData.Get<SamplerState>("samplerState");[m
+             Draw.SpriteBatch.Begin(SpriteSortMode.Deferred,[m
+                 spriteBatchData.Get<BlendState>("blendState"),[m
+[36m@@ -963,7 +970,9 @@[m [mnamespace MadelineParty {[m
+ [m
+         public void DoGreenSpace(BoardSpace space, Action next) {[m
+             if(greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {[m
+[32m+[m[32m                Console.WriteLine(spaceEvent.GetHashCode());[m[41m[m
+                 spaceEvent.RunGreenSpace(this, space, next ?? (() => { }));[m
+[32m+[m[32m                Console.WriteLine(spaceEvent.GetHashCode());[m[41m[m
+             }[m
+         }[m
+ [m
+[1mdiff --git a/GreenSpace/GS_Gondola.cs b/GreenSpace/GS_Gondola.cs[m
+[1mindex ae389f9..bbb2fdf 100644[m
+[1m--- a/GreenSpace/GS_Gondola.cs[m
+[1m+++ b/GreenSpace/GS_Gondola.cs[m
+[36m@@ -7,6 +7,7 @@[m [musing Monocle;[m
+ using System;[m
+ using System.Collections;[m
+ using System.Collections.Generic;[m
+[32m+[m[32musing System.Diagnostics;[m
+ using System.Linq;[m
+ [m
+ namespace MadelineParty.GreenSpace {[m
+[36m@@ -29,12 +30,19 @@[m [mnamespace MadelineParty.GreenSpace {[m
+ [m
+         // These only exist so that HandlePlayerChoice can use them, DO NOT use them outside of that[m
+         private BoardController lastBoard;[m
+[31m-        private BoardController.BoardSpace lastSpace;[m
+[32m+[m[32m        private BoardController.BoardSpace? lastSpace = null;[m
+         private Action lastAfter;[m
+[32m+[m
+[32m+[m[32m        public GS_Gondola() {[m
+[32m+[m[32m            Console.WriteLine("Creating " + GetHashCode());[m
+[32m+[m[32m            Console.WriteLine(new StackTrace());[m
+[32m+[m[32m        }[m
+[32m+[m
+         public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after) {[m
+             lastBoard = board;[m
+             lastSpace = space;[m
+             lastAfter = after;[m
+[32m+[m[32m            Console.WriteLine("Setting " + GetHashCode() +": " + (lastBoard != null) + " " + (lastSpace != null) + " " + (lastAfter != null));[m
+             if (GameData.players[board.CurrentPlayerToken.id].strawberries >= GONDOLA_COST) {[m
+                 board.GetLeftButton(board.CurrentPlayerToken).OnPressButton += delegate {[m
+                     MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "TAKEGONDOLA", choice = 1 });[m
+[36m@@ -146,14 +154,16 @@[m [mnamespace MadelineParty.GreenSpace {[m
+ [m
+         public override void LoadContent() {[m
+             base.LoadContent();[m
+[31m-            MultiplayerSingleton.Instance.RegisterHandler<PlayerChoice>(HandlePlayerChoice);[m
+[32m+[m[32m            Console.WriteLine("Registering Gondola " + GetHashCode());[m
+[32m+[m[32m            MultiplayerSingleton.Instance.RegisterUniqueHandler<PlayerChoice>("MadelinePartyGondola", HandlePlayerChoice);[m
+         }[m
+ [m
+         private void HandlePlayerChoice(MPData data) {[m
+             if (data is not PlayerChoice playerChoice) return;[m
+             // If another player in our party has made a gondola choice[m
+[31m-            if (GameData.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choice.Equals("TAKEGONDOLA")) {[m
+[31m-                GondolaChoiceMade(playerChoice.choice == 1, lastBoard, lastSpace, lastAfter);[m
+[32m+[m[32m            if (GameData.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("TAKEGONDOLA")) {[m
+[32m+[m[32m                Console.WriteLine("Getting " + GetHashCode() + ": " + (lastBoard != null) + " " + (lastSpace != null) + " " + (lastAfter != null));[m
+[32m+[m[32m                GondolaChoiceMade(playerChoice.choice == 1, lastBoard, lastSpace.Value, lastAfter);[m
+             }[m
+         }[m
+     }[m
+[1mdiff --git a/Minigame/MinigameSurvival.cs b/Minigame/MinigameSurvival.cs[m
+[1mindex d34e9d7..b17263c 100644[m
+[1m--- a/Minigame/MinigameSurvival.cs[m
+[1m+++ b/Minigame/MinigameSurvival.cs[m
+[36m@@ -70,6 +70,7 @@[m [mnamespace MadelineParty {[m
+             base.AfterStart();[m
+             // Reset timer so it starts at 0 instead of 4.2[m
+             startTime = level.RawTimeActive;[m
+[32m+[m[32m            level.Tracker.GetEntity<Player>().JustRespawned = false;[m
+             level.Session.RespawnPoint = deadRespawn;[m
+             level.Add(display = new MinigameTimeDisplay(this));[m
+         }[m
+[1mdiff --git a/Multiplayer/MultiplayerSingleton.cs b/Multiplayer/MultiplayerSingleton.cs[m
+[1mindex 6f53900..c1f7c71 100644[m
+[1m--- a/Multiplayer/MultiplayerSingleton.cs[m
+[1m+++ b/Multiplayer/MultiplayerSingleton.cs[m
+[36m@@ -43,6 +43,7 @@[m [mnamespace MadelineParty.Multiplayer {[m
+         // General[m
+ [m
+         private Dictionary<Type, List<Action<MPData>>> handlers = new();[m
+[32m+[m[32m        private Dictionary<Type, Dictionary<string, Action<MPData>>> uniqueHandlers = new();[m
+ [m
+         private static readonly Dictionary<string, Action<MultiplayerData>> sendMethods = new() {[m
+             { CELESTENET_NAMESPACE, SendCelesteNet }[m
+[36m@@ -106,12 +107,24 @@[m [mnamespace MadelineParty.Multiplayer {[m
+             handlers[typeof(T)].Add(handler);[m
+         }[m
+ [m
+[32m+[m[32m        public void RegisterUniqueHandler<T>(string key, Action<MPData> handler) {[m
+[32m+[m[32m            if (!uniqueHandlers.ContainsKey(typeof(T))) {[m
+[32m+[m[32m                uniqueHandlers[typeof(T)] = new();[m
+[32m+[m[32m            }[m
+[32m+[m[32m            uniqueHandlers[typeof(T)][key] = handler;[m
+[32m+[m[32m        }[m
+[32m+[m
+         private void Handle(MPData data) {[m
+             if(handlers.TryGetValue(data.GetType(), out List<Action<MPData>> specificHandlers)) {[m
+                 foreach(var handler in specificHandlers) {[m
+                     handler.Invoke(data);[m
+                 }[m
+             }[m
+[32m+[m[32m            if (uniqueHandlers.TryGetValue(data.GetType(), out Dictionary<string, Action<MPData>> specificUniqueHandlers)) {[m
+[32m+[m[32m                foreach (var handler in specificUniqueHandlers.Values) {[m
+[32m+[m[32m                    handler.Invoke(data);[m
+[32m+[m[32m                }[m
+[32m+[m[32m            }[m
+         }[m
+ [m
+         public void SendChat(string msg) {[m

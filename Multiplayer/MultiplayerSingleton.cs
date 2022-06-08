@@ -43,6 +43,7 @@ namespace MadelineParty.Multiplayer {
         // General
 
         private Dictionary<Type, List<Action<MPData>>> handlers = new();
+        private Dictionary<Type, Dictionary<string, Action<MPData>>> uniqueHandlers = new();
 
         private static readonly Dictionary<string, Action<MultiplayerData>> sendMethods = new() {
             { CELESTENET_NAMESPACE, SendCelesteNet }
@@ -106,9 +107,21 @@ namespace MadelineParty.Multiplayer {
             handlers[typeof(T)].Add(handler);
         }
 
+        public void RegisterUniqueHandler<T>(string key, Action<MPData> handler) {
+            if (!uniqueHandlers.ContainsKey(typeof(T))) {
+                uniqueHandlers[typeof(T)] = new();
+            }
+            uniqueHandlers[typeof(T)][key] = handler;
+        }
+
         private void Handle(MPData data) {
             if(handlers.TryGetValue(data.GetType(), out List<Action<MPData>> specificHandlers)) {
                 foreach(var handler in specificHandlers) {
+                    handler.Invoke(data);
+                }
+            }
+            if (uniqueHandlers.TryGetValue(data.GetType(), out Dictionary<string, Action<MPData>> specificUniqueHandlers)) {
+                foreach (var handler in specificUniqueHandlers.Values) {
                     handler.Invoke(data);
                 }
             }

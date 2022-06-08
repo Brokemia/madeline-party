@@ -37,8 +37,10 @@ namespace MadelineParty {
                 get {
                     if (_destinations == null) {
                         _destinations = new List<BoardSpace>();
-                        foreach (int id in destIDs_DONTUSE) {
-                            _destinations.Add(boardSpaces.Find(m => m.ID == id));
+                        if (destIDs_DONTUSE != null) {
+                            foreach (int id in destIDs_DONTUSE) {
+                                _destinations.Add(boardSpaces.Find(m => m.ID == id));
+                            }
                         }
                     }
                     return _destinations;
@@ -228,14 +230,14 @@ namespace MadelineParty {
             boardSpaces.Add(new BoardSpace() { ID = 15, type = 'i', x = 107, y = -10, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 16, } });
             boardSpaces.Add(new BoardSpace() { ID = 16, type = 'g', x = 104, y = 12, heartSpace = false, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 23, } });
             boardSpaces.Add(new BoardSpace() { ID = 17, type = 'g', x = 70, y = 33, heartSpace = false, greenSpaceEvent = "gondola", destIDs_DONTUSE = new List<int> { 25, } });
-            boardSpaces.Add(new BoardSpace() { ID = 18, type = 'r', x = 112, y = 71, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 20, } });
-            boardSpaces.Add(new BoardSpace() { ID = 19, type = 'b', x = 111, y = 46, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 18, } });
-            boardSpaces.Add(new BoardSpace() { ID = 20, type = 'b', x = 92, y = 86, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 21, } });
+            boardSpaces.Add(new BoardSpace() { ID = 18, type = 'r', x = 115, y = 71, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 20, } });
+            boardSpaces.Add(new BoardSpace() { ID = 19, type = 'b', x = 119, y = 52, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 18, } });
+            boardSpaces.Add(new BoardSpace() { ID = 20, type = 'b', x = 98, y = 86, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 21, } });
             boardSpaces.Add(new BoardSpace() { ID = 21, type = 'r', x = 74, y = 87, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 22, } });
             boardSpaces.Add(new BoardSpace() { ID = 22, type = 'b', x = 63, y = 72, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 24, } });
             boardSpaces.Add(new BoardSpace() { ID = 23, type = 'b', x = 84, y = 18, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 27, } });
             boardSpaces.Add(new BoardSpace() { ID = 24, type = 'g', x = 52, y = 40, heartSpace = false, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 17, } });
-            boardSpaces.Add(new BoardSpace() { ID = 25, type = 'b', x = 94, y = 33, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 19, } });
+            boardSpaces.Add(new BoardSpace() { ID = 25, type = 'b', x = 104, y = 33, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 19, } });
             boardSpaces.Add(new BoardSpace() { ID = 26, type = 'b', x = 38, y = 63, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 2, } });
             boardSpaces.Add(new BoardSpace() { ID = 27, type = 'b', x = 55, y = 22, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 11, } });
         }
@@ -254,14 +256,18 @@ namespace MadelineParty {
                 ['i'] = GFX.Game["decals/madelineparty/shopspace"]
             };
 
-            var spaces = from assembly in AppDomain.CurrentDomain.GetAssemblies()
-                         from type in assembly.GetTypesSafe()
-                         where type.IsDefined(typeof(GreenSpaceAttribute), false) && typeof(GreenSpaceEvent).IsAssignableFrom(type)
-                         select type.GetConstructor(new Type[0]).Invoke(new object[0]) as GreenSpaceEvent;
-            foreach(var space in spaces) {
+            greenSpaces = new();
+            foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies()) {
+                foreach(var type in assembly.GetTypesSafe()) {
+                    if(type.IsDefined(typeof(GreenSpaceAttribute), false) && typeof(GreenSpaceEvent).IsAssignableFrom(type)) {
+                        GreenSpaceEvent gse = type.GetConstructor(new Type[0]).Invoke(new object[0]) as GreenSpaceEvent;
+                        greenSpaces[type.GetCustomAttributes<GreenSpaceAttribute>().First().id] = gse;
+                    }
+                }
+            }
+            foreach (var space in greenSpaces.Values) {
                 space.LoadContent();
             }
-            greenSpaces = spaces.ToDictionary(space => space.GetType().GetCustomAttributes<GreenSpaceAttribute>().First().id);
         }
 
         public override void Added(Scene scene) {
@@ -893,9 +899,12 @@ namespace MadelineParty {
             status = BoardStatus.PLAYERMOVE;
         }
 
-        private static DynData<SpriteBatch> spriteBatchData = new DynData<SpriteBatch>(Draw.SpriteBatch);
+        private static DynamicData spriteBatchData;
         public void SubHUDRender() {
             Draw.SpriteBatch.End();
+            if (spriteBatchData is null) {
+                spriteBatchData = DynamicData.For(Draw.SpriteBatch);
+            }
             SamplerState before = spriteBatchData.Get<SamplerState>("samplerState");
             Draw.SpriteBatch.Begin(SpriteSortMode.Deferred,
                 spriteBatchData.Get<BlendState>("blendState"),

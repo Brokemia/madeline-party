@@ -7,6 +7,7 @@ using Monocle;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace MadelineParty.GreenSpace {
@@ -29,8 +30,9 @@ namespace MadelineParty.GreenSpace {
 
         // These only exist so that HandlePlayerChoice can use them, DO NOT use them outside of that
         private BoardController lastBoard;
-        private BoardController.BoardSpace lastSpace;
+        private BoardController.BoardSpace? lastSpace = null;
         private Action lastAfter;
+
         public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after) {
             lastBoard = board;
             lastSpace = space;
@@ -146,14 +148,14 @@ namespace MadelineParty.GreenSpace {
 
         public override void LoadContent() {
             base.LoadContent();
-            MultiplayerSingleton.Instance.RegisterHandler<PlayerChoice>(HandlePlayerChoice);
+            MultiplayerSingleton.Instance.RegisterUniqueHandler<PlayerChoice>("MadelinePartyGondola", HandlePlayerChoice);
         }
 
         private void HandlePlayerChoice(MPData data) {
             if (data is not PlayerChoice playerChoice) return;
             // If another player in our party has made a gondola choice
-            if (GameData.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choice.Equals("TAKEGONDOLA")) {
-                GondolaChoiceMade(playerChoice.choice == 1, lastBoard, lastSpace, lastAfter);
+            if (GameData.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("TAKEGONDOLA")) {
+                GondolaChoiceMade(playerChoice.choice == 1, lastBoard, lastSpace.Value, lastAfter);
             }
         }
     }
