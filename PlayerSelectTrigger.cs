@@ -81,21 +81,13 @@ namespace MadelineParty {
                 level.Remove(player);
                 level.UnloadLevel();
 
-                level.Session.Level = "Game_MainRoom";
-                switch (playerID) {
-                    case 0:
-                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
-                        break;
-                    case 1:
-                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Right, level.Bounds.Top));
-                        break;
-                    case 2:
-                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Bottom));
-                        break;
-                    case 3:
-                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Right, level.Bounds.Bottom));
-                        break;
+                level.Session.Level = "Game_SettingsConfig";
+                if(GameData.gnetHost) {
+                    level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
+                } else {
+                    level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Bottom));
                 }
+
                 level.LoadLevel(Player.IntroTypes.None);
 
                 Leader.RestoreStrawberries(player.Leader);

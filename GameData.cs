@@ -47,7 +47,7 @@ namespace MadelineParty
         {
             get
             {
-                return turn < 5 ? earlyShop : lateShop;
+                return turn <= maxTurns / 2 ? earlyShop : lateShop;
             }
         }
 

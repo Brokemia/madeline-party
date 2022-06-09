@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Celeste;
+﻿using Celeste;
 using Celeste.Mod;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
@@ -9,153 +7,36 @@ using Monocle;
 
 namespace MadelineParty {
 
-    public class PlayerNumberSelect : Solid {
-        public const int MAXPLAYERS = 4;
-
-        public class PlayerNumberPlus : Solid {
-            private PlayerNumberSelect parent;
-            private MTexture texture;
-
-            public PlayerNumberPlus(Vector2 position, PlayerNumberSelect parent) : base(position, 16, 16, true) {
-                this.parent = parent;
-                OnDashCollide = OnDashed;
-                SurfaceSoundIndex = SurfaceIndex.TileToIndex['3'];
-                texture = GFX.Game["objects/madelineparty/playernumberselect/plus"];
-                AddTag(Tags.PauseUpdate);
-                AddTag(Tags.FrozenUpdate);
-            }
-
-            public override void Render() {
-                texture.Draw(this.Position);
-                base.Render();
-            }
-
-            public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true) {
-                if (playSound) {
-                    Audio.Play("event:/game/general/wall_break_ice", Position);
-                }
-
-                if (MultiplayerSingleton.Instance.BackendConnected()) {
-                    parent.playerNumber++;
-                    if (parent.playerNumber > MAXPLAYERS) {
-                        parent.playerNumber = 1;
-                    }
-                } else {
-                    Logger.Log("MadelineParty", "CelesteNet not installed or connected");
-                }
-            }
-
-            private DashCollisionResults OnDashed(Player player, Vector2 direction) {
-                Break(player.Center, direction);
-                return DashCollisionResults.Rebound;
-            }
-        }
-
-        public class PlayerNumberMinus : Solid {
-            private PlayerNumberSelect parent;
-            private MTexture texture;
-
-            public PlayerNumberMinus(Vector2 position, PlayerNumberSelect parent) : base(position, 16, 16, true) {
-                this.parent = parent;
-                OnDashCollide = OnDashed;
-                SurfaceSoundIndex = SurfaceIndex.TileToIndex['3'];
-                texture = GFX.Game["objects/madelineparty/playernumberselect/minus"];
-                AddTag(Tags.PauseUpdate);
-                AddTag(Tags.FrozenUpdate);
-            }
-
-            public override void Render() {
-                texture.Draw(this.Position);
-                base.Render();
-            }
-
-            public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true) {
-                if (playSound) {
-                    Audio.Play("event:/game/general/wall_break_ice", Position);
-                }
-
-                if (MultiplayerSingleton.Instance.BackendConnected()) {
-                    parent.playerNumber--;
-                    if (parent.playerNumber < 1) {
-                        parent.playerNumber = MAXPLAYERS;
-                    }
-                } else {
-                    Logger.Log("MadelineParty", "CelesteNet not installed or connected");
-                }
-            }
-
-            private DashCollisionResults OnDashed(Player player, Vector2 direction) {
-                Break(player.Center, direction);
-                return DashCollisionResults.Rebound;
-            }
-        }
+    public class PlayerNumberSelect : NumberSelect {
 
         private Level level;
 
-        private const string texturePrefix = "objects/madelineparty/playernumberselect/playernumber";
-
-        private PlayerNumberPlus plus;
-        private PlayerNumberMinus minus;
-
-        public int playerNumber = 1;
-
-        private MTexture[] textures = new MTexture[] { null, null, null, null };
-
         public PlayerNumberSelect(Vector2 position, Vector2[] nodes)
-            : base(position, 32, 32, true) {
+            : base(position, nodes, new int[]{ 1, 2, 3, 4 }) {
             GameData.Reset();
-            if (nodes.Length == 0) {
-                plus = new PlayerNumberPlus(position + new Vector2(-60, 0), this);
-                minus = new PlayerNumberMinus(position + new Vector2(60 + 16, 0), this);
-            } else if (nodes.Length == 1) {
-                plus = new PlayerNumberPlus(nodes[0], this);
-                minus = new PlayerNumberMinus(position + new Vector2(60, 0), this);
-            } else {
-                plus = new PlayerNumberPlus(nodes[0], this);
-                minus = new PlayerNumberMinus(nodes[1], this);
-            }
-            textures[0] = GFX.Game[texturePrefix + "00"];
-            textures[1] = GFX.Game[texturePrefix + "01"];
-            textures[2] = GFX.Game[texturePrefix + "02"];
-            textures[3] = GFX.Game[texturePrefix + "03"];
-            OnDashCollide = OnDashed;
-            SurfaceSoundIndex = SurfaceIndex.TileToIndex['3'];
-            AddTag(Tags.PauseUpdate);
-            AddTag(Tags.FrozenUpdate);
         }
 
         public PlayerNumberSelect(EntityData data, Vector2 offset)
-            : this(data.Position + offset, data.Nodes) {
+            : this(data.Position + offset, data.NodesOffset(offset)) {
         }
 
         public override void Added(Scene scene) {
             base.Added(scene);
             level = scene as Level;
             level.CanRetry = false;
-            scene.Add(plus);
-            scene.Add(minus);
-        }
-
-        public override void Render() {
-            textures[playerNumber - 1].Draw(this.Position);
-            base.Render();
         }
 
         public override void Update() {
             base.Update();
-            if (playerNumber != 1 && !MultiplayerSingleton.Instance.BackendConnected()) {
-                playerNumber = 1;
+            if (Value != 1 && !MultiplayerSingleton.Instance.BackendConnected()) {
+                valueIdx = 0;
             }
-
         }
 
-        public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true) {
-            if (playSound) {
-                Audio.Play("event:/game/general/wall_break_ice", Position);
-            }
-            Player player = Scene.Tracker.GetEntity<Player>();
-            GameData.playerNumber = playerNumber;
-            if (playerNumber != 1) {
+        protected override DashCollisionResults OnDashed(Player player, Vector2 direction) {
+            Audio.Play("event:/game/general/wall_break_ice", Position);
+            GameData.playerNumber = Value;
+            if (Value != 1) {
                 MultiplayerSingleton.Instance.Send(new Party { respondingTo = -1, lookingForParty = (byte)GameData.playerNumber });
             }
 
@@ -170,11 +51,30 @@ namespace MadelineParty {
 
                 Leader.RestoreStrawberries(level.Tracker.GetEntity<Player>().Leader);
             };
+            return base.OnDashed(player, direction);
         }
 
-        private DashCollisionResults OnDashed(Player player, Vector2 direction) {
-            Break(player.Center, direction);
-            return DashCollisionResults.Rebound;
+
+        protected override DashCollisionResults OnPlus(Player player, Vector2 direction) {
+            Audio.Play("event:/game/general/wall_break_ice", Position);
+
+            if (MultiplayerSingleton.Instance.BackendConnected()) {
+                IncremementValue();
+            } else {
+                Logger.Log("MadelineParty", "Multiplayer backend not installed or connected");
+            }
+            return base.OnPlus(player, direction);
+        }
+
+        protected override DashCollisionResults OnMinus(Player player, Vector2 direction) {
+            Audio.Play("event:/game/general/wall_break_ice", Position);
+
+            if (MultiplayerSingleton.Instance.BackendConnected()) {
+                DecremementValue();
+            } else {
+                Logger.Log("MadelineParty", "Multiplayer backend not installed or connected");
+            }
+            return base.OnMinus(player, direction);
         }
     }
 }
