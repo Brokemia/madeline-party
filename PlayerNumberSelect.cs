@@ -41,15 +41,7 @@ namespace MadelineParty {
             }
 
             level.OnEndOfFrame += delegate {
-                Leader.StoreStrawberries(player.Leader);
-                level.Remove(player);
-                level.UnloadLevel();
-
-                level.Session.Level = "Game_Lobby";
-                level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
-                level.LoadLevel(Player.IntroTypes.None);
-
-                Leader.RestoreStrawberries(level.Tracker.GetEntity<Player>().Leader);
+                level.Teleport("Game_Lobby");
             };
             return base.OnDashed(player, direction);
         }
@@ -61,6 +53,7 @@ namespace MadelineParty {
             if (MultiplayerSingleton.Instance.BackendConnected()) {
                 IncremementValue();
             } else {
+                Scene.Add(new MiniTextbox("MadelineParty_CelesteNet_Missing"));
                 Logger.Log("MadelineParty", "Multiplayer backend not installed or connected");
             }
             return base.OnPlus(player, direction);
@@ -72,6 +65,7 @@ namespace MadelineParty {
             if (MultiplayerSingleton.Instance.BackendConnected()) {
                 DecremementValue();
             } else {
+                Scene.Add(new MiniTextbox("MadelineParty_CelesteNet_Missing"));
                 Logger.Log("MadelineParty", "Multiplayer backend not installed or connected");
             }
             return base.OnMinus(player, direction);

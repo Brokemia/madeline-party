@@ -734,7 +734,7 @@ namespace MadelineParty {
                 List<LevelData> minigames = level.Session.MapData.Levels.FindAll((obj) => obj.Name.StartsWith("z_Minigame", StringComparison.InvariantCulture));
                 minigames.RemoveAll((obj) => GameData.playedMinigames.Contains(obj.Name));
                 int chosenMinigame = rand.Next(minigames.Count);
-                if (riggedMinigame != null) {
+                if (riggedMinigame != null && minigames.IndexOf(riggedMinigame) >= 0) {
                     chosenMinigame = minigames.IndexOf(riggedMinigame);
                     riggedMinigame = null;
                 }
@@ -763,7 +763,7 @@ namespace MadelineParty {
                 level.Session.Level = GameData.minigame.Name;
                 level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
                 level.LoadLevel(Player.IntroTypes.None);
-                level.Session.Audio.Music.Event = "event:/music/remix/01_forsaken_city";
+                level.Session.Audio.Music.Event = GameData.GetMinigameMusic(GameData.minigame.Name);
 
                 Leader.RestoreStrawberries(player.Leader);
             };

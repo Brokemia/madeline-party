@@ -1,5 +1,7 @@
 ﻿using Celeste;
 using Celeste.Mod.Entities;
+using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -15,13 +17,29 @@ namespace MadelineParty {
             AddTag(Tags.FrozenUpdate);
         }
 
+        public override void Added(Scene scene) {
+            base.Added(scene);
+            MultiplayerSingleton.Instance.RegisterUniqueHandler<PlayerChoice>("GoButton", HandlePlayerChoice);
+        }
+
         public override void Render() {
             texture.Draw(Position);
             base.Render();
         }
 
+        private void HandlePlayerChoice(MPData data) {
+            if (data is not PlayerChoice playerChoice) return;
+            // If another player in our party has changed the turn count
+            if (GameData.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("GOBUTTON")) {
+                OnDashed(SceneAs<Level>().Tracker.GetEntity<Player>(), default);
+            }
+        }
+
         private DashCollisionResults OnDashed(Player player, Vector2 direction) {
             Level level = SceneAs<Level>();
+            if(GameData.gnetHost) {
+                MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "GOBUTTON" });
+            }
             level.OnEndOfFrame += delegate {
                 Leader.StoreStrawberries(player.Leader);
                 level.Remove(player);

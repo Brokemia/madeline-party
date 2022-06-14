@@ -79,5 +79,8 @@ namespace MadelineParty
             MinigameTheoMover.theoCount = 0;
         }
 
+        public static string GetMinigameMusic(string name) {
+            return "event:/madelineparty/music/minigame/chase_chiptune";
+        }
     }
 }

@@ -64,38 +64,19 @@ namespace MadelineParty {
             MinigameSwitchGatherer.Load();
             BoardController.Load();
             TiebreakerController.Load();
+            PersistentMiniTextbox.Load();
+
             MultiplayerSingleton.Instance.RegisterHandler<Party>(HandleParty);
             MultiplayerSingleton.Instance.RegisterHandler<MinigameEnd>(HandleMinigameEnd);
             MultiplayerSingleton.Instance.RegisterHandler<MinigameStatus>(HandleMinigameStatus);
             MultiplayerSingleton.Instance.RegisterHandler<RandomSeed>(HandleRandomSeed);
-            On.Celeste.Player.Die += Player_Die;
-        }
-
-        private PlayerDeadBody Player_Die(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats) {
-            Strawberry galaxyBerry = null;
-            foreach (Follower follower in self.Leader.Followers) {
-                if (follower.Entity is Strawberry berry && berry.Golden) {
-                    galaxyBerry = berry;
-                }
-            }
-            var session = self.SceneAs<Level>().Session;
-            var deadBody = orig(self, direction, evenIfInvincible, registerDeathInStats);
-            if (galaxyBerry != null) {
-                deadBody.DeathAction = delegate
-                {
-                    session.Area = new AreaKey(0);
-                    Engine.Scene = new LevelExit(LevelExit.Mode.GoldenBerryRestart, session) {
-                        GoldenStrawberryEntryLevel = "0"
-                    };
-                };
-            }
-
-            return deadBody;
         }
 
         public static bool IsSIDMadelineParty(string sid) {
             return sid.StartsWith("Brokemia/MadelineParty/madelineparty");
         }
+
+        private float disconnectLeniency = 2f;
 
         void Player_Update(On.Celeste.Player.orig_Update orig, Player self) {
             Level l = self.SceneAs<Level>();
@@ -105,8 +86,14 @@ namespace MadelineParty {
                 if (MultiplayerSingleton.Instance.BackendInstalled()) {
                     // If the player disconnects from a multiplayer game
                     if (GameData.playerNumber > 1 && !MultiplayerSingleton.Instance.BackendConnected()) {
-                        Player player = level.Tracker.GetEntity<Player>();
-                        sendToStart(player);
+                        disconnectLeniency -= Engine.RawDeltaTime;
+                        if (disconnectLeniency < 0) {
+                            Player player = level.Tracker.GetEntity<Player>();
+                            sendToStart(player);
+                            disconnectLeniency = 2f;
+                        }
+                    } else {
+                        disconnectLeniency = 2f;
                     }
                 }
 
@@ -211,6 +198,7 @@ namespace MadelineParty {
             Everest.Events.Level.OnLoadEntity -= Level_OnLoadEntity;
             On.Celeste.Player.Update -= Player_Update;
             MinigameSwitchGatherer.Unload();
+            PersistentMiniTextbox.Unload();
         }
 
         private void HandleParty(MPData data) {
