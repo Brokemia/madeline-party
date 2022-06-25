@@ -3,6 +3,7 @@ using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
+using System.Diagnostics;
 
 namespace MadelineParty {
 	[CustomEntity("madelineparty/persistentMiniTextboxTrigger")]
@@ -10,8 +11,11 @@ namespace MadelineParty {
 		private enum Modes {
 			OnPlayerEnter,
 			OnLevelStart,
+			OnWipeFinish,
 			OnTheoEnter
 		}
+
+		private Level level;
 
 		private EntityID id;
 
@@ -24,6 +28,8 @@ namespace MadelineParty {
 		private bool onlyOnce;
 
 		private int deathCount;
+
+		private bool firstUpdate = true;
 
 		public PersistentMiniTextboxTrigger(EntityData data, Vector2 offset, EntityID id) : base(data, offset) {
 			this.id = id;
@@ -41,18 +47,36 @@ namespace MadelineParty {
 
 		public override void Awake(Scene scene) {
 			base.Awake(scene);
+			level = SceneAs<Level>();
 			if (mode == Modes.OnLevelStart) {
 				Trigger();
 			}
 		}
 
-		public override void OnEnter(Player player) {
+        public override void Update() {
+            base.Update();
+			if (firstUpdate && mode == Modes.OnWipeFinish) {
+				if (level.Wipe != null) {
+					Action onComplete = level.Wipe.OnComplete;
+					level.Wipe.OnComplete = () => {
+						Trigger();
+						onComplete?.Invoke();
+					};
+				} else {
+					Trigger();
+                }
+			}
+			firstUpdate = false;
+		}
+
+        public override void OnEnter(Player player) {
 			if (mode == Modes.OnPlayerEnter) {
 				Trigger();
 			}
 		}
 
 		private void Trigger() {
+			if (Scene == null) return;
 			if (!triggered && (deathCount < 0 || SceneAs<Level>().Session.DeathsInCurrentLevel == deathCount)) {
 				triggered = true;
 				Scene.Add(new PersistentMiniTextbox(Calc.Random.Choose(dialogOptions)));

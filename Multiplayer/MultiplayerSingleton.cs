@@ -30,6 +30,8 @@ namespace MadelineParty.Multiplayer {
         }
 
         private static uint getIdCelesteNet() => CelesteNetClientModule.Instance.Client.PlayerInfo.ID;
+        
+        private static string getNameCelesteNet(uint id) => CelesteNetClientModule.Instance.Client.Data.GetRef<DataPlayerInfo>(id).Name;
 
         private static void loadCelesteNet() => CelesteNetMadelinePartyComponent.handleAction = Instance.Handle;
 
@@ -56,6 +58,10 @@ namespace MadelineParty.Multiplayer {
 
         private static readonly Dictionary<string, Func<uint>> idMethods = new() {
             { CELESTENET_NAMESPACE, getIdCelesteNet }
+        };
+
+        private static readonly Dictionary<string, Func<uint, string>> nameMethods = new() {
+            { CELESTENET_NAMESPACE, getNameCelesteNet }
         };
 
         private readonly Dictionary<string, Action> loadMethods = new() {
@@ -96,8 +102,17 @@ namespace MadelineParty.Multiplayer {
             return BackendInstalled() && statusMethods[multiplayerBackend].Item2();
         }
 
+        // TODO maybe turn ID and name into a general info thing
+
         public uint GetPlayerID() {
             return BackendConnected() ? idMethods[multiplayerBackend]() : uint.MaxValue;
+        }
+
+        public string GetPlayerName(uint id) {
+            if(BackendConnected()) {
+                return nameMethods[multiplayerBackend](id);
+            }
+            throw new Exception("Attempted to get player name while not connected");
         }
 
         public void RegisterHandler<T>(Action<MPData> handler) {

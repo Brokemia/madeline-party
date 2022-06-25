@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace MadelineParty {
     static class Extensions {
 
-        public static T OrDefault<S, T>(this Dictionary<S, T> self, S key, T defaultValue) {
+		public static T OrDefault<S, T>(this Dictionary<S, T> self, S key, T defaultValue) {
             if(self.TryGetValue(key, out T value)) {
                 return value;
             }

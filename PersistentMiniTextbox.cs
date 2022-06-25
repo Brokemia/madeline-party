@@ -1,5 +1,6 @@
 ﻿using Celeste;
 using Celeste.Mod;
+using Monocle;
 using System;
 using System.Collections;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MadelineParty {
+    [Tracked(false)]
     public class PersistentMiniTextbox : MiniTextbox {
         public PersistentMiniTextbox(string dialogId) : base(dialogId) {
 

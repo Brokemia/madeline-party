@@ -138,8 +138,53 @@ namespace MadelineParty {
                     level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));
 
                     level.LoadLevel(Player.IntroTypes.None);
+
+                    if(level.Wipe != null) {
+                        Action onComplete = level.Wipe.OnComplete;
+                        level.Wipe.OnComplete = delegate {
+                            level.Add(new PersistentMiniTextbox(GetWinnerText(winners)));
+                            onComplete?.Invoke();
+                        };
+                    } else {
+                        level.Add(new PersistentMiniTextbox(GetWinnerText(winners)));
+                    }
                 };
             }
+        }
+
+        // Turn several names into a readable list
+        private string CombineNames(List<string> names) {
+            if (names.Count == 1) {
+                return names[0];
+            } else if (names.Count == 2) {
+                return $"{names[0]} and {names[1]}";
+            }
+
+            string res = "";
+            for(int i = 0; i < names.Count - 1; i++) {
+                res += names[i];
+                if(i == names.Count - 2) {
+                    res += ", and ";
+                } else {
+                    res += ", ";
+                }
+            }
+            res += names[names.Count - 1];
+            return res;
+        }
+
+        // TODO add special text for a win streak
+        // X is domingating, X is unstoppable, etc
+        private string GetWinnerText(List<int> winners) {
+            // First, set the name to use as a dialog entry
+            string name;
+            if (MultiplayerSingleton.Instance.BackendConnected()) {
+                name = CombineNames(winners.ConvertAll(i => MultiplayerSingleton.Instance.GetPlayerName(GameData.celestenetIDs[i])));
+            } else {
+                name = "{savedata Name}";
+            }
+            Dialog.Language.Dialog["MadelineParty_Winner_ID_Name"] = name;
+            return BoardController.GetRandomDialogID(winners.Count > 1 ? "MadelineParty_Minigame_Winners_List" : "MadelineParty_Minigame_Winner_List");
         }
 
         private static void HandleMinigameVector2(MPData data) {

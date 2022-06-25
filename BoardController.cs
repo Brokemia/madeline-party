@@ -106,7 +106,13 @@ namespace MadelineParty {
 
         private Level level;
 
-        Random rand = new Random();
+        private Random rand = new Random();
+
+        private Random _textRand;
+
+        private Random TextRand {
+            get => _textRand == null ? _textRand = new Random((int)(GameData.turnOrderSeed / 3) - GameData.turn - 120) : _textRand;
+        }
 
         // The number of players that have rolled dice
         // Used for the start of the game
@@ -317,6 +323,15 @@ namespace MadelineParty {
                     int p = i;
                     Alarm.Set(this, 0.5f, delegate {
                         SetDice(p);
+                        if(level.Wipe != null) {
+                            Action onComplete = level.Wipe.OnComplete;
+                            level.Wipe.OnComplete = delegate {
+                                Scene.Add(new MiniTextbox("MadelineParty_Start"));
+                                onComplete?.Invoke();
+                            };
+                        } else {
+                            Scene.Add(new MiniTextbox("MadelineParty_Start"));
+                        }
                     });
                 } else {
                     found[i].SetCurrentMode(LeftButton.Modes.Inactive);
@@ -347,13 +362,8 @@ namespace MadelineParty {
                 }
                 status = BoardStatus.WAITING;
                 Alarm.Set(this, 0.5f, delegate {
-                    SetDice(turnOrder[0]);
+                    ChangeTurn(turnOrder[0]);
                 });
-                if (GameData.players[turnOrder[0]].items.Contains(GameData.Item.DOUBLEDICE)) {
-                    Alarm.Set(this, 0.5f, delegate {
-                        SetDoubleDice(turnOrder[0]);
-                    });
-                }
 
                 if (delayedDieRoll != null) {
                     if (isWaitingOnPlayer(GameData.playerSelectTriggers[delayedDieRoll.ID])) {
@@ -428,12 +438,44 @@ namespace MadelineParty {
             SetRightButtonStatus(player, RightButton.Modes.DoubleDice);
         }
 
+        private void ChangeTurn(int player) {
+            SetDice(player);
+            if (GameData.players[player].items.Contains(GameData.Item.DOUBLEDICE)) {
+                SetDoubleDice(player);
+            }
+            if(level.Wipe != null) {
+                Action onComplete = level.Wipe.OnComplete;
+                level.Wipe.OnComplete = delegate {
+                    level.Add(new MiniTextbox(GetCurrentTurnText(player)));
+                    onComplete?.Invoke();
+                };
+            } else {
+                level.Add(new MiniTextbox(GetCurrentTurnText(player)));
+            }
+        }
+
+        private string GetCurrentTurnText(int player) {
+            // First, set the name to use as a dialog entry
+            string name;
+            if(MultiplayerSingleton.Instance.BackendConnected()) {
+                name = MultiplayerSingleton.Instance.GetPlayerName(GameData.celestenetIDs[player]);
+            } else {
+                name = "{savedata Name}";
+            }
+            Dialog.Language.Dialog["MadelineParty_Current_Turn_Name"] = name;
+            return GetRandomDialogID("MadelineParty_Current_Turn_Text_List");
+        }
+
+        public static string GetRandomDialogID(string listID) {
+            return Instance.TextRand.Choose(Dialog.Clean(listID).Split(','));
+        }
+
         private Vector2 ScreenCoordsFromBoardCoords(Vector2 boardCoords) {
             return ScreenCoordsFromBoardCoords(boardCoords, new Vector2(0, 0));
         }
 
         private Vector2 ScreenCoordsFromBoardCoords(Vector2 boardCoords, Vector2 offsetInPxls) {
-            return new Vector2((this.X - level.LevelOffset.X + boardCoords.X * 10) * 6 + offsetInPxls.X, (this.Y - level.LevelOffset.Y + boardCoords.Y * 10) * 6 + offsetInPxls.Y);
+            return new Vector2((X - level.LevelOffset.X + boardCoords.X * 10) * 6 + offsetInPxls.X, (Y - level.LevelOffset.Y + boardCoords.Y * 10) * 6 + offsetInPxls.Y);
         }
 
         private Vector2 SwapXY(Vector2 v) {
@@ -488,6 +530,7 @@ namespace MadelineParty {
                             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmShopEnter);
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelShopEnter);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.ENTERSHOP);
+                            level.Add(new MiniTextbox(GetRandomDialogID("MadelineParty_Enter_Shop_Prompt_List")));
                         } else if (playerMoveProgress == playerMoveDistance) { // Check if we've hit our destination
                             playerMoveDistance = 0;
                             playerMovePath = null;
@@ -713,10 +756,7 @@ namespace MadelineParty {
                 GameData.turn++;
                 Add(new Coroutine(InitiateMinigame()));
             } else {
-                SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Dice);
-                if (GameData.players[turnOrder[playerTurn]].items.Contains(GameData.Item.DOUBLEDICE)) {
-                    SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.DoubleDice);
-                }
+                ChangeTurn(CurrentPlayerToken.id);
             }
         }
 
@@ -729,6 +769,8 @@ namespace MadelineParty {
         }
 
         public IEnumerator InitiateMinigame() {
+            yield return 1f;
+            level.Add(new PersistentMiniTextbox(GetRandomDialogID("MadelineParty_Minigame_Time_List")));
             hackfixRespawn = false; //FIXME hackfix
             if (GameData.gnetHost) {
                 List<LevelData> minigames = level.Session.MapData.Levels.FindAll((obj) => obj.Name.StartsWith("z_Minigame", StringComparison.InvariantCulture));
@@ -750,7 +792,7 @@ namespace MadelineParty {
                 yield return null;
             }
 
-            yield return 3f;
+            yield return 5f;
             Console.WriteLine("End minigame wait");
 
             Player player = level.Tracker.GetEntity<Player>();
@@ -873,10 +915,7 @@ namespace MadelineParty {
                         playersGoneThrough++;
                     }
                     status = BoardStatus.WAITING;
-                    SetLeftButtonStatus(turnOrder[0], LeftButton.Modes.Dice);
-                    if (GameData.players[turnOrder[0]].items.Contains(GameData.Item.DOUBLEDICE)) {
-                        SetRightButtonStatus(turnOrder[0], RightButton.Modes.DoubleDice);
-                    }
+                    ChangeTurn(turnOrder[0]);
                 }
                 return;
             }

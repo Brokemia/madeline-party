@@ -75,9 +75,15 @@ namespace MadelineParty {
             level.Add(display = new MinigameTimeDisplay(this));
         }
 
+        private AngryOshiro lastOshiro;
+
         public override void Update() {
             base.Update();
             spawnTimer -= Engine.DeltaTime;
+            if(lastOshiro != null) {
+                DynamicData.For(lastOshiro).Get<StateMachine>("state").State = 0;
+                lastOshiro = null;
+            }
             if(spawnTimer < 0 && !completed) {
                 spawnTimer = nextSpawnTime;
                 // Reduce by a half second each time until it's only 1 second between spawns
@@ -87,7 +93,9 @@ namespace MadelineParty {
                 if (spawnSeekers && (!spawnOshiro || rand.Next(2) == 0)) {
                     level.Add(new Seeker(seekerSpawns[rand.Next(seekerSpawns.Count)], null));
                 } else if(spawnOshiro) {
-                    level.Add(new AngryOshiro(new Vector2(-64, 0), false));
+                    var oshiro = new AngryOshiro(new Vector2(-64, 0), false);
+                    level.Add(oshiro);
+                    lastOshiro = oshiro;
                 }
             }
         }
