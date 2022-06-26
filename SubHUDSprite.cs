@@ -8,30 +8,41 @@ namespace MadelineParty {
     public class SubHUDSprite : Entity {
         private static DynData<SpriteBatch> spriteBatchData;
 
+        private Level level;
+
         public Sprite sprite;
         private bool cleanSampling;
-        public SubHUDSprite(Sprite sprite, bool cleanSampling = true) {
+        private bool respectScreenShake;
+        public SubHUDSprite(Sprite sprite, bool cleanSampling = true, bool respectScreenShake = true) {
             if (spriteBatchData == null) {
-                spriteBatchData = new DynData<SpriteBatch>(Draw.SpriteBatch);
+                spriteBatchData = new(Draw.SpriteBatch);
             }
             this.sprite = sprite;
             this.cleanSampling = cleanSampling;
+            this.respectScreenShake = respectScreenShake;
             Add(sprite);
             AddTag(TagsExt.SubHUD);
         }
 
+        public override void Added(Scene scene) {
+            base.Added(scene);
+            level = SceneAs<Level>();
+        }
+
         public override void Render() {
             SamplerState before = null;
-            if (cleanSampling) {
+            Matrix beforeMatrix = default;
+            if (cleanSampling || respectScreenShake) {
                 Draw.SpriteBatch.End();
                 before = spriteBatchData.Get<SamplerState>("samplerState");
+                beforeMatrix = spriteBatchData.Get<Matrix>("transformMatrix");
                 Draw.SpriteBatch.Begin(SpriteSortMode.Deferred,
                     spriteBatchData.Get<BlendState>("blendState"),
-                    SamplerState.PointClamp,
+                    cleanSampling ? SamplerState.PointClamp : before,
                     spriteBatchData.Get<DepthStencilState>("depthStencilState"),
                     spriteBatchData.Get<RasterizerState>("rasterizerState"),
                     spriteBatchData.Get<Effect>("customEffect"),
-                    spriteBatchData.Get<Matrix>("transformMatrix"));
+                    beforeMatrix * (respectScreenShake ? Matrix.CreateTranslation(new Vector3(-level.ShakeVector.X, -level.ShakeVector.Y, 0) * 6) : Matrix.Identity));
             }
             base.Render();
             if (cleanSampling) {
@@ -42,7 +53,7 @@ namespace MadelineParty {
                     spriteBatchData.Get<DepthStencilState>("depthStencilState"),
                     spriteBatchData.Get<RasterizerState>("rasterizerState"),
                     spriteBatchData.Get<Effect>("customEffect"),
-                    spriteBatchData.Get<Matrix>("transformMatrix"));
+                    beforeMatrix);
             }
         }
     }

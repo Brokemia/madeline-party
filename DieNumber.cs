@@ -56,7 +56,7 @@ namespace MadelineParty {
         public override void Render() {
             base.Render();
             //board.diceNumbers[number].Draw((Position - level.LevelOffset) * 6, Vector2.Zero, Color.White, new Vector2(1.5f, 1.5f));
-            ActiveFont.DrawOutline(number + 1 + "", (Position - level.LevelOffset) * 6, new Vector2(.5f, .5f), new Vector2(2f, 2f), Color.Blue, 1f, Color.Black);
+            ActiveFont.DrawOutline(number + 1 + "", (Position - level.LevelOffset) * 6 - level.ShakeVector * 6, new Vector2(.5f, .5f), new Vector2(2f, 2f), Color.Blue, 1f, Color.Black);
         }
     }
 }

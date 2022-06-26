@@ -12,16 +12,18 @@ namespace MadelineParty {
     [Tracked]
     public class PlayerToken : Entity {
         private class TokenImage : Component {
-            public PlayerToken token => (PlayerToken)base.Entity;
+            public PlayerToken token => (PlayerToken)Entity;
 
             public TokenImage()
                 : base(active: true, visible: true) {
             }
 
             public override void Render() {
-                token.textures[(int)token.frame].DrawCentered(token.Position, Color.White, token.scale);
+                token.textures[(int)token.frame].DrawCentered(token.Position - token.level.ShakeVector * 6, Color.White, token.scale);
             }
         }
+
+        private Level level;
 
         public int id;
 
@@ -120,12 +122,13 @@ namespace MadelineParty {
         public override void Render() {
             base.Render();
             if (respawnEase >= 0) {
-                DeathEffect.Draw(Position, color, respawnEase);
+                DeathEffect.Draw(Position - level.ShakeVector * 6, color, respawnEase);
             }
         }
 
         public override void Added(Scene scene) {
             base.Added(scene);
+            level = SceneAs<Level>();
             if (image == null) {
                 Add(image = new TokenImage());
             }

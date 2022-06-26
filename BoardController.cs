@@ -67,14 +67,21 @@ namespace MadelineParty {
         }
 
         protected class TurnDisplay : Entity {
+            private Level level;
+
             public TurnDisplay() {
                 AddTag(TagsExt.SubHUD);
+            }
+
+            public override void Added(Scene scene) {
+                base.Added(scene);
+                level = SceneAs<Level>();
             }
 
             public override void Render() {
                 base.Render();
                 string text = "Turn " + (Instance.turnDisplay == -1 ? GameData.turn : Instance.turnDisplay) + "/" + GameData.maxTurns;
-                ActiveFont.DrawOutline(text, new Vector2(Celeste.Celeste.TargetWidth / 2, Celeste.Celeste.TargetHeight - 6 * 16), new Vector2(0.5f, 0.5f), Vector2.One, Color.Blue, 2f, Color.Black);
+                ActiveFont.DrawOutline(text, new Vector2(Celeste.Celeste.TargetWidth / 2, Celeste.Celeste.TargetHeight - 6 * 16) - level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Blue, 2f, Color.Black);
             }
         }
 
@@ -90,6 +97,9 @@ namespace MadelineParty {
                 controller.SubHUDRender();
             }
         }
+
+        private static Color pathColor = Color.White; // Use DarkSlateGray in dark mode
+        private static Color pathOutlineColor = Color.DarkGray; // Use Black in dark mode
 
         public const float TOKEN_SPEED = 80f;
         public static string[] TokenPaths = { "madeline/normal00", "badeline/normal00", "theo/excited00", "granny/normal00" };
@@ -170,6 +180,8 @@ namespace MadelineParty {
         public static List<BoardSpace> boardSpaces = new();
 
         private static Dictionary<string, GreenSpaceEvent> greenSpaces;
+
+        private VirtualRenderTarget lineRenderTarget;
 
         static BoardController() {
             //boardSpaces.Add(new BoardSpace() { ID = 0, type = 's', x = 16, y = 52, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 1, } });
@@ -523,6 +535,8 @@ namespace MadelineParty {
                             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmHeartBuy);
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelHeartBuy);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYHEART);
+                            Dialog.Language.Dialog["MadelineParty_Heart_Cost"] = GameData.heartCost.ToString();
+                            level.Add(new MiniTextbox(GetRandomDialogID("MadelineParty_Buy_Heart_Prompt_List")));
                         }
                         // If we're at the item shop and have enough free space
                         else if (CurrentPlayerToken.currentSpace.type == 'i' && GameData.players[movingPlayerID].items.Count < GameData.maxItems) {
@@ -945,13 +959,14 @@ namespace MadelineParty {
                 spriteBatchData = DynamicData.For(Draw.SpriteBatch);
             }
             SamplerState before = spriteBatchData.Get<SamplerState>("samplerState");
+            Matrix matrixBefore = spriteBatchData.Get<Matrix>("transformMatrix");
             Draw.SpriteBatch.Begin(SpriteSortMode.Deferred,
                 spriteBatchData.Get<BlendState>("blendState"),
                 SamplerState.PointClamp,
                 spriteBatchData.Get<DepthStencilState>("depthStencilState"),
                 spriteBatchData.Get<RasterizerState>("rasterizerState"),
                 spriteBatchData.Get<Effect>("customEffect"),
-                spriteBatchData.Get<Matrix>("transformMatrix"));
+                matrixBefore * Matrix.CreateTranslation(new Vector3(-level.ShakeVector.X, -level.ShakeVector.Y, 0) * 6));
 
             foreach (BoardSpace space in boardSpaces) {
                 if (space.ID != GameData.heartSpaceID && space.type == 'g' && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
@@ -966,18 +981,36 @@ namespace MadelineParty {
                 spriteBatchData.Get<DepthStencilState>("depthStencilState"),
                 spriteBatchData.Get<RasterizerState>("rasterizerState"),
                 spriteBatchData.Get<Effect>("customEffect"),
-                spriteBatchData.Get<Matrix>("transformMatrix"));
+                matrixBefore);
         }
 
         public override void Render() {
             base.Render();
 
-            foreach (BoardSpace space in boardSpaces) {
-                Vector2 spacePos = Position + new Vector2(space.x, space.y);
-                foreach (BoardSpace dest in space.destinations) {
-                    Draw.Line(spacePos, Position + new Vector2(dest.x, dest.y), Color.White);
+            if (lineRenderTarget == null) {
+                lineRenderTarget = VirtualContent.CreateRenderTarget("madelineparty-board-lines", level.Bounds.Width, level.Bounds.Height);
+                GameplayRenderer.End();
+                Engine.Graphics.GraphicsDevice.SetRenderTarget(lineRenderTarget);
+                Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+                Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null,
+                    Matrix.CreateTranslation(-level.Bounds.X, -level.Bounds.Y, 0));
+                foreach (BoardSpace space in boardSpaces) {
+                    Vector2 spacePos = Position + new Vector2(space.x, space.y);
+                    foreach (BoardSpace dest in space.destinations) {
+                        Draw.Line(spacePos, Position + new Vector2(dest.x, dest.y), pathColor);
+                    }
                 }
+                Draw.SpriteBatch.End();
+                Engine.Instance.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
+                GameplayRenderer.Begin();
             }
+            
+            Vector2 renderPos = level.Bounds.Location.ToVector2();
+            Draw.SpriteBatch.Draw(lineRenderTarget, renderPos + Vector2.UnitX, pathOutlineColor);
+            Draw.SpriteBatch.Draw(lineRenderTarget, renderPos - Vector2.UnitX, pathOutlineColor);
+            Draw.SpriteBatch.Draw(lineRenderTarget, renderPos + Vector2.UnitY, pathOutlineColor);
+            Draw.SpriteBatch.Draw(lineRenderTarget, renderPos - Vector2.UnitY, pathOutlineColor);
+            Draw.SpriteBatch.Draw(lineRenderTarget, renderPos, pathColor);
 
             foreach (BoardSpace space in boardSpaces) {
                 Vector2 spacePos = Position + new Vector2(space.x, space.y);

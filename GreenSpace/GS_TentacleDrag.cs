@@ -61,7 +61,7 @@ namespace MadelineParty.GreenSpace {
             Vector2 speed = (endSpace.screenPosition - startSpace.screenPosition).SafeNormalize() * 150 * Engine.DeltaTime;
             Vector2 pos = startSpace.screenPosition;
             while (tentacle.Position != endSpace.screenPosition - offset) {
-                pos = Vector2.Clamp(pos + speed, startSpace.screenPosition, endSpace.screenPosition);
+                pos = Vector2.Clamp(pos + speed, Vector2.Min(startSpace.screenPosition, endSpace.screenPosition), Vector2.Max(startSpace.screenPosition, endSpace.screenPosition));
                 speed += speed.SafeNormalize() * 150 * Engine.DeltaTime;
                 dragToPos(tentacle, grabbed, pos, offset);
                 yield return null;

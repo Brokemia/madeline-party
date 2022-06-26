@@ -89,6 +89,8 @@ namespace MadelineParty {
 
                 level.LoadLevel(Player.IntroTypes.Jump);
 
+                level.Tracker.GetEntity<GameEndController>().winnerID = winnerID;
+
                 Leader.RestoreStrawberries(player.Leader);
             };
         }
