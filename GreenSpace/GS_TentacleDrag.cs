@@ -34,7 +34,7 @@ namespace MadelineParty.GreenSpace {
             tentacle.Position.Y = Engine.ViewHeight;
 
             Tween riseTween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeIn, 0.25f, true);
-            riseTween.OnUpdate = t => tentacle.Position.Y = Calc.LerpClamp(Engine.ViewHeight, targetPosition.Y, t.Percent);
+            riseTween.OnUpdate = t => tentacle.Position.Y = Calc.LerpClamp(Engine.ViewHeight, targetPosition.Y, t.Eased);
             riseTween.OnComplete = t => {
                 tentacleSprite.Play("tentacle_grab");
                 board.Add(new Coroutine(PullDown(board, after, tentacle, space)));

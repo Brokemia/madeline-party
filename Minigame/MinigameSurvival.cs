@@ -17,6 +17,8 @@ namespace MadelineParty {
         private static FieldInfo diedInGBJInfo = typeof(Player).GetField("diedInGBJ", BindingFlags.Static | BindingFlags.NonPublic);
         private List<Vector2> seekerSpawns = new();
         private Random rand;
+        private float spawnDecrease;
+        private float minSpawnTime;
         private float nextSpawnTime = 6.2f;
         private float spawnTimer = 5.2f;
         protected Vector2 deadRespawn;
@@ -27,6 +29,8 @@ namespace MadelineParty {
 
         public MinigameSurvival(EntityData data, Vector2 offset) : base(data, offset) {
             deadRespawn = data.Nodes[0];
+            spawnDecrease = data.Float("spawnDecrease", 0.5f);
+            minSpawnTime = data.Float("minSpawnTime", 1.2f);
             spawnSeekers = data.Bool("spawnSeekers", true);
             spawnOshiro = data.Bool("spawnOshiro", false);
         }
@@ -87,9 +91,10 @@ namespace MadelineParty {
             if(spawnTimer < 0 && !completed) {
                 spawnTimer = nextSpawnTime;
                 // Reduce by a half second each time until it's only 1 second between spawns
-                if(nextSpawnTime > 1.2) {
-                    nextSpawnTime -= 0.5f;
+                if(nextSpawnTime > minSpawnTime) {
+                    nextSpawnTime -= spawnDecrease;
                 }
+                nextSpawnTime = Calc.Max(nextSpawnTime, minSpawnTime);
                 if (spawnSeekers && (!spawnOshiro || rand.Next(2) == 0)) {
                     level.Add(new Seeker(seekerSpawns[rand.Next(seekerSpawns.Count)], null));
                 } else if(spawnOshiro) {
