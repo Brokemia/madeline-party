@@ -10,7 +10,7 @@ namespace MadelineParty {
     public class GameEndController : Entity {
         private Level level;
         public int winnerID;
-        private Random textRand = new Random((int)(GameData.turnOrderSeed / 3) + 70);
+        private Random textRand = new Random((int)(GameData.Instance.turnOrderSeed / 3) + 70);
 
         public override void Added(Scene scene) {
             base.Added(scene);
@@ -24,7 +24,7 @@ namespace MadelineParty {
             // First, set the name to use as a dialog entry
             string name;
             if (MultiplayerSingleton.Instance.BackendConnected()) {
-                name = MultiplayerSingleton.Instance.GetPlayerName(GameData.celestenetIDs[player]);
+                name = MultiplayerSingleton.Instance.GetPlayerName(GameData.Instance.celestenetIDs[player]);
             } else {
                 name = "{savedata Name}";
             }

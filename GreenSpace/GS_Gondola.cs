@@ -37,7 +37,7 @@ namespace MadelineParty.GreenSpace {
             lastBoard = board;
             lastSpace = space;
             lastAfter = after;
-            if (GameData.players[board.CurrentPlayerToken.id].strawberries >= GONDOLA_COST) {
+            if (GameData.Instance.players[board.CurrentPlayerToken.id].strawberries >= GONDOLA_COST) {
                 board.GetLeftButton(board.CurrentPlayerToken).OnPressButton += delegate {
                     MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "TAKEGONDOLA", choice = 1 });
                     GondolaChoiceMade(true, board, space, after);
@@ -154,7 +154,7 @@ namespace MadelineParty.GreenSpace {
         private void HandlePlayerChoice(MPData data) {
             if (data is not PlayerChoice playerChoice) return;
             // If another player in our party has made a gondola choice
-            if (GameData.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("TAKEGONDOLA")) {
+            if (GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("TAKEGONDOLA")) {
                 GondolaChoiceMade(playerChoice.choice == 1, lastBoard, lastSpace.Value, lastAfter);
             }
         }

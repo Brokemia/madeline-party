@@ -23,7 +23,7 @@ namespace MadelineParty {
             level = SceneAs<Level>();
             rolls = new int[4];
             List<int> list = new List<int>(BoardController.oneToTen);
-            Random rand = new Random((int)GameData.tieBreakerSeed);
+            Random rand = new Random((int)GameData.Instance.tieBreakerSeed);
             for (int i = 0; i < 4; i++) {
                 rolls[i] = list[rand.Next(list.Count)];
                 list.Remove(rolls[i]);
@@ -31,7 +31,7 @@ namespace MadelineParty {
         }
 
         public void RollDice(Vector2 buttonPos, int playerID) {
-            if (playerID == GameData.realPlayerID) {
+            if (playerID == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new TiebreakerRolled { ButtonPosition = buttonPos });
             }
 
@@ -73,7 +73,7 @@ namespace MadelineParty {
             PlayerData winner = playersSorted.Find(p => p.TokenSelected == winnerID);
             playersSorted.Remove(winner);
             playersSorted.Insert(0, winner);
-            int realPlayerPlace = playersSorted.FindIndex((obj) => obj.TokenSelected == GameData.realPlayerID);
+            int realPlayerPlace = playersSorted.FindIndex((obj) => obj.TokenSelected == GameData.Instance.realPlayerID);
             level.OnEndOfFrame += delegate {
                 Player player = level.Tracker.GetEntity<Player>();
                 Leader.StoreStrawberries(player.Leader);
@@ -111,7 +111,7 @@ namespace MadelineParty {
         private static void HandleTiebreakerRolled(MPData data) {
             if (data is not TiebreakerRolled rolled) return;
             // If another player in our party has rolled a tiebreaker die
-            if (GameData.celestenetIDs.Contains(rolled.ID) && rolled.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(rolled.ID) && rolled.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
                 if (Engine.Scene is not Level level) {
                     return;
                 }
@@ -119,7 +119,7 @@ namespace MadelineParty {
                     // Find a close button
                     if ((button.Position - rolled.ButtonPosition).LengthSquared() < 1) {
                         button.SetCurrentMode(LeftButton.Modes.Inactive);
-                        level.Entities.FindFirst<TiebreakerController>()?.RollDice(rolled.ButtonPosition, GameData.playerSelectTriggers[rolled.ID]);
+                        level.Entities.FindFirst<TiebreakerController>()?.RollDice(rolled.ButtonPosition, GameData.Instance.playerSelectTriggers[rolled.ID]);
                         return;
                     }
                 }

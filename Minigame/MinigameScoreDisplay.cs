@@ -22,15 +22,15 @@ namespace MadelineParty {
                 float num = -300f * Ease.CubeIn(1f - DrawLerp);
 
                 int index = 0;
-                for(int i = 0; i < GameData.players.Length; i++) {
-                    if (GameData.players[i] != null) {
+                for(int i = 0; i < GameData.Instance.players.Length; i++) {
+                    if (GameData.Instance.players[i] != null) {
                         scoreBg.Draw(new Vector2(num, Y + 44 * (index + 1)));
-                        PlayerToken token = GameData.players[i].token;
+                        PlayerToken token = GameData.Instance.players[i].token;
                         token.textures[(int)token.frame].DrawCentered(new Vector2(num + 40, Y - 8 + 44 * (index + 1.5f)), Color.White, .3f);
 
                         PixelFont font = Dialog.Languages["english"].Font;
                         float fontFaceSize = Dialog.Languages["english"].FontFaceSize;
-                        string text = (GameData.minigameStatus.ContainsKey(i) ? GameData.minigameStatus[i].ToString() : "0") + (max > 0 ? "/" + max : "");
+                        string text = (GameData.Instance.minigameStatus.ContainsKey(i) ? GameData.Instance.minigameStatus[i].ToString() : "0") + (max > 0 ? "/" + max : "");
                         font.DrawOutline(fontFaceSize, text, new Vector2(num + 120, Y + 44f * (index + 2)), new Vector2(0.5f, 1f), Vector2.One * (1f + wiggler.Value * 0.15f), Color.White, 2f, Color.Black);
                         index++;
                     }

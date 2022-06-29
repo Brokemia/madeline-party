@@ -30,9 +30,9 @@ namespace MadelineParty {
         private void HandlePlayerChoice(MPData data) {
             if (data is not PlayerChoice playerChoice) return;
             // If another player in our party has changed the turn count
-            if (GameData.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("TURNCOUNTSELECT")) {
+            if (GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("TURNCOUNTSELECT")) {
                 valueIdx = playerChoice.choice;
-                GameData.maxTurns = Value;
+                GameData.Instance.maxTurns = Value;
             }
         }
 
@@ -44,7 +44,7 @@ namespace MadelineParty {
         protected override DashCollisionResults OnPlus(Player player, Vector2 direction) {
             Audio.Play("event:/game/general/wall_break_ice", Position);
             IncremementValue();
-            GameData.maxTurns = Value;
+            GameData.Instance.maxTurns = Value;
             MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "TURNCOUNTSELECT", choice = valueIdx });
             return base.OnPlus(player, direction);
         }
@@ -52,7 +52,7 @@ namespace MadelineParty {
         protected override DashCollisionResults OnMinus(Player player, Vector2 direction) {
             Audio.Play("event:/game/general/wall_break_ice", Position);
             DecremementValue();
-            GameData.maxTurns = Value;
+            GameData.Instance.maxTurns = Value;
             MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "TURNCOUNTSELECT", choice = valueIdx });
             return base.OnMinus(player, direction);
         }

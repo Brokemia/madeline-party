@@ -25,7 +25,7 @@ namespace MadelineParty {
         public override void OnEnter(Player player) {
             base.OnEnter(player);
             // Stop problems with the player entering the trigger multiple times
-            if (GameData.minigameResults.Exists((obj) => obj.Item1 == GameData.realPlayerID))
+            if (GameData.Instance.minigameResults.Exists((obj) => obj.Item1 == GameData.Instance.realPlayerID))
                 return;
             completed = true;
             MinigameTimeDisplay display = level.Entities.FindFirst<MinigameTimeDisplay>();
@@ -39,7 +39,7 @@ namespace MadelineParty {
             foreach(SyncedKevin kevin in level.Tracker.GetEntities<SyncedKevin>()) {
                 kevin.deactivated = true;
             }
-            GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, (uint)timeElapsed));
+            GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, (uint)timeElapsed));
             MultiplayerSingleton.Instance.Send(new MinigameEnd { results = (uint)timeElapsed });
 
             Add(new Coroutine(EndMinigame(LOWEST_WINS, () => {})));

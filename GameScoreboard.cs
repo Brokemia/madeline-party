@@ -21,16 +21,16 @@ namespace MadelineParty {
             public override void Render() {
                 base.Render();
                 if (parent.currentMode != Modes.ENTERSHOP) {
-                    if (parent == null || GameData.players[parent.PlayerID] == null) return;
-                    string strawberryText = ((parent.tempStrawberries == -1) ? GameData.players[parent.PlayerID].strawberries : parent.tempStrawberries) + "";
-                    string heartText = GameData.players[parent.PlayerID].hearts + "";
+                    if (parent == null || GameData.Instance.players[parent.PlayerID] == null) return;
+                    string strawberryText = ((parent.tempStrawberries == -1) ? GameData.Instance.players[parent.PlayerID].strawberries : parent.tempStrawberries) + "";
+                    string heartText = GameData.Instance.players[parent.PlayerID].hearts + "";
                     if (parent.currentMode == Modes.BUYHEART) {
-                        ActiveFont.DrawOutline("-" + GameData.heartCost, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Red, 2f, Color.Black);
+                        ActiveFont.DrawOutline("-" + GameData.Instance.heartCost, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Red, 2f, Color.Black);
                         ActiveFont.DrawOutline("+1", (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x1E, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.LimeGreen, 2f, Color.Black);
                     } else if (parent.currentMode == Modes.BUYITEM) {
-                        ActiveFont.DrawOutline("-" + GameData.itemPrices[parent.itemBeingBought], (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Red, 2f, Color.Black);
+                        ActiveFont.DrawOutline("-" + GameData.Instance.itemPrices[parent.itemBeingBought], (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Red, 2f, Color.Black);
                         ActiveFont.DrawOutline("+1", (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x1E, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.LimeGreen, 2f, Color.Black);
-                        heartText = GameData.players[parent.PlayerID].items.Count((i) => i == parent.itemBeingBought) + "";
+                        heartText = GameData.Instance.players[parent.PlayerID].items.Count((i) => i == parent.itemBeingBought) + "";
                     } else if (parent.currentMode == Modes.BUYARBITRARY) {
                         ActiveFont.DrawOutline("-" + parent.arbitraryCost, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Red, 2f, Color.Black);
                         ActiveFont.DrawOutline("+" + parent.arbitraryPurchaseAmount, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x1E, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.LimeGreen, 2f, Color.Black);
@@ -42,8 +42,8 @@ namespace MadelineParty {
                 }
 
                 // Display items
-                for (int i = 0; i < GameData.players[parent.playerID].items.Count; i++) {
-                    switch (GameData.players[parent.playerID].items[i]) {
+                for (int i = 0; i < GameData.Instance.players[parent.playerID].items.Count; i++) {
+                    switch (GameData.Instance.players[parent.playerID].items[i]) {
                         case GameData.Item.DOUBLEDICE:
                             parent.doubleDiceTexture.Draw((parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x0C + i * 0x24, 0x0C) - parent.level.ShakeVector * 6, Vector2.Zero, Color.White, new Vector2(2, 2));
                             break;
@@ -51,10 +51,10 @@ namespace MadelineParty {
                 }
                 // Display items in the shop
                 if (parent.currentMode == Modes.ENTERSHOP) {
-                    for (int i = 0; i < GameData.shopContents.Count; i++) {
-                        switch (GameData.shopContents[i]) {
+                    for (int i = 0; i < GameData.Instance.shopContents.Count; i++) {
+                        switch (GameData.Instance.shopContents[i]) {
                             case GameData.Item.DOUBLEDICE:
-                                parent.doubleDiceTexture.Draw((parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x12 * 6 + 2 + i * 0x24 - (GameData.shopContents.Count - 1) * 18, 0x20 * 6) - parent.level.ShakeVector * 6, Vector2.Zero, Color.White, new Vector2(2, 2));
+                                parent.doubleDiceTexture.Draw((parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x12 * 6 + 2 + i * 0x24 - (GameData.Instance.shopContents.Count - 1) * 18, 0x20 * 6) - parent.level.ShakeVector * 6, Vector2.Zero, Color.White, new Vector2(2, 2));
                                 break;
                         }
                     }
@@ -114,7 +114,7 @@ namespace MadelineParty {
         public override void Added(Scene scene) {
             base.Added(scene);
             level = SceneAs<Level>();
-            if (GameData.players[PlayerID] != null) {
+            if (GameData.Instance.players[PlayerID] != null) {
                 level.Add(text = new ScoreboardText(this));
                 strawberrySprite = GFX.SpriteBank.Create("strawberry");
                 Add(strawberrySprite);
@@ -154,7 +154,7 @@ namespace MadelineParty {
 
         public void StrawberryChange(int changeBy, float changeSpeed) {
             strawberryChangeSpeed = changeSpeed;
-            tempStrawberries = GameData.players[playerID].strawberries;
+            tempStrawberries = GameData.Instance.players[playerID].strawberries;
             Add(new Coroutine(StrawberryChangeRoutine(changeBy)));
         }
 

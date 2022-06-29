@@ -25,15 +25,15 @@ namespace MadelineParty {
         public override void OnEnter(Player player) {
             base.OnEnter(player);
             occupied = true;
-            GameData.currentPlayerSelection = this;
+            GameData.Instance.currentPlayerSelection = this;
             MultiplayerSingleton.Instance.Send(new Party { respondingTo = -1, playerSelectTrigger = playerID });
 
             // -1 so it doesn't count me as a player
-            int left = GameData.playerNumber - 1;
-            foreach (KeyValuePair<uint, int> kvp1 in GameData.playerSelectTriggers) {
+            int left = GameData.Instance.playerNumber - 1;
+            foreach (KeyValuePair<uint, int> kvp1 in GameData.Instance.playerSelectTriggers) {
                 // Check if another player is trying to choose the same spot
                 bool duplicate = false;
-                foreach (KeyValuePair<uint, int> kvp2 in GameData.playerSelectTriggers) {
+                foreach (KeyValuePair<uint, int> kvp2 in GameData.Instance.playerSelectTriggers) {
                     duplicate |= (kvp2.Key != kvp1.Key && kvp2.Value == kvp1.Value);
                 }
                 if (!duplicate && kvp1.Value != -1 && kvp1.Value != playerID) {
@@ -47,42 +47,42 @@ namespace MadelineParty {
         }
 
         private void MultiplayerOccupiedAction() {
-            GameData.players[playerID] = new PlayerData(playerID, MultiplayerSingleton.Instance.GetPlayerID());
-            foreach (KeyValuePair<uint, int> pair in GameData.playerSelectTriggers) {
+            GameData.Instance.players[playerID] = new PlayerData(playerID, MultiplayerSingleton.Instance.GetPlayerID());
+            foreach (KeyValuePair<uint, int> pair in GameData.Instance.playerSelectTriggers) {
                 if (pair.Value != playerID && pair.Value >= 0) {
-                    GameData.players[pair.Value] = new PlayerData(pair.Value, pair.Key);
+                    GameData.Instance.players[pair.Value] = new PlayerData(pair.Value, pair.Key);
                 }
             }
             // Host determines the random seeds for the game
             // Seeds are determined in advance to avoid duplicate rolls when it matters
-            if (GameData.gnetHost) {
-                MultiplayerSingleton.Instance.Send(new RandomSeed { turnOrderSeed = GameData.turnOrderSeed, tieBreakerSeed = GameData.tieBreakerSeed });
+            if (GameData.Instance.gnetHost) {
+                MultiplayerSingleton.Instance.Send(new RandomSeed { turnOrderSeed = GameData.Instance.turnOrderSeed, tieBreakerSeed = GameData.Instance.tieBreakerSeed });
             }
         }
 
         // Only called on the Trigger that the player at this computer has selected
         public void AllTriggersOccupied() {
             // Store playerID
-            GameData.realPlayerID = playerID;
+            GameData.Instance.realPlayerID = playerID;
             Random rand = new Random();
             // If not the host, the seeds will be changed by a recieved communication
-            GameData.turnOrderSeed = (uint)rand.Next(2, 100000);
-            GameData.tieBreakerSeed = (uint)rand.Next(2, 100000);
+            GameData.Instance.turnOrderSeed = (uint)rand.Next(2, 100000);
+            GameData.Instance.tieBreakerSeed = (uint)rand.Next(2, 100000);
             BoardController.generateTurnOrderRolls();
             if (MultiplayerSingleton.Instance.BackendConnected()) {
                 MultiplayerOccupiedAction();
             } else {
-                GameData.players[playerID] = new PlayerData(playerID);
+                GameData.Instance.players[playerID] = new PlayerData(playerID);
             }
             Player player = level.Tracker.GetEntity<Player>();
             level.OnEndOfFrame += delegate {
-                GameData.currentPlayerSelection = null;
+                GameData.Instance.currentPlayerSelection = null;
                 Leader.StoreStrawberries(player.Leader);
                 level.Remove(player);
                 level.UnloadLevel();
 
                 level.Session.Level = "Game_SettingsConfig";
-                if(GameData.gnetHost) {
+                if(GameData.Instance.gnetHost) {
                     level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
                 } else {
                     level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Bottom));
@@ -96,10 +96,10 @@ namespace MadelineParty {
 
         public override void OnLeave(Player player) {
             base.OnLeave(player);
-            if (GameData.realPlayerID == -1) {
+            if (GameData.Instance.realPlayerID == -1) {
                 occupied = false;
                 MultiplayerSingleton.Instance.Send(new Party { respondingTo = -1, playerSelectTrigger = -1 });
-                GameData.currentPlayerSelection = null;
+                GameData.Instance.currentPlayerSelection = null;
             }
         }
 

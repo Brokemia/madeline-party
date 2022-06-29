@@ -80,7 +80,7 @@ namespace MadelineParty {
 
             public override void Render() {
                 base.Render();
-                string text = "Turn " + (Instance.turnDisplay == -1 ? GameData.turn : Instance.turnDisplay) + "/" + GameData.maxTurns;
+                string text = "Turn " + (Instance.turnDisplay == -1 ? GameData.Instance.turn : Instance.turnDisplay) + "/" + GameData.Instance.maxTurns;
                 ActiveFont.DrawOutline(text, new Vector2(Celeste.Celeste.TargetWidth / 2, Celeste.Celeste.TargetHeight - 6 * 16) - level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Blue, 2f, Color.Black);
             }
         }
@@ -121,7 +121,7 @@ namespace MadelineParty {
         private Random _textRand;
 
         private Random TextRand {
-            get => _textRand == null ? _textRand = new Random((int)(GameData.turnOrderSeed / 3) - GameData.turn - 120) : _textRand;
+            get => _textRand == null ? _textRand = new Random((int)(GameData.Instance.turnOrderSeed / 3) - GameData.Instance.turn - 120) : _textRand;
         }
 
         // The number of players that have rolled dice
@@ -298,14 +298,14 @@ namespace MadelineParty {
             foreach (BoardSpace space in boardSpaces) {
                 if (space.type == 's') {
                     int tokensAdded = 0;
-                    for (int k = 0; k < GameData.players.Length; k++) {
-                        if (GameData.players[k] != null) {
-                            if (!GameData.gameStarted) {
-                                PlayerToken token = new PlayerToken(k, TokenPaths[GameData.players[k].TokenSelected], space.screenPosition + new Vector2(0, tokensAdded * 18), new Vector2(.25f, .25f), -1, space);
+                    for (int k = 0; k < GameData.Instance.players.Length; k++) {
+                        if (GameData.Instance.players[k] != null) {
+                            if (!GameData.Instance.gameStarted) {
+                                PlayerToken token = new PlayerToken(k, TokenPaths[GameData.Instance.players[k].TokenSelected], space.screenPosition + new Vector2(0, tokensAdded * 18), new Vector2(.25f, .25f), -1, space);
                                 playerTokens[k] = token;
-                                GameData.players[k].token = token;
+                                GameData.Instance.players[k].token = token;
                             } else {
-                                playerTokens[k] = GameData.players[k].token;
+                                playerTokens[k] = GameData.Instance.players[k].token;
                             }
                             tokensAdded++;
                         }
@@ -331,7 +331,7 @@ namespace MadelineParty {
             found.Sort();
             for (int i = 0; i < found.Count; i++) {
                 leftButtons.Add(found[i]);
-                if (GameData.players[i] != null && !GameData.gameStarted) {
+                if (GameData.Instance.players[i] != null && !GameData.Instance.gameStarted) {
                     int p = i;
                     Alarm.Set(this, 0.5f, delegate {
                         SetDice(p);
@@ -363,8 +363,8 @@ namespace MadelineParty {
             }
 
             // Make sure turn order is determined after minigame completion
-            if (GameData.gameStarted) {
-                List<PlayerData> temp = new(GameData.players);
+            if (GameData.Instance.gameStarted) {
+                List<PlayerData> temp = new(GameData.Instance.players);
                 temp.Sort();
                 int playersGoneThrough = 0;
                 for (int i = 0; i < temp.Count; i++) {
@@ -378,7 +378,7 @@ namespace MadelineParty {
                 });
 
                 if (delayedDieRoll != null) {
-                    if (isWaitingOnPlayer(GameData.playerSelectTriggers[delayedDieRoll.ID])) {
+                    if (isWaitingOnPlayer(GameData.Instance.playerSelectTriggers[delayedDieRoll.ID])) {
                         string rollString = "";
                         foreach (int i in delayedDieRoll.rolls) {
                             rollString += i + ", ";
@@ -386,8 +386,8 @@ namespace MadelineParty {
                         Logger.Log("MadelineParty", "Delayed emote interpreted as die roll from player " + delayedDieRoll.DisplayName + ". Rolls: " + rollString);
 
                         if (delayedDieRoll.rolls.Length == 2)
-                            GameData.players[GameData.playerSelectTriggers[delayedDieRoll.ID]].items.Remove(GameData.Item.DOUBLEDICE);
-                        RollDice(GameData.playerSelectTriggers[delayedDieRoll.ID], delayedDieRoll.rolls);
+                            GameData.Instance.players[GameData.Instance.playerSelectTriggers[delayedDieRoll.ID]].items.Remove(GameData.Item.DOUBLEDICE);
+                        RollDice(GameData.Instance.playerSelectTriggers[delayedDieRoll.ID], delayedDieRoll.rolls);
                     }
                     delayedDieRoll = null;
                 }
@@ -399,7 +399,7 @@ namespace MadelineParty {
                     queuedStrawberries.Clear();
                 }
             }
-            GameData.gameStarted = true;
+            GameData.Instance.gameStarted = true;
         }
 
         public GameScoreboard GetScoreboard(PlayerToken player) {
@@ -452,7 +452,7 @@ namespace MadelineParty {
 
         private void ChangeTurn(int player) {
             SetDice(player);
-            if (GameData.players[player].items.Contains(GameData.Item.DOUBLEDICE)) {
+            if (GameData.Instance.players[player].items.Contains(GameData.Item.DOUBLEDICE)) {
                 SetDoubleDice(player);
             }
             if(level.Wipe != null) {
@@ -470,7 +470,7 @@ namespace MadelineParty {
             // First, set the name to use as a dialog entry
             string name;
             if(MultiplayerSingleton.Instance.BackendConnected()) {
-                name = MultiplayerSingleton.Instance.GetPlayerName(GameData.celestenetIDs[player]);
+                name = MultiplayerSingleton.Instance.GetPlayerName(GameData.Instance.celestenetIDs[player]);
             } else {
                 name = "{savedata Name}";
             }
@@ -530,16 +530,16 @@ namespace MadelineParty {
                         CurrentPlayerToken.currentSpace = playerMovePath[playerMoveProgress];
 
                         // If we're on the heart space
-                        if (GameData.heartSpaceID == CurrentPlayerToken.currentSpace.ID && GameData.players[movingPlayerID].strawberries >= GameData.heartCost) {
+                        if (GameData.Instance.heartSpaceID == CurrentPlayerToken.currentSpace.ID && GameData.Instance.players[movingPlayerID].strawberries >= GameData.Instance.heartCost) {
                             status = BoardStatus.WAITING;
                             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmHeartBuy);
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelHeartBuy);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYHEART);
-                            Dialog.Language.Dialog["MadelineParty_Heart_Cost"] = GameData.heartCost.ToString();
+                            Dialog.Language.Dialog["MadelineParty_Heart_Cost"] = GameData.Instance.heartCost.ToString();
                             level.Add(new MiniTextbox(GetRandomDialogID("MadelineParty_Buy_Heart_Prompt_List")));
                         }
                         // If we're at the item shop and have enough free space
-                        else if (CurrentPlayerToken.currentSpace.type == 'i' && GameData.players[movingPlayerID].items.Count < GameData.maxItems) {
+                        else if (CurrentPlayerToken.currentSpace.type == 'i' && GameData.Instance.players[movingPlayerID].items.Count < GameData.maxItems) {
                             status = BoardStatus.WAITING;
                             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmShopEnter);
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelShopEnter);
@@ -561,7 +561,7 @@ namespace MadelineParty {
 
         private void HandleSpaceAction(Action next) {
             // Don't do an action if we're on the heart space
-            if(GameData.heartSpaceID == CurrentPlayerToken.currentSpace.ID) {
+            if(GameData.Instance.heartSpaceID == CurrentPlayerToken.currentSpace.ID) {
                 next();
             }
             switch (CurrentPlayerToken.currentSpace.type) {
@@ -584,7 +584,7 @@ namespace MadelineParty {
 
         public void ChangeStrawberries(int playerID, int amt, float changeSpeed = 0.25f) {
             scoreboards[playerID].StrawberryChange(amt, changeSpeed);
-            GameData.players[playerID].ChangeStrawberries(amt);
+            GameData.Instance.players[playerID].ChangeStrawberries(amt);
         }
 
         public static void QueueStrawberryChange(int playerID, int amt) {
@@ -597,13 +597,13 @@ namespace MadelineParty {
 
         public void SkipItem() {
             // Only send out data if we are the player that skipped the item
-            if (turnOrder[playerTurn] == GameData.realPlayerID) {
+            if (turnOrder[playerTurn] == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "SHOPITEM", choice = 1 });
             }
             shopItemViewing++;
-            if (shopItemViewing < GameData.shopContents.Count) {
-                scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, GameData.shopContents[shopItemViewing]);
-                if (GameData.players[turnOrder[playerTurn]].strawberries >= GameData.itemPrices[GameData.shopContents[shopItemViewing]]) {
+            if (shopItemViewing < GameData.Instance.shopContents.Count) {
+                scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, GameData.Instance.shopContents[shopItemViewing]);
+                if (GameData.Instance.players[turnOrder[playerTurn]].strawberries >= GameData.Instance.itemPrices[GameData.Instance.shopContents[shopItemViewing]]) {
                     SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmItemBuy);
                 } else {
                     SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
@@ -618,23 +618,23 @@ namespace MadelineParty {
 
         public void BuyItem() {
             // Only send out data if we are the player that bought the item
-            if (turnOrder[playerTurn] == GameData.realPlayerID) {
+            if (turnOrder[playerTurn] == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "SHOPITEM", choice = 0 });
             }
-            GameData.Item itemBought = GameData.shopContents[shopItemViewing];
-            GameData.players[turnOrder[playerTurn]].items.Add(itemBought);
+            GameData.Item itemBought = GameData.Instance.shopContents[shopItemViewing];
+            GameData.Instance.players[turnOrder[playerTurn]].items.Add(itemBought);
             shopItemViewing = 0;
-            scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL, GameData.shopContents[shopItemViewing]);
+            scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL, GameData.Instance.shopContents[shopItemViewing]);
             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.Inactive);
 
-            ChangeStrawberries(turnOrder[playerTurn], -GameData.itemPrices[itemBought], .08f);
+            ChangeStrawberries(turnOrder[playerTurn], -GameData.Instance.itemPrices[itemBought], .08f);
             AfterChoice();
         }
 
         public void SkipShop() {
             // Only send out data if we are the player that skipped the shop
-            if (turnOrder[playerTurn] == GameData.realPlayerID) {
+            if (turnOrder[playerTurn] == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "ENTERSHOP", choice = 1 });
             }
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
@@ -645,14 +645,14 @@ namespace MadelineParty {
 
         public void EnterShop() {
             // Only send out data if we are the player that entered the shop
-            if (turnOrder[playerTurn] == GameData.realPlayerID) {
+            if (turnOrder[playerTurn] == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "ENTERSHOP", choice = 0 });
             }
             shopItemViewing = 0;
-            scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, GameData.shopContents[shopItemViewing]);
+            scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, GameData.Instance.shopContents[shopItemViewing]);
             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelItemBuy);
-            Console.WriteLine(GameData.players[turnOrder[playerTurn]].strawberries + " " + GameData.itemPrices[GameData.shopContents[shopItemViewing]]);
-            if (GameData.players[turnOrder[playerTurn]].strawberries >= GameData.itemPrices[GameData.shopContents[shopItemViewing]]) {
+            Console.WriteLine(GameData.Instance.players[turnOrder[playerTurn]].strawberries + " " + GameData.Instance.itemPrices[GameData.Instance.shopContents[shopItemViewing]]);
+            if (GameData.Instance.players[turnOrder[playerTurn]].strawberries >= GameData.Instance.itemPrices[GameData.Instance.shopContents[shopItemViewing]]) {
                 SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmItemBuy);
             } else {
                 SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
@@ -661,7 +661,7 @@ namespace MadelineParty {
 
         public void SkipHeart() {
             // Only send out data if we are the player that skipped the heart
-            if (turnOrder[playerTurn] == GameData.realPlayerID) {
+            if (turnOrder[playerTurn] == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "HEART", choice = 1 });
             }
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
@@ -672,26 +672,26 @@ namespace MadelineParty {
 
         public void BuyHeart() {
             // Only send out data if we are the player that bought the heart
-            if (turnOrder[playerTurn] == GameData.realPlayerID) {
+            if (turnOrder[playerTurn] == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "HEART", choice = 0 });
             }
-            ChangeStrawberries(turnOrder[playerTurn], -GameData.heartCost, 0.08f);
-            GameData.players[turnOrder[playerTurn]].hearts++;
+            ChangeStrawberries(turnOrder[playerTurn], -GameData.Instance.heartCost, 0.08f);
+            GameData.Instance.players[turnOrder[playerTurn]].hearts++;
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
 
-            GameData.heartSpaceID = -1;
+            GameData.Instance.heartSpaceID = -1;
             // Only send out data if we are the player that bought the heart
-            if (turnOrder[playerTurn] == GameData.realPlayerID) {
-                List<BoardSpace> possibleHeartSpaces = boardSpaces.FindAll((s) => s.heartSpace && GameData.players[turnOrder[playerTurn]].token.currentSpace.ID != s.ID);
-                GameData.heartSpaceID = possibleHeartSpaces[rand.Next(possibleHeartSpaces.Count)].ID;
-                MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "HEARTSPACEID", choice = GameData.heartSpaceID });
+            if (turnOrder[playerTurn] == GameData.Instance.realPlayerID) {
+                List<BoardSpace> possibleHeartSpaces = boardSpaces.FindAll((s) => s.heartSpace && GameData.Instance.players[turnOrder[playerTurn]].token.currentSpace.ID != s.ID);
+                GameData.Instance.heartSpaceID = possibleHeartSpaces[rand.Next(possibleHeartSpaces.Count)].ID;
+                MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "HEARTSPACEID", choice = GameData.Instance.heartSpaceID });
             }
             Add(new Coroutine(WaitForNewHeartSpaceCoroutine()));
         }
 
         private IEnumerator WaitForNewHeartSpaceCoroutine() {
-            while (GameData.heartSpaceID < 0) {
+            while (GameData.Instance.heartSpaceID < 0) {
                 yield return null;
             }
 
@@ -733,7 +733,7 @@ namespace MadelineParty {
 
         public void ContinueMovementAfterIntersection(Direction chosen) {
             // Only send out data if we are the player that chose the direction
-            if (turnOrder[playerTurn] == GameData.realPlayerID) {
+            if (turnOrder[playerTurn] == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "DIRECTION", choice = (int)chosen });
             }
             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
@@ -764,10 +764,10 @@ namespace MadelineParty {
         public void EndTurn() {
             status = BoardStatus.WAITING;
             playerTurn++;
-            if (playerTurn >= GameData.playerNumber) {
+            if (playerTurn >= GameData.Instance.playerNumber) {
                 playerTurn = 0;
-                turnDisplay = GameData.turn;
-                GameData.turn++;
+                turnDisplay = GameData.Instance.turn;
+                GameData.Instance.turn++;
                 Add(new Coroutine(InitiateMinigame()));
             } else {
                 ChangeTurn(CurrentPlayerToken.id);
@@ -776,9 +776,9 @@ namespace MadelineParty {
 
         public void ChoseMinigame(int chosen, long startTime = 0) {
             List<LevelData> minigames = level.Session.MapData.Levels.FindAll((obj) => obj.Name.StartsWith("z_Minigame", StringComparison.InvariantCulture));
-            minigames.RemoveAll((obj) => GameData.playedMinigames.Contains(obj.Name));
-            GameData.minigame = minigames[chosen];
-            GameData.playedMinigames.Add(GameData.minigame.Name);
+            minigames.RemoveAll((obj) => GameData.Instance.playedMinigames.Contains(obj.Name));
+            GameData.Instance.minigame = minigames[chosen];
+            GameData.Instance.playedMinigames.Add(GameData.Instance.minigame.Name);
             minigameStartTime = DateTime.FromFileTimeUtc(startTime);
         }
 
@@ -786,9 +786,9 @@ namespace MadelineParty {
             yield return 1f;
             level.Add(new PersistentMiniTextbox(GetRandomDialogID("MadelineParty_Minigame_Time_List")));
             hackfixRespawn = false; //FIXME hackfix
-            if (GameData.gnetHost) {
+            if (GameData.Instance.gnetHost) {
                 List<LevelData> minigames = level.Session.MapData.Levels.FindAll((obj) => obj.Name.StartsWith("z_Minigame", StringComparison.InvariantCulture));
-                minigames.RemoveAll((obj) => GameData.playedMinigames.Contains(obj.Name));
+                minigames.RemoveAll((obj) => GameData.Instance.playedMinigames.Contains(obj.Name));
                 int chosenMinigame = rand.Next(minigames.Count);
                 if (riggedMinigame != null && minigames.IndexOf(riggedMinigame) >= 0) {
                     chosenMinigame = minigames.IndexOf(riggedMinigame);
@@ -799,10 +799,10 @@ namespace MadelineParty {
                 ChoseMinigame(chosenMinigame);
                 MultiplayerSingleton.Instance.Send(new MinigameStart { choice = chosenMinigame, gameStart = minigameStartTime.ToFileTimeUtc() });
             }
-            Console.WriteLine("Host? " + GameData.gnetHost);
+            Console.WriteLine("Host? " + GameData.Instance.gnetHost);
 
             Console.WriteLine("Begin minigame wait");
-            while (GameData.minigame == null /*|| minigameStartTime.CompareTo(DateTime.UtcNow) < 0*/) {
+            while (GameData.Instance.minigame == null /*|| minigameStartTime.CompareTo(DateTime.UtcNow) < 0*/) {
                 yield return null;
             }
 
@@ -816,10 +816,10 @@ namespace MadelineParty {
                 level.Remove(player);
                 level.UnloadLevel();
 
-                level.Session.Level = GameData.minigame.Name;
+                level.Session.Level = GameData.Instance.minigame.Name;
                 level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
                 level.LoadLevel(Player.IntroTypes.None);
-                level.Session.Audio.Music.Event = GameData.GetMinigameMusic(GameData.minigame.Name);
+                level.Session.Audio.Music.Event = GameData.GetMinigameMusic(GameData.Instance.minigame.Name);
 
                 Leader.RestoreStrawberries(player.Leader);
             };
@@ -828,11 +828,11 @@ namespace MadelineParty {
         // Returns which number player this is, ignoring unpicked characters
         private int getRelativePlayerID(int absPlayerID) {
             int currPlayer = 0;
-            for (int i = 0; i < GameData.players.Length; i++) {
+            for (int i = 0; i < GameData.Instance.players.Length; i++) {
                 if (i == absPlayerID) {
                     return currPlayer;
                 }
-                if (GameData.players[i] != null) {
+                if (GameData.Instance.players[i] != null) {
                     currPlayer++;
                 }
             }
@@ -849,7 +849,7 @@ namespace MadelineParty {
                 level.Add(number);
                 numbersToDisplay.Add(number);
                 // Number of expected die rolls
-                int numberOfSpaces = status == BoardStatus.GAMESTART ? GameData.playerNumber : rolls.Length;
+                int numberOfSpaces = status == BoardStatus.GAMESTART ? GameData.Instance.playerNumber : rolls.Length;
                 // new Vector2(8, 4) for text instead of graphics
                 number.MoveNumber((rolls.Length == 1 ? leftButtons[playerID].Position : rightButtons[playerID].Position) + new Vector2(0, 12) + new Vector2(8, 4), Position + new Vector2(12 * 5 - 10 * (numberOfSpaces - 1) - 4 + 20 * number.posIndex, -24) + new Vector2(8, 4));
                 yield return .25f;
@@ -881,7 +881,7 @@ namespace MadelineParty {
 
         // Usually called only due to Celestenet messages
         public void RollDice(int playerID, int[] rolls) {
-            if (playerID == GameData.realPlayerID) {
+            if (playerID == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new DieRoll { rolls = rolls });
             }
             Add(new Coroutine(DieRollAnimation(playerID, rolls)));
@@ -900,10 +900,10 @@ namespace MadelineParty {
                 }
                 if (doubleDice) {
                     rolls.Add(rand.Next(10) + 1);
-                    GameData.players[playerID].items.Remove(GameData.Item.DOUBLEDICE);
+                    GameData.Instance.players[playerID].items.Remove(GameData.Item.DOUBLEDICE);
                 }
             }
-            if (playerID == GameData.realPlayerID) {
+            if (playerID == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new DieRoll { rolls = rolls.ToArray() });
             }
             Add(new Coroutine(DieRollAnimation(playerID, rolls.ToArray())));
@@ -913,13 +913,13 @@ namespace MadelineParty {
             SetLeftButtonStatus(playerID, LeftButton.Modes.Inactive);
             SetRightButtonStatus(playerID, RightButton.Modes.Inactive);
             if (status == BoardStatus.GAMESTART) {
-                GameData.players[playerID].StartingRoll = roll;
+                GameData.Instance.players[playerID].StartingRoll = roll;
                 Console.WriteLine("Roll: " + playerID + " " + roll);
                 diceRolled++;
-                if (diceRolled >= GameData.playerNumber) {
+                if (diceRolled >= GameData.Instance.playerNumber) {
                     Add(new Coroutine(RemoveDieRollsAnimation()));
                     diceRolled = 0;
-                    List<PlayerData> temp = new(GameData.players);
+                    List<PlayerData> temp = new(GameData.Instance.players);
                     temp.Sort();
                     int playersGoneThrough = 0;
                     for (int i = 0; i < temp.Count; i++) {
@@ -969,7 +969,7 @@ namespace MadelineParty {
                 matrixBefore * Matrix.CreateTranslation(new Vector3(-level.ShakeVector.X, -level.ShakeVector.Y, 0) * 6));
 
             foreach (BoardSpace space in boardSpaces) {
-                if (space.ID != GameData.heartSpaceID && space.type == 'g' && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
+                if (space.ID != GameData.Instance.heartSpaceID && space.type == 'g' && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
                     spaceEvent.RenderSubHUD(space);
                 }
             }
@@ -1014,7 +1014,7 @@ namespace MadelineParty {
 
             foreach (BoardSpace space in boardSpaces) {
                 Vector2 spacePos = Position + new Vector2(space.x, space.y);
-                if (space.ID != GameData.heartSpaceID) {
+                if (space.ID != GameData.Instance.heartSpaceID) {
                     if(space.type == 'g' && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
                         spaceEvent.Render(space);
                     } else if (spaceTextures.ContainsKey(space.type)) {
@@ -1028,7 +1028,7 @@ namespace MadelineParty {
 
         public static void generateTurnOrderRolls() {
             List<int> list = new List<int>(oneToTen);
-            Random rand = new Random((int)GameData.turnOrderSeed);
+            Random rand = new Random((int)GameData.Instance.turnOrderSeed);
             for (int i = 0; i < 4; i++) {
                 turnOrderRolls[i] = list[rand.Next(list.Count)];
                 list.Remove(turnOrderRolls[i]);
@@ -1051,14 +1051,14 @@ namespace MadelineParty {
         private static void HandleDieRoll(MPData data) {
             if (data is not DieRoll dieRoll) return;
             // If another player in our party has rolled the dice and we're waiting on them for an action
-            if (GameData.celestenetIDs.Contains(dieRoll.ID) && dieRoll.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(dieRoll.ID) && dieRoll.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
 
                 if (!MadelinePartyModule.Instance.level.Session.Level.Equals(MadelinePartyModule.MAIN_ROOM)) {
                     // Activate it once in the right room
                     // This is so players that roll before everyone shows up don't break everything
                     delayedDieRoll = dieRoll;
                 } else {
-                    if (Instance?.isWaitingOnPlayer(GameData.playerSelectTriggers[dieRoll.ID]) ?? false) {
+                    if (Instance?.isWaitingOnPlayer(GameData.Instance.playerSelectTriggers[dieRoll.ID]) ?? false) {
                         string rollString = "";
                         foreach (int i in dieRoll.rolls) {
                             rollString += i + ", ";
@@ -1066,8 +1066,8 @@ namespace MadelineParty {
                         Logger.Log("MadelineParty", "Received die roll from player " + dieRoll.DisplayName + ". Rolls: " + rollString);
 
                         if (dieRoll.rolls.Length == 2)
-                            GameData.players[GameData.playerSelectTriggers[dieRoll.ID]].items.Remove(GameData.Item.DOUBLEDICE);
-                        Instance.RollDice(GameData.playerSelectTriggers[dieRoll.ID], dieRoll.rolls);
+                            GameData.Instance.players[GameData.Instance.playerSelectTriggers[dieRoll.ID]].items.Remove(GameData.Item.DOUBLEDICE);
+                        Instance.RollDice(GameData.Instance.playerSelectTriggers[dieRoll.ID], dieRoll.rolls);
                     }
                 }
             }
@@ -1076,7 +1076,7 @@ namespace MadelineParty {
         private static void HandlePlayerChoice(MPData data) {
             if (data is not PlayerChoice playerChoice) return;
             // If another player in our party has made a choice
-            if (GameData.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
                 Logger.Log("MadelineParty", "Choice detected of type " + playerChoice.choiceType + " with value " + playerChoice.choice);
                 switch (playerChoice.choiceType) {
                     case "HEART":
@@ -1104,7 +1104,7 @@ namespace MadelineParty {
                         Instance?.ContinueMovementAfterIntersection((Direction)playerChoice.choice);
                         break;
                     case "HEARTSPACEID":
-                        GameData.heartSpaceID = playerChoice.choice;
+                        GameData.Instance.heartSpaceID = playerChoice.choice;
                         break;
                 }
             }
@@ -1113,7 +1113,7 @@ namespace MadelineParty {
         private static void HandleMinigameStart(MPData data) {
             if (data is not MinigameStart start) return;
             // If we've received information about a minigame starting from another player in our party
-            if (GameData.celestenetIDs.Contains(start.ID) && start.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(start.ID) && start.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
                 Instance?.ChoseMinigame(start.choice, start.gameStart);
             }
         }

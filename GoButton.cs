@@ -30,14 +30,14 @@ namespace MadelineParty {
         private void HandlePlayerChoice(MPData data) {
             if (data is not PlayerChoice playerChoice) return;
             // If another player in our party has changed the turn count
-            if (GameData.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("GOBUTTON")) {
+            if (GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("GOBUTTON")) {
                 OnDashed(SceneAs<Level>().Tracker.GetEntity<Player>(), default);
             }
         }
 
         private DashCollisionResults OnDashed(Player player, Vector2 direction) {
             Level level = SceneAs<Level>();
-            if(GameData.gnetHost) {
+            if(GameData.Instance.gnetHost) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "GOBUTTON" });
             }
             level.OnEndOfFrame += delegate {
@@ -46,7 +46,7 @@ namespace MadelineParty {
                 level.UnloadLevel();
 
                 level.Session.Level = "Game_MainRoom";
-                switch (GameData.realPlayerID) {
+                switch (GameData.Instance.realPlayerID) {
                     case 0:
                         level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
                         break;

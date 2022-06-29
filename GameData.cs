@@ -8,6 +8,8 @@ namespace MadelineParty
 {
     public class GameData
     {
+        public static GameData Instance = new GameData();
+
         private GameData()
         {
         }
@@ -18,32 +20,32 @@ namespace MadelineParty
         }
 
         public const int maxItems = 3;
-        public static int turn = 1;
-        // TODO Add selector for turn number
-        public static int maxTurns = 10;
-        public static int playerNumber = -1;
-        public static uint turnOrderSeed = 21;
-        public static uint tieBreakerSeed = 20;
-        public static PlayerData[] players = { null, null, null, null };
+        public int turn = 1;
+        public string mode = "Board";
+        public int maxTurns = 10;
+        public int playerNumber = -1;
+        public uint turnOrderSeed = 21;
+        public uint tieBreakerSeed = 20;
+        public PlayerData[] players = { null, null, null, null };
         // The ID of the player at this client
-        public static int realPlayerID = -1;
-        public static bool gnetHost = true;
-        public static List<uint> celestenetIDs = new List<uint>();
+        public int realPlayerID = -1;
+        public bool gnetHost = true;
+        public List<uint> celestenetIDs = new List<uint>();
         // Which playerSelectTrigger each player is in
-        public static ConcurrentDictionary<uint, int> playerSelectTriggers = new ConcurrentDictionary<uint, int>();
-        public static List<string> playedMinigames = new List<string>();
+        public ConcurrentDictionary<uint, int> playerSelectTriggers = new ConcurrentDictionary<uint, int>();
+        public List<string> playedMinigames = new List<string>();
         // Matches player token ID to minigame status
-        public static Dictionary<int, uint> minigameStatus = new Dictionary<int, uint>();
+        public Dictionary<int, uint> minigameStatus = new Dictionary<int, uint>();
         // Matches player token ID to minigame results
-        public static List<Tuple<int, uint>> minigameResults = new List<Tuple<int, uint>>();
-        public static int heartSpaceID = 12;
-        public static PlayerSelectTrigger currentPlayerSelection;
-        public static int heartCost = 5;
-        public static LevelData minigame;
-        public static bool gameStarted;
-        private static List<Item> earlyShop = new List<Item>(new Item[] { Item.DOUBLEDICE });
-        private static List<Item> lateShop = new List<Item>(new Item[] { Item.DOUBLEDICE });
-        public static List<Item> shopContents
+        public List<Tuple<int, uint>> minigameResults = new List<Tuple<int, uint>>();
+        public int heartSpaceID = 12;
+        public PlayerSelectTrigger currentPlayerSelection;
+        public int heartCost = 5;
+        public LevelData minigame;
+        public bool gameStarted;
+        private List<Item> earlyShop = new List<Item>(new Item[] { Item.DOUBLEDICE });
+        private List<Item> lateShop = new List<Item>(new Item[] { Item.DOUBLEDICE });
+        public List<Item> shopContents
         {
             get
             {
@@ -52,31 +54,19 @@ namespace MadelineParty
         }
 
         // Set in the Module's Initialize method
-        public static Dictionary<Item, int> itemPrices = new Dictionary<Item, int>();
+        public Dictionary<Item, int> itemPrices = new Dictionary<Item, int>();
 
         public static void Reset()
         {
-            turn = 1;
-            maxTurns = 10;
-            playerNumber = -1;
-            turnOrderSeed = 21;
-            tieBreakerSeed = 20;
-            players = new PlayerData[]{ null, null, null, null };
-            realPlayerID = -1;
-            heartSpaceID = 12;
-            gnetHost = true;
-            celestenetIDs = new List<uint>();
-            heartCost = 5;
-            playerSelectTriggers = new ConcurrentDictionary<uint, int>();
-            playedMinigames = new List<string>();
-            minigameStatus = new Dictionary<int, uint>();
-            minigameResults = new List<Tuple<int, uint>>();
-            currentPlayerSelection = null;
-            minigame = null;
-            gameStarted = false;
+            Instance = new GameData();
             MinigameEntity.startTime = -1;
             MinigameEntity.started = false;
+            MinigameEntity.didRespawn = false;
             MinigameTheoMover.theoCount = 0;
+            MinigameInfinityTrigger.loops = 0;
+            MinigameInfinityTrigger.dist = 0;
+            MinigameSwitchGatherer.switchCount = 0;
+            MinigameSwitchGatherer.switchesOn = new();
         }
 
         public static string GetMinigameMusic(string name) {

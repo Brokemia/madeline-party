@@ -7,6 +7,7 @@ using Monocle;
 
 namespace MadelineParty {
 
+    [Tracked]
     public class PlayerNumberSelect : NumberSelect {
 
         private Level level;
@@ -35,15 +36,7 @@ namespace MadelineParty {
 
         protected override DashCollisionResults OnDashed(Player player, Vector2 direction) {
             Audio.Play("event:/game/general/wall_break_ice", Position);
-            GameData.playerNumber = Value;
-            if (Value != 1) {
-                MultiplayerSingleton.Instance.Send(new Party { respondingTo = -1, lookingForParty = (byte)GameData.playerNumber });
-            }
-
-            level.OnEndOfFrame += delegate {
-                level.Teleport("Game_Lobby");
-            };
-            return base.OnDashed(player, direction);
+            return DashCollisionResults.Bounce;
         }
 
 

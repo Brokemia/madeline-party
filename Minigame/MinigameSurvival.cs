@@ -52,7 +52,7 @@ namespace MadelineParty {
                 started = false;
                 didRespawn = false;
                 level.CanRetry = false;
-                GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, (uint)timeElapsed));
+                GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, (uint)timeElapsed));
                 MultiplayerSingleton.Instance.Send(new MinigameEnd { results = (uint)timeElapsed });
                 
                 Add(new Coroutine(EndMinigame(HIGHEST_WINS, () => { })));
@@ -66,7 +66,7 @@ namespace MadelineParty {
                         seeker.RemoveSelf();
                     }
                 }
-                rand = new Random((int)GameData.turnOrderSeed + (int)Y);
+                rand = new Random((int)GameData.Instance.turnOrderSeed + (int)Y);
             }
         }
 

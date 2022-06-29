@@ -51,7 +51,7 @@ namespace MadelineParty {
 
         public void CollectSwitch(Vector2 pos) {
             switchCount++;
-            GameData.minigameStatus[GameData.realPlayerID] = switchCount;
+            GameData.Instance.minigameStatus[GameData.Instance.realPlayerID] = switchCount;
 
             TouchSwitch ts = switches.Find((s) => s.Position == pos);
             DeactivateSwitch(ts);
@@ -61,7 +61,7 @@ namespace MadelineParty {
             }
             MultiplayerSingleton.Instance.Send(new MinigameStatus { results = switchCount });
             MultiplayerSingleton.Instance.Send(new MinigameVector2 { vec = pos, extra = -1 });
-            if (GameData.gnetHost && switchesOn.Count == 0) {
+            if (GameData.Instance.gnetHost && switchesOn.Count == 0) {
                 NewSwitcheDistribution(ts);
             }
         }
@@ -110,7 +110,7 @@ namespace MadelineParty {
             // Reset timer so it starts at 30 instead of (30 - the time it takes to count down)
             startTime = level.RawTimeActive;
             level.Add(display = new MinigameScoreDisplay(this));
-            if(GameData.gnetHost) {
+            if(GameData.Instance.gnetHost) {
                 ActivateSwitch(switches[rand.Next(switches.Count)]);
             }
         }
@@ -154,7 +154,7 @@ namespace MadelineParty {
                             float num = Calc.Random.NextFloat((float)Math.PI * 2f);
                             level.Particles.Emit(TouchSwitch.P_FireWhite, ts.Position + Calc.AngleToVector(num, 6f), num);
                         }
-                        if (GameData.gnetHost && switchesOn.Count == 0) {
+                        if (GameData.Instance.gnetHost && switchesOn.Count == 0) {
                             NewSwitcheDistribution(ts);
                         }
                     } else {
@@ -178,7 +178,7 @@ namespace MadelineParty {
             didRespawn = false;
             level.CanRetry = false;
             Console.WriteLine("Touch Switch Count: " + switchCount);
-            GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, switchCount));
+            GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, switchCount));
             MultiplayerSingleton.Instance.Send(new MinigameEnd { results = switchCount });
 
             yield return new SwapImmediately(EndMinigame(HIGHEST_WINS, () => {

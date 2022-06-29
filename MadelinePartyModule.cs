@@ -85,7 +85,7 @@ namespace MadelineParty {
             if (l != null && IsSIDMadelineParty(l.Session.Area.GetSID())) {
                 if (MultiplayerSingleton.Instance.BackendInstalled()) {
                     // If the player disconnects from a multiplayer game
-                    if (GameData.playerNumber > 1 && !MultiplayerSingleton.Instance.BackendConnected()) {
+                    if (GameData.Instance.playerNumber > 1 && !MultiplayerSingleton.Instance.BackendConnected()) {
                         disconnectLeniency -= Engine.RawDeltaTime;
                         if (disconnectLeniency < 0) {
                             Player player = level.Tracker.GetEntity<Player>();
@@ -97,13 +97,13 @@ namespace MadelineParty {
                     }
                 }
 
-                if (!l.Session.Level.Equals(START_ROOM) && (!l.Session.Level.Equals("Game_Lobby") || GameData.playerNumber == -1)) {
-                    if (GameData.players.All((data) => data == null)) {
+                if (!l.Session.Level.Equals(START_ROOM) && (!l.Session.Level.Equals("Game_Lobby") || GameData.Instance.playerNumber == -1)) {
+                    if (GameData.Instance.players.All((data) => data == null)) {
                         Player player = l.Tracker.GetEntity<Player>();
                         sendToStart(player);
                     } else {
                         // FIXME Use new Multiplayer
-                        //foreach (uint id in GameData.celestenetIDs) {
+                        //foreach (uint id in GameData.Instance.celestenetIDs) {
                         //    if (playerInStartRoom(id)) {
                         //        Player player = l.Tracker.GetEntity<Player>();
                         //        sendToStart(player);
@@ -183,7 +183,7 @@ namespace MadelineParty {
         // Optional, initialize anything after Celeste has initialized itself properly.
         public override void Initialize() {
             // Set the shop prices
-            GameData.itemPrices[GameData.Item.DOUBLEDICE] = 10;
+            GameData.Instance.itemPrices[GameData.Item.DOUBLEDICE] = 10;
         }
 
         // Optional, do anything requiring either the Celeste or mod content here.
@@ -205,10 +205,10 @@ namespace MadelineParty {
             if(data is not Party party) return;
             if (!IsSIDMadelineParty(level.Session.Area.GetSID())) return;
             Logger.Log("MadelineParty", "Recieved PartyData. My ID: " + MultiplayerSingleton.Instance.GetPlayerID() + " Player ID: " + party.ID + " Looking for party of size " + party.lookingForParty);
-            if (party.lookingForParty == GameData.playerNumber // if they want the same party size
+            if (party.lookingForParty == GameData.Instance.playerNumber // if they want the same party size
                 && party.version.Equals(Metadata.VersionString) // and our versions match
-                && GameData.celestenetIDs.Count < GameData.playerNumber - 1 // and we aren't full up
-                && !GameData.celestenetIDs.Contains(party.ID) // and they aren't in our party
+                && GameData.Instance.celestenetIDs.Count < GameData.Instance.playerNumber - 1 // and we aren't full up
+                && !GameData.Instance.celestenetIDs.Contains(party.ID) // and they aren't in our party
                 && party.ID != MultiplayerSingleton.Instance.GetPlayerID()) { // and they aren't us
 
                 string joinMsg = party.DisplayName + " has joined the party!";
@@ -217,25 +217,25 @@ namespace MadelineParty {
                     // Tell them that they aren't the host and are instead joining our party
                     MultiplayerSingleton.Instance.Send(new Party {
                         respondingTo = (int)party.ID,
-                        lookingForParty = (byte)GameData.playerNumber,
-                        partyHost = GameData.gnetHost
+                        lookingForParty = (byte)GameData.Instance.playerNumber,
+                        partyHost = GameData.Instance.gnetHost
                     });
 
-                    GameData.celestenetIDs.Add(party.ID);
+                    GameData.Instance.celestenetIDs.Add(party.ID);
 
                     
                     Logger.Log("MadelineParty", joinMsg);
                     MultiplayerSingleton.Instance.SendChat(joinMsg);
 
-                    if (GameData.currentPlayerSelection != null) {
+                    if (GameData.Instance.currentPlayerSelection != null) {
                         MultiplayerSingleton.Instance.Send(new Party {
                             respondingTo = (int)party.ID,
-                            playerSelectTrigger = GameData.currentPlayerSelection.playerID
+                            playerSelectTrigger = GameData.Instance.currentPlayerSelection.playerID
                         });
                     }
                 } else if (party.respondingTo == MultiplayerSingleton.Instance.GetPlayerID()) {
-                    GameData.gnetHost = false;
-                    GameData.celestenetIDs.Add(party.ID);
+                    GameData.Instance.gnetHost = false;
+                    GameData.Instance.celestenetIDs.Add(party.ID);
 
                     Logger.Log("MadelineParty", joinMsg);
                     MultiplayerSingleton.Instance.SendChat(joinMsg);
@@ -243,25 +243,25 @@ namespace MadelineParty {
             }
 
             // If the other player entered a player select trigger
-            if (party.playerSelectTrigger != -2 && GameData.celestenetIDs.Contains(party.ID) && (party.respondingTo < 0 || party.respondingTo == MultiplayerSingleton.Instance.GetPlayerID())) {
+            if (party.playerSelectTrigger != -2 && GameData.Instance.celestenetIDs.Contains(party.ID) && (party.respondingTo < 0 || party.respondingTo == MultiplayerSingleton.Instance.GetPlayerID())) {
                 Logger.Log("MadelineParty", "Player ID: " + party.ID + " entered player select trigger " + party.playerSelectTrigger);
-                GameData.playerSelectTriggers[party.ID] = party.playerSelectTrigger;
-                if (GameData.currentPlayerSelection != null) {
+                GameData.Instance.playerSelectTriggers[party.ID] = party.playerSelectTrigger;
+                if (GameData.Instance.currentPlayerSelection != null) {
                     // -1 so it doesn't count me as a player
-                    int left = GameData.playerNumber - 1;
-                    foreach (KeyValuePair<uint, int> kvp1 in GameData.playerSelectTriggers) {
+                    int left = GameData.Instance.playerNumber - 1;
+                    foreach (KeyValuePair<uint, int> kvp1 in GameData.Instance.playerSelectTriggers) {
                         // Check if another player is trying to choose the same spot
                         bool duplicate = false;
-                        foreach (KeyValuePair<uint, int> kvp2 in GameData.playerSelectTriggers) {
+                        foreach (KeyValuePair<uint, int> kvp2 in GameData.Instance.playerSelectTriggers) {
                             duplicate |= (kvp2.Key != kvp1.Key && kvp2.Value == kvp1.Value);
                         }
-                        if (!duplicate && kvp1.Value != -1 && kvp1.Value != GameData.currentPlayerSelection.playerID) {
+                        if (!duplicate && kvp1.Value != -1 && kvp1.Value != GameData.Instance.currentPlayerSelection.playerID) {
                             left--;
                         }
                     }
 
                     if (left <= 0) {
-                        GameData.currentPlayerSelection.AllTriggersOccupied();
+                        GameData.Instance.currentPlayerSelection.AllTriggersOccupied();
                     }
                 }
             }
@@ -270,8 +270,8 @@ namespace MadelineParty {
         private void HandleMinigameEnd(MPData data) {
             if (data is not MinigameEnd end) return;
             // If another player in our party has beaten a minigame
-            if (GameData.celestenetIDs.Contains(end.ID) && end.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
-                GameData.minigameResults.Add(new Tuple<int, uint>(GameData.playerSelectTriggers[end.ID], end.results));
+            if (GameData.Instance.celestenetIDs.Contains(end.ID) && end.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+                GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.playerSelectTriggers[end.ID], end.results));
                 Logger.Log("MadelineParty", "Player " + end.DisplayName + " has finished the minigame with a result of " + end.results);
             }
         }
@@ -279,8 +279,8 @@ namespace MadelineParty {
         private void HandleMinigameStatus(MPData data) {
             if (data is not MinigameStatus status) return;
             // If another player in our party is sending out a minigame status update
-            if (GameData.celestenetIDs.Contains(status.ID) && status.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
-                GameData.minigameStatus[GameData.playerSelectTriggers[status.ID]] = status.results;
+            if (GameData.Instance.celestenetIDs.Contains(status.ID) && status.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+                GameData.Instance.minigameStatus[GameData.Instance.playerSelectTriggers[status.ID]] = status.results;
                 Logger.Log("MadelineParty", "Player " + status.DisplayName + " has updated their minigame status with a result of " + status.results);
             }
         }
@@ -288,9 +288,9 @@ namespace MadelineParty {
         private void HandleRandomSeed(MPData data) {
             if (data is not RandomSeed seed) return;
             // If another player in our party is distributing the randomization seeds
-            if (GameData.celestenetIDs.Contains(seed.ID) && seed.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
-                GameData.turnOrderSeed = seed.turnOrderSeed;
-                GameData.tieBreakerSeed = seed.tieBreakerSeed;
+            if (GameData.Instance.celestenetIDs.Contains(seed.ID) && seed.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+                GameData.Instance.turnOrderSeed = seed.turnOrderSeed;
+                GameData.Instance.tieBreakerSeed = seed.tieBreakerSeed;
                 BoardController.generateTurnOrderRolls();
             }
         }

@@ -180,7 +180,7 @@ namespace MadelineParty
                     if (board != null) {
                         board.RollDice(GetTokenID());
                     } else if(level.Entities.FindFirst<TiebreakerController>() is TiebreakerController controller) {
-                        controller.RollDice(Position, GameData.realPlayerID);
+                        controller.RollDice(Position, GameData.Instance.realPlayerID);
                     }
                     break;
                 case Modes.ConfirmHeartBuy:

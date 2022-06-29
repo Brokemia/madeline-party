@@ -100,7 +100,7 @@ namespace MadelineParty {
         protected IEnumerator EndMinigame(Comparison<Tuple<int, uint>> placeOrderer, Action cleanup) {
             Player player = level.Tracker.GetEntity<Player>();
             // Wait until all players have finished
-            while (GameData.minigameResults.Count < GameData.playerNumber) {
+            while (GameData.Instance.minigameResults.Count < GameData.Instance.playerNumber) {
                 if(player != null || (player = level.Tracker.GetEntity<Player>()) != null) {
                     // Freeze the player so they can't do anything else until everyone else is done
                     player.StateMachine.State = Player.StFrozen;
@@ -109,12 +109,12 @@ namespace MadelineParty {
                 yield return null;
             }
 
-            GameData.minigameResults.Sort(placeOrderer);
+            GameData.Instance.minigameResults.Sort(placeOrderer);
 
-            List<int> winners = new() { GameData.minigameResults[0].Item1 };
-            for (int i = 1; i < GameData.minigameResults.Count; i++) {
-                if (GameData.minigameResults[i].Item2 == GameData.minigameResults[0].Item2) {
-                    winners.Add(GameData.minigameResults[i].Item1);
+            List<int> winners = new() { GameData.Instance.minigameResults[0].Item1 };
+            for (int i = 1; i < GameData.Instance.minigameResults.Count; i++) {
+                if (GameData.Instance.minigameResults[i].Item2 == GameData.Instance.minigameResults[0].Item2) {
+                    winners.Add(GameData.Instance.minigameResults[i].Item1);
                 }
             }
 
@@ -123,9 +123,9 @@ namespace MadelineParty {
             }
 
             // Winners share the top pedestal, everyone else is placed below that
-            int realPlayerPlace = winners.Contains(GameData.realPlayerID) ? 0 : GameData.minigameResults.FindIndex((obj) => obj.Item1 == GameData.realPlayerID) - winners.Count + 2;
+            int realPlayerPlace = winners.Contains(GameData.Instance.realPlayerID) ? 0 : GameData.Instance.minigameResults.FindIndex((obj) => obj.Item1 == GameData.Instance.realPlayerID) - winners.Count + 2;
             // A check to stop the game from crashing when I hit one of these while testing
-            if (winners[0] >= 0 && GameData.players[winners[0]] != null) {
+            if (winners[0] >= 0 && GameData.Instance.players[winners[0]] != null) {
                 cleanup();
                 level.OnEndOfFrame += delegate {
                     level.Remove(player);
@@ -179,7 +179,7 @@ namespace MadelineParty {
             // First, set the name to use as a dialog entry
             string name;
             if (MultiplayerSingleton.Instance.BackendConnected()) {
-                name = CombineNames(winners.ConvertAll(i => MultiplayerSingleton.Instance.GetPlayerName(GameData.celestenetIDs[i])));
+                name = CombineNames(winners.ConvertAll(i => MultiplayerSingleton.Instance.GetPlayerName(GameData.Instance.celestenetIDs[i])));
             } else {
                 name = "{savedata Name}";
             }
@@ -190,7 +190,7 @@ namespace MadelineParty {
         private static void HandleMinigameVector2(MPData data) {
             if (data is not MinigameVector2 vector2) return;
             // If another player in our party is sending out minigame vector2 data
-            if (GameData.celestenetIDs.Contains(vector2.ID) && vector2.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(vector2.ID) && vector2.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
                 MinigameEntity mge;
                 if ((mge = Engine.Scene?.Tracker.GetEntity<MinigameEntity>()) != null) {
                     mge.MultiplayerReceiveVector2(vector2.vec, vector2.extra);

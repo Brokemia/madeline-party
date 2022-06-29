@@ -37,7 +37,7 @@ namespace MadelineParty {
         public override void Update() {
             base.Update();
             // If another player beat us to it
-            if (endCoroutine == null && GameData.minigameResults.Count > 0) {
+            if (endCoroutine == null && GameData.Instance.minigameResults.Count > 0) {
                 Add(endCoroutine = new Coroutine(EndMinigame()));
             }
         }
@@ -53,7 +53,7 @@ namespace MadelineParty {
             didRespawn = false;
             level.CanRetry = false;
             Console.WriteLine("Theo Count: " + theoCount);
-            GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, timeElapsed));
+            GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, timeElapsed));
             MultiplayerSingleton.Instance.Send(new MinigameEnd { results = timeElapsed });
 
             yield return new SwapImmediately(EndMinigame(LOWEST_WINS, () => {
@@ -67,7 +67,7 @@ namespace MadelineParty {
                 theoCrystal.RemoveSelf();
                 theoCount++;
                 
-                GameData.minigameStatus[GameData.realPlayerID] = theoCount;
+                GameData.Instance.minigameStatus[GameData.Instance.realPlayerID] = theoCount;
                 MultiplayerSingleton.Instance.Send(new MinigameStatus { results = theoCount });
                 if (theoCount >= THEOS_NEEDED && endCoroutine == null) {
                     Add(endCoroutine = new Coroutine(EndMinigame()));

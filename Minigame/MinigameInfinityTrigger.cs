@@ -154,7 +154,7 @@ namespace MadelineParty {
 
             if (player != null) {
                 dist = calculateDist(loops, player.X);
-                GameData.minigameStatus[GameData.realPlayerID] = dist;
+                GameData.Instance.minigameStatus[GameData.Instance.realPlayerID] = dist;
             }
         }
 
@@ -179,7 +179,7 @@ namespace MadelineParty {
             level.CanRetry = false;
             dist = calculateDist(loops, player.X);
             Console.WriteLine("Minigame Distance: " + dist);
-            GameData.minigameResults.Add(new Tuple<int, uint>(GameData.realPlayerID, dist));
+            GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, dist));
             MultiplayerSingleton.Instance.Send(new MinigameEnd { results = dist });
 
             yield return new SwapImmediately(EndMinigame(HIGHEST_WINS, () => {
