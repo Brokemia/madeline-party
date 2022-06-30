@@ -74,24 +74,7 @@ namespace MadelineParty {
             } else {
                 GameData.Instance.players[playerID] = new PlayerData(playerID);
             }
-            Player player = level.Tracker.GetEntity<Player>();
-            level.OnEndOfFrame += delegate {
-                GameData.Instance.currentPlayerSelection = null;
-                Leader.StoreStrawberries(player.Leader);
-                level.Remove(player);
-                level.UnloadLevel();
-
-                level.Session.Level = "Game_SettingsConfig";
-                if(GameData.Instance.gnetHost) {
-                    level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
-                } else {
-                    level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Bottom));
-                }
-
-                level.LoadLevel(Player.IntroTypes.None);
-
-                Leader.RestoreStrawberries(player.Leader);
-            };
+            ModeManager.Instance.AfterPlayerSelect(level);
         }
 
         public override void OnLeave(Player player) {

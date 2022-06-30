@@ -3,11 +3,6 @@ using Celeste.Mod.Entities;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MadelineParty {
 
@@ -22,6 +17,7 @@ namespace MadelineParty {
         public override void OnEnter(Player player) {
             base.OnEnter(player);
 
+            ModeManager.Instance.Mode = mode;
             GameData.Instance.playerNumber = Scene.Tracker.GetEntity<PlayerNumberSelect>()?.Value ?? 1;
             if (GameData.Instance.playerNumber != 1) {
                 MultiplayerSingleton.Instance.Send(new Party { respondingTo = -1, lookingForParty = (byte)GameData.Instance.playerNumber });

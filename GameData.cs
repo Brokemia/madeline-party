@@ -8,7 +8,7 @@ namespace MadelineParty
 {
     public class GameData
     {
-        public static GameData Instance = new GameData();
+        public static GameData Instance { get; private set; } = new GameData();
 
         private GameData()
         {
@@ -21,7 +21,6 @@ namespace MadelineParty
 
         public const int maxItems = 3;
         public int turn = 1;
-        public string mode = "Board";
         public int maxTurns = 10;
         public int playerNumber = -1;
         public uint turnOrderSeed = 21;

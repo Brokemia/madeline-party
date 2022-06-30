@@ -21,7 +21,11 @@ namespace MadelineParty {
             return defaultValue;
         }
 
-        public static void Teleport(this Level self, string levelName, Vector2? spawnPoint = null) {
+		public static void Teleport(this Level self, string levelName, Vector2? spawnPoint = null) {
+            self.Teleport(levelName, () => spawnPoint);
+        }
+
+        public static void Teleport(this Level self, string levelName, Func<Vector2?> spawnPointFunc) {
 			Glitch.Value = 0f;
 			Engine.TimeRate = 1f;
 			Distort.Anxiety = 0f;
@@ -38,6 +42,7 @@ namespace MadelineParty {
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 			self.Session.Level = levelName;
+			Vector2? spawnPoint = spawnPointFunc.Invoke();
 			if (spawnPoint == null) {
 				spawnPoint = self.GetSpawnPoint(new Vector2(self.Bounds.Left, self.Bounds.Top));
 			}
