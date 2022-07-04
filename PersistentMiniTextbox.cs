@@ -7,11 +7,34 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace MadelineParty {
     [Tracked(false)]
     public class PersistentMiniTextbox : MiniTextbox {
+        private static readonly Regex insertLate = new Regex("\\{MP\\+\\s*(.*?)\\}");
+
+        private static string ProcessDialog(string dialogID) {
+            string text = Dialog.Language.Dialog[dialogID];
+            MatchCollection matchCollection = null;
+            bool anyChanges = false;
+            while (matchCollection == null || matchCollection.Count > 0) {
+                matchCollection = insertLate.Matches(text);
+                for (int i = 0; i < matchCollection.Count; i++) {
+                    Match match = matchCollection[i];
+                    string value = match.Groups[1].Value;
+                    text = ((!Dialog.Language.Dialog.TryGetValue(value, out string value2)) ? text.Replace(match.Value, "[XXX]") : text.Replace(match.Value, value2));
+                    anyChanges = true;
+                }
+            }
+            if (anyChanges) {
+                Dialog.Language.Dialog[dialogID + "_MadelinePartyProcessed"] = text;
+                return dialogID + "_MadelinePartyProcessed";
+            }
+            return dialogID;
+        }
+
         private FancyText.Anchors anchor;
         private DynamicData selfData;
         private Level level;
@@ -60,10 +83,16 @@ namespace MadelineParty {
 
         public static void Load() {
             On.Celeste.MiniTextbox.Routine += MiniTextbox_Routine;
+            On.Celeste.MiniTextbox.ctor += MiniTextbox_ctor;
+        }
+
+        private static void MiniTextbox_ctor(On.Celeste.MiniTextbox.orig_ctor orig, MiniTextbox self, string dialogId) {
+            orig(self, ProcessDialog(dialogId));
         }
 
         public static void Unload() {
             On.Celeste.MiniTextbox.Routine -= MiniTextbox_Routine;
+            On.Celeste.MiniTextbox.ctor -= MiniTextbox_ctor;
         }
 
         private static IEnumerator MiniTextbox_Routine(On.Celeste.MiniTextbox.orig_Routine orig, MiniTextbox self) {

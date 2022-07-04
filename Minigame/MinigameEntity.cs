@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Celeste;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
@@ -118,9 +119,7 @@ namespace MadelineParty {
                 }
             }
 
-            foreach (int winnerID in winners) {
-                BoardController.QueueStrawberryChange(winnerID, 10);
-            }
+            ModeManager.Instance.DistributeMinigameRewards(winners);
 
             // Winners share the top pedestal, everyone else is placed below that
             int realPlayerPlace = winners.Contains(GameData.Instance.realPlayerID) ? 0 : GameData.Instance.minigameResults.FindIndex((obj) => obj.Item1 == GameData.Instance.realPlayerID) - winners.Count + 2;
@@ -174,17 +173,11 @@ namespace MadelineParty {
         }
 
         // TODO add special text for a win streak
-        // X is domingating, X is unstoppable, etc
+        // X is dominating, X is unstoppable, etc
         private string GetWinnerText(List<int> winners) {
             // First, set the name to use as a dialog entry
-            string name;
-            if (MultiplayerSingleton.Instance.BackendConnected()) {
-                name = CombineNames(winners.ConvertAll(i => MultiplayerSingleton.Instance.GetPlayerName(GameData.Instance.celestenetIDs[i])));
-            } else {
-                name = "{savedata Name}";
-            }
-            Dialog.Language.Dialog["MadelineParty_Winner_ID_Name"] = name;
-            return BoardController.GetRandomDialogID(winners.Count > 1 ? "MadelineParty_Minigame_Winners_List" : "MadelineParty_Minigame_Winner_List");
+            Dialog.Language.Dialog["MadelineParty_Winner_ID_Name"] = CombineNames(winners.ConvertAll(i => GameData.Instance.GetPlayerName(i)));
+            return GameData.Instance.GetRandomDialogID(winners.Count > 1 ? "MadelineParty_Minigame_Winners_List" : "MadelineParty_Minigame_Winner_List");
         }
 
         private static void HandleMinigameVector2(MPData data) {

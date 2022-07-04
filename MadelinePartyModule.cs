@@ -65,6 +65,7 @@ namespace MadelineParty {
             BoardController.Load();
             TiebreakerController.Load();
             PersistentMiniTextbox.Load();
+            TextMenuPlus.Load();
 
             MultiplayerSingleton.Instance.RegisterHandler<Party>(HandleParty);
             MultiplayerSingleton.Instance.RegisterHandler<MinigameEnd>(HandleMinigameEnd);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using Celeste;
 using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
@@ -22,13 +23,7 @@ namespace MadelineParty {
 
         private string GetWinnerText(int player) {
             // First, set the name to use as a dialog entry
-            string name;
-            if (MultiplayerSingleton.Instance.BackendConnected()) {
-                name = MultiplayerSingleton.Instance.GetPlayerName(GameData.Instance.celestenetIDs[player]);
-            } else {
-                name = "{savedata Name}";
-            }
-            Dialog.Language.Dialog["MadelineParty_Winner_ID_Name"] = name;
+            Dialog.Language.Dialog["MadelineParty_Winner_ID_Name"] = GameData.Instance.GetPlayerName(player);
             return textRand.Choose(Dialog.Clean("MadelineParty_Game_Winner_List").Split(','));
         }
 

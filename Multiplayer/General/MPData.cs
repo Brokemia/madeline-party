@@ -22,7 +22,7 @@ namespace MadelineParty.Multiplayer.General {
 
     public class MinigameStart : MPData {
         // The minigame selected
-        public int choice;
+        public string choice;
         // The time to start the minigame
         public long gameStart;
     }

@@ -118,12 +118,6 @@ namespace MadelineParty {
 
         private Random rand = new Random();
 
-        private Random _textRand;
-
-        private Random TextRand {
-            get => _textRand == null ? _textRand = new Random((int)(GameData.Instance.turnOrderSeed / 3) - GameData.Instance.turn - 120) : _textRand;
-        }
-
         // The number of players that have rolled dice
         // Used for the start of the game
         private int diceRolled = 0;
@@ -468,18 +462,8 @@ namespace MadelineParty {
 
         private string GetCurrentTurnText(int player) {
             // First, set the name to use as a dialog entry
-            string name;
-            if(MultiplayerSingleton.Instance.BackendConnected()) {
-                name = MultiplayerSingleton.Instance.GetPlayerName(GameData.Instance.celestenetIDs[player]);
-            } else {
-                name = "{savedata Name}";
-            }
-            Dialog.Language.Dialog["MadelineParty_Current_Turn_Name"] = name;
-            return GetRandomDialogID("MadelineParty_Current_Turn_Text_List");
-        }
-
-        public static string GetRandomDialogID(string listID) {
-            return Instance.TextRand.Choose(Dialog.Clean(listID).Split(','));
+            Dialog.Language.Dialog["MadelineParty_Current_Turn_Name"] = GameData.Instance.GetPlayerName(player);
+            return GameData.Instance.GetRandomDialogID("MadelineParty_Current_Turn_Text_List");
         }
 
         private Vector2 ScreenCoordsFromBoardCoords(Vector2 boardCoords) {
@@ -536,7 +520,7 @@ namespace MadelineParty {
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelHeartBuy);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYHEART);
                             Dialog.Language.Dialog["MadelineParty_Heart_Cost"] = GameData.Instance.heartCost.ToString();
-                            level.Add(new MiniTextbox(GetRandomDialogID("MadelineParty_Buy_Heart_Prompt_List")));
+                            level.Add(new MiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Buy_Heart_Prompt_List")));
                         }
                         // If we're at the item shop and have enough free space
                         else if (CurrentPlayerToken.currentSpace.type == 'i' && GameData.Instance.players[movingPlayerID].items.Count < GameData.maxItems) {
@@ -544,7 +528,7 @@ namespace MadelineParty {
                             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmShopEnter);
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelShopEnter);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.ENTERSHOP);
-                            level.Add(new MiniTextbox(GetRandomDialogID("MadelineParty_Enter_Shop_Prompt_List")));
+                            level.Add(new MiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Enter_Shop_Prompt_List")));
                         } else if (playerMoveProgress == playerMoveDistance) { // Check if we've hit our destination
                             playerMoveDistance = 0;
                             playerMovePath = null;
@@ -774,24 +758,20 @@ namespace MadelineParty {
             }
         }
 
-        public void ChoseMinigame(int chosen, long startTime = 0) {
-            List<LevelData> minigames = level.Session.MapData.Levels.FindAll((obj) => obj.Name.StartsWith("z_Minigame", StringComparison.InvariantCulture));
-            minigames.RemoveAll((obj) => GameData.Instance.playedMinigames.Contains(obj.Name));
-            GameData.Instance.minigame = minigames[chosen];
-            GameData.Instance.playedMinigames.Add(GameData.Instance.minigame.Name);
-            minigameStartTime = DateTime.FromFileTimeUtc(startTime);
+        public static void ChoseMinigame(string chosen, long startTime = 0) {
+            GameData.Instance.minigame = chosen;
+            GameData.Instance.playedMinigames.Add(chosen);
         }
 
         public IEnumerator InitiateMinigame() {
             yield return 1f;
-            level.Add(new PersistentMiniTextbox(GetRandomDialogID("MadelineParty_Minigame_Time_List")));
+            level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Minigame_Time_List")));
             hackfixRespawn = false; //FIXME hackfix
             if (GameData.Instance.gnetHost) {
-                List<LevelData> minigames = level.Session.MapData.Levels.FindAll((obj) => obj.Name.StartsWith("z_Minigame", StringComparison.InvariantCulture));
-                minigames.RemoveAll((obj) => GameData.Instance.playedMinigames.Contains(obj.Name));
-                int chosenMinigame = rand.Next(minigames.Count);
+                List<LevelData> minigames = GameData.Instance.GetAllUnplayedMinigames(level);
+                string chosenMinigame = minigames[rand.Next(minigames.Count)].Name;
                 if (riggedMinigame != null && minigames.IndexOf(riggedMinigame) >= 0) {
-                    chosenMinigame = minigames.IndexOf(riggedMinigame);
+                    chosenMinigame = minigames[minigames.IndexOf(riggedMinigame)].Name;
                     riggedMinigame = null;
                 }
                 minigameStartTime = DateTime.UtcNow.AddSeconds(3);
@@ -816,10 +796,10 @@ namespace MadelineParty {
                 level.Remove(player);
                 level.UnloadLevel();
 
-                level.Session.Level = GameData.Instance.minigame.Name;
+                level.Session.Level = GameData.Instance.minigame;
                 level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
                 level.LoadLevel(Player.IntroTypes.None);
-                level.Session.Audio.Music.Event = GameData.GetMinigameMusic(GameData.Instance.minigame.Name);
+                level.Session.Audio.Music.Event = GameData.GetMinigameMusic(GameData.Instance.minigame);
 
                 Leader.RestoreStrawberries(player.Leader);
             };
@@ -1114,7 +1094,8 @@ namespace MadelineParty {
             if (data is not MinigameStart start) return;
             // If we've received information about a minigame starting from another player in our party
             if (GameData.Instance.celestenetIDs.Contains(start.ID) && start.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
-                Instance?.ChoseMinigame(start.choice, start.gameStart);
+                ChoseMinigame(start.choice, start.gameStart);
+                ModeManager.Instance.AfterMinigameChosen();
             }
         }
     }

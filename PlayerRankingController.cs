@@ -98,33 +98,7 @@ namespace MadelineParty {
             if (GameData.Instance.turn > GameData.Instance.maxTurns) {
                 EndGame();
             } else {
-                level.OnEndOfFrame += delegate {
-                    Player player = level.Tracker.GetEntity<Player>();
-                    Leader.StoreStrawberries(player.Leader);
-                    level.Remove(player);
-                    level.UnloadLevel();
-
-                    level.Session.Level = "Game_MainRoom";
-                    GameData.Instance.minigameResults.Clear();
-                    GameData.Instance.minigameStatus.Clear();
-                    switch (GameData.Instance.realPlayerID) {
-                        case 0:
-                            level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
-                            break;
-                        case 1:
-                            level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Right, level.Bounds.Top));
-                            break;
-                        case 2:
-                            level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Bottom));
-                            break;
-                        case 3:
-                            level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Right, level.Bounds.Bottom));
-                            break;
-                    }
-                    level.LoadLevel(Player.IntroTypes.None);
-
-                    Leader.RestoreStrawberries(player.Leader);
-                };
+                ModeManager.Instance.AfterPlayersRanked(level);
             }
 
         }
