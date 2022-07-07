@@ -64,21 +64,25 @@ namespace MadelineParty {
         public PlayerToken(int id, string texture, Vector2 position, Vector2 scale, int depth, BoardSpace space) : base(position) {
             this.id = id;
             color = colors[texture];
-            if (string.IsNullOrEmpty(Path.GetExtension(texture))) {
-                texture += ".png";
-            }
             Collider = new Hitbox(20, 20, -5, -5);
             AnimationSpeed = 12f;
             Depth = depth;
             this.scale = scale;
-            string extension = Path.GetExtension(texture);
-            string input = Path.Combine("madelineparty", "tokens", texture.Replace(extension, "")).Replace('\\', '/');
-            Name = Regex.Replace(input, "\\d+$", string.Empty);
+            Name = GetFullPath(texture);
             textures = GFX.Gui.GetAtlasSubtextures(Name);
             AddTag(TagsExt.SubHUD);
             AddTag(Tags.PauseUpdate);
             AddTag(Tags.FrozenUpdate);
             currentSpace = space;
+        }
+
+        public static string GetFullPath(string texture) {
+            if (string.IsNullOrEmpty(Path.GetExtension(texture))) {
+                texture += ".png";
+            }
+            string extension = Path.GetExtension(texture);
+            string input = Path.Combine("madelineparty", "tokens", texture.Replace(extension, "")).Replace('\\', '/');
+            return Regex.Replace(input, "\\d+$", string.Empty);
         }
 
         public override void Update() {
