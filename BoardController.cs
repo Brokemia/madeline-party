@@ -225,7 +225,6 @@ namespace MadelineParty {
             //boardSpaces.Add(new BoardSpace() { ID = 31, type = 'b', x = 71, y = 103, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 1, } });
             // Cycle Madness
             boardSpaces.Add(new BoardSpace() { ID = 0, type = 's', x = 52, y = 61, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 2, } });
-            boardSpaces.Add(new BoardSpace() { ID = 1, type = 's', x = 52, y = 61, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 2, } });
             boardSpaces.Add(new BoardSpace() { ID = 2, type = 'b', x = 47, y = 80, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 3, } });
             boardSpaces.Add(new BoardSpace() { ID = 3, type = 'g', x = 33, y = 101, heartSpace = false, greenSpaceEvent = "gondola", destIDs_DONTUSE = new List<int> { 4, } });
             boardSpaces.Add(new BoardSpace() { ID = 4, type = 'b', x = 7, y = 96, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 5, } });
