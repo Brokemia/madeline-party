@@ -122,7 +122,7 @@ namespace MadelineParty {
             ModeManager.Instance.DistributeMinigameRewards(winners);
 
             // Winners share the top pedestal, everyone else is placed below that
-            int realPlayerPlace = winners.Contains(GameData.Instance.realPlayerID) ? 0 : GameData.Instance.minigameResults.FindIndex((obj) => obj.Item1 == GameData.Instance.realPlayerID) - winners.Count + 2;
+            int realPlayerPlace = winners.Contains(GameData.Instance.realPlayerID) ? 0 : GameData.Instance.minigameResults.FindIndex((obj) => obj.Item1 == GameData.Instance.realPlayerID) - winners.Count + 1;
             // A check to stop the game from crashing when I hit one of these while testing
             if (winners[0] >= 0 && GameData.Instance.players[winners[0]] != null) {
                 cleanup();

@@ -22,8 +22,7 @@ namespace MadelineParty {
                 for (int i = 0; i < GameData.Instance.players.Length; i++) {
                     if (GameData.Instance.players[i] != null) {
                         bg.Draw(new Vector2(num, Y + 44 * (index + 1)));
-                        PlayerToken token = GameData.Instance.players[i].token;
-                        token.textures[(int)token.frame].DrawCentered(new Vector2(num + 60, Y - 8 + 44 * (index + 1.5f)), Color.White, .3f);
+                        GFX.Gui[PlayerToken.GetFullPath(BoardController.TokenPaths[i]) + "00"].DrawCentered(new Vector2(num + 60, Y - 8 + 44 * (index + 1.5f)), Color.White, .3f);
 
                         PixelFont font = Dialog.Languages["english"].Font;
                         float fontFaceSize = Dialog.Languages["english"].FontFaceSize;
