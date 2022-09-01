@@ -9,6 +9,7 @@ using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
+using VivHelper.Entities;
 
 namespace MadelineParty {
     // Survive an increasing number of seekers for as long as possible
@@ -96,7 +97,8 @@ namespace MadelineParty {
                 }
                 nextSpawnTime = Calc.Max(nextSpawnTime, minSpawnTime);
                 if (spawnSeekers && (!spawnOshiro || rand.Next(2) == 0)) {
-                    level.Add(new Seeker(seekerSpawns[rand.Next(seekerSpawns.Count)], null));
+                    level.Add(new CustomSeeker(new EntityData { Position = seekerSpawns[rand.Next(seekerSpawns.Count)] }, Vector2.Zero));
+                    //level.Add(new Seeker(seekerSpawns[rand.Next(seekerSpawns.Count)], null));
                 } else if(spawnOshiro) {
                     var oshiro = new AngryOshiro(new Vector2(-64, 0), false);
                     level.Add(oshiro);

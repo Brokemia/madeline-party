@@ -36,6 +36,9 @@
     <Reference Include=".\lib-stripped\CelesteNet.Shared.dll">
       <Private>False</Private>
     </Reference>
+    <Reference Include="VivHelper">
+      <HintPath>lib-stripped\VivHelper.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <Choose>
