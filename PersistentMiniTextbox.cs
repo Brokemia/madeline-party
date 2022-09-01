@@ -16,7 +16,7 @@ namespace MadelineParty {
         private static readonly Regex insertLate = new Regex("\\{MP\\+\\s*(.*?)\\}");
 
         private static string ProcessDialog(string dialogID) {
-            string text = Dialog.Language.Dialog[dialogID];
+            string text = Dialog.Get(dialogID.Trim());
             MatchCollection matchCollection = null;
             bool anyChanges = false;
             while (matchCollection == null || matchCollection.Count > 0) {
