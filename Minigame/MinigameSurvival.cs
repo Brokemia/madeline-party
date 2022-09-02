@@ -29,7 +29,7 @@ namespace MadelineParty {
         private bool spawnOshiro;
 
         public MinigameSurvival(EntityData data, Vector2 offset) : base(data, offset) {
-            deadRespawn = data.Nodes[0];
+            deadRespawn = data.NodesOffset(offset)[0];
             spawnDecrease = data.Float("spawnDecrease", 0.5f);
             minSpawnTime = data.Float("minSpawnTime", 1.2f);
             spawnSeekers = data.Bool("spawnSeekers", true);
@@ -44,6 +44,7 @@ namespace MadelineParty {
             base.Awake(scene);
             // If we have just died
             if (level.Session.RespawnPoint == deadRespawn) {
+                level.Tracker.GetEntities<Seeker>().ForEach(e => e.RemoveSelf());
                 completed = true;
                 MinigameTimeDisplay display = level.Entities.FindFirst<MinigameTimeDisplay>();
                 if (display != null)
@@ -97,7 +98,11 @@ namespace MadelineParty {
                 }
                 nextSpawnTime = Calc.Max(nextSpawnTime, minSpawnTime);
                 if (spawnSeekers && (!spawnOshiro || rand.Next(2) == 0)) {
-                    level.Add(new CustomSeeker(new EntityData { Position = seekerSpawns[rand.Next(seekerSpawns.Count)] }, Vector2.Zero));
+                    var data = new EntityData { Position = seekerSpawns[rand.Next(seekerSpawns.Count)] };
+                    data.Values = new();
+                    data.Values["SightDistance"] = 9999f;
+                    data.Values["SpottedLosePlayerTime"] = 2.0f;
+                    level.Add(new CustomSeeker(data, Vector2.Zero));
                     //level.Add(new Seeker(seekerSpawns[rand.Next(seekerSpawns.Count)], null));
                 } else if(spawnOshiro) {
                     var oshiro = new AngryOshiro(new Vector2(-64, 0), false);
