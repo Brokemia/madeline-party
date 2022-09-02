@@ -31,7 +31,7 @@ namespace MadelineParty.Multiplayer {
 
         private static uint getIdCelesteNet() => CelesteNetClientModule.Instance.Client.PlayerInfo.ID;
         
-        private static string getNameCelesteNet(uint id) => CelesteNetClientModule.Instance.Client.Data.GetRef<DataPlayerInfo>(id).Name;
+        private static string getNameCelesteNet(uint id) => CelesteNetClientModule.Instance.Client.Data.TryGetRef(id, out DataPlayerInfo value) ? value.Name : "???";
 
         private static void loadCelesteNet() => CelesteNetMadelinePartyComponent.handleAction = Instance.Handle;
 

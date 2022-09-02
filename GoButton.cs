@@ -30,7 +30,7 @@ namespace MadelineParty {
         private void HandlePlayerChoice(MPData data) {
             if (data is not PlayerChoice playerChoice) return;
             // If another player in our party has changed the turn count
-            if (GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("GOBUTTON")) {
+            if (GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && "GOBUTTON".Equals(playerChoice.choiceType)) {
                 OnDashed(SceneAs<Level>().Tracker.GetEntity<Player>(), default);
             }
         }

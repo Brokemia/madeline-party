@@ -224,33 +224,34 @@ namespace MadelineParty {
             //boardSpaces.Add(new BoardSpace() { ID = 30, type = 'r', x = 80, y = 86, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 31, } });
             //boardSpaces.Add(new BoardSpace() { ID = 31, type = 'b', x = 71, y = 103, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 1, } });
             // Cycle Madness
-            boardSpaces.Add(new BoardSpace() { ID = 0, type = 's', x = 52, y = 61, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 2, } });
-            boardSpaces.Add(new BoardSpace() { ID = 2, type = 'b', x = 47, y = 80, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 3, } });
-            boardSpaces.Add(new BoardSpace() { ID = 3, type = 'g', x = 33, y = 101, heartSpace = false, greenSpaceEvent = "gondola", destIDs_DONTUSE = new List<int> { 4, } });
-            boardSpaces.Add(new BoardSpace() { ID = 4, type = 'b', x = 7, y = 96, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 5, } });
-            boardSpaces.Add(new BoardSpace() { ID = 5, type = 'b', x = -5, y = 76, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 6, } });
-            boardSpaces.Add(new BoardSpace() { ID = 6, type = 'r', x = -7, y = 51, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 7, } });
-            boardSpaces.Add(new BoardSpace() { ID = 7, type = 'g', x = 8, y = 39, heartSpace = false, greenSpaceEvent = "gondola", destIDs_DONTUSE = new List<int> { 8, } });
-            boardSpaces.Add(new BoardSpace() { ID = 8, type = 'b', x = 33, y = 45, heartSpace = true, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 26, } });
-            boardSpaces.Add(new BoardSpace() { ID = 9, type = 'g', x = 15, y = 16, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 10, } });
-            boardSpaces.Add(new BoardSpace() { ID = 10, type = 'b', x = 11, y = 1, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 12, } });
-            boardSpaces.Add(new BoardSpace() { ID = 11, type = 'r', x = 33, y = 23, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 9, } });
-            boardSpaces.Add(new BoardSpace() { ID = 12, type = 'g', x = 27, y = -9, heartSpace = false, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 13, } });
-            boardSpaces.Add(new BoardSpace() { ID = 13, type = 'b', x = 55, y = -15, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 14, } });
-            boardSpaces.Add(new BoardSpace() { ID = 14, type = 'b', x = 81, y = -15, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 15, } });
-            boardSpaces.Add(new BoardSpace() { ID = 15, type = 'i', x = 107, y = -10, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 16, } });
-            boardSpaces.Add(new BoardSpace() { ID = 16, type = 'g', x = 104, y = 12, heartSpace = false, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 23, } });
-            boardSpaces.Add(new BoardSpace() { ID = 17, type = 'g', x = 70, y = 33, heartSpace = false, greenSpaceEvent = "gondola", destIDs_DONTUSE = new List<int> { 25, } });
-            boardSpaces.Add(new BoardSpace() { ID = 18, type = 'r', x = 115, y = 71, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 20, } });
-            boardSpaces.Add(new BoardSpace() { ID = 19, type = 'b', x = 119, y = 52, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 18, } });
-            boardSpaces.Add(new BoardSpace() { ID = 20, type = 'b', x = 98, y = 86, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 21, } });
-            boardSpaces.Add(new BoardSpace() { ID = 21, type = 'r', x = 74, y = 87, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 22, } });
-            boardSpaces.Add(new BoardSpace() { ID = 22, type = 'b', x = 63, y = 72, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 24, } });
-            boardSpaces.Add(new BoardSpace() { ID = 23, type = 'b', x = 84, y = 18, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 27, } });
-            boardSpaces.Add(new BoardSpace() { ID = 24, type = 'g', x = 52, y = 40, heartSpace = false, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 17, } });
-            boardSpaces.Add(new BoardSpace() { ID = 25, type = 'b', x = 104, y = 33, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 19, } });
-            boardSpaces.Add(new BoardSpace() { ID = 26, type = 'b', x = 38, y = 63, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 2, } });
-            boardSpaces.Add(new BoardSpace() { ID = 27, type = 'b', x = 55, y = 22, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 11, } });
+            boardSpaces.Add(new BoardSpace() { ID = 0, type = 's', x = 96, y = 89, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 1, } });
+            boardSpaces.Add(new BoardSpace() { ID = 1, type = 'b', x = 72, y = 92, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 2, } });
+            boardSpaces.Add(new BoardSpace() { ID = 2, type = 'a', x = 80, y = 112, heartSpace = false, greenSpaceEvent = "gondola", destIDs_DONTUSE = new List<int> { 3, } });
+            boardSpaces.Add(new BoardSpace() { ID = 3, type = 'b', x = 52, y = 115, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 27, } });
+            boardSpaces.Add(new BoardSpace() { ID = 4, type = 'b', x = 8, y = 89, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 5, } });
+            boardSpaces.Add(new BoardSpace() { ID = 5, type = 'r', x = -7, y = 63, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 6, } });
+            boardSpaces.Add(new BoardSpace() { ID = 6, type = 'a', x = 11, y = 42, heartSpace = false, greenSpaceEvent = "gondola", destIDs_DONTUSE = new List<int> { 7, } });
+            boardSpaces.Add(new BoardSpace() { ID = 7, type = 'b', x = 29, y = 54, heartSpace = true, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 24, } });
+            boardSpaces.Add(new BoardSpace() { ID = 8, type = 'g', x = 8, y = 15, heartSpace = true, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 9, } });
+            boardSpaces.Add(new BoardSpace() { ID = 9, type = 'b', x = 5, y = -3, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 11, } });
+            boardSpaces.Add(new BoardSpace() { ID = 10, type = 'r', x = 28, y = 23, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 8, } });
+            boardSpaces.Add(new BoardSpace() { ID = 11, type = 'g', x = 26, y = -12, heartSpace = false, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 12, } });
+            boardSpaces.Add(new BoardSpace() { ID = 12, type = 'b', x = 51, y = -15, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 13, } });
+            boardSpaces.Add(new BoardSpace() { ID = 13, type = 'i', x = 77, y = -15, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 26, } });
+            boardSpaces.Add(new BoardSpace() { ID = 14, type = 'b', x = 102, y = 12, heartSpace = false, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 21, } });
+            boardSpaces.Add(new BoardSpace() { ID = 15, type = 'a', x = 62, y = 35, heartSpace = false, greenSpaceEvent = "gondola", destIDs_DONTUSE = new List<int> { 23, } });
+            boardSpaces.Add(new BoardSpace() { ID = 16, type = 'r', x = 121, y = 88, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 18, } });
+            boardSpaces.Add(new BoardSpace() { ID = 17, type = 'b', x = 120, y = 66, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 16, } });
+            boardSpaces.Add(new BoardSpace() { ID = 18, type = 'b', x = 107, y = 81, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 19, } });
+            boardSpaces.Add(new BoardSpace() { ID = 19, type = 'g', x = 79, y = 71, heartSpace = true, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 20, } });
+            boardSpaces.Add(new BoardSpace() { ID = 20, type = 'b', x = 58, y = 61, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 22, } });
+            boardSpaces.Add(new BoardSpace() { ID = 21, type = 'b', x = 84, y = 18, heartSpace = true, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 25, } });
+            boardSpaces.Add(new BoardSpace() { ID = 22, type = 'g', x = 42, y = 41, heartSpace = false, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { 15, } });
+            boardSpaces.Add(new BoardSpace() { ID = 23, type = 'i', x = 99, y = 42, heartSpace = false, greenSpaceEvent = "seeker", destIDs_DONTUSE = new List<int> { 17, } });
+            boardSpaces.Add(new BoardSpace() { ID = 24, type = 'b', x = 42, y = 77, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 1, } });
+            boardSpaces.Add(new BoardSpace() { ID = 25, type = 'b', x = 55, y = 22, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 10, } });
+            boardSpaces.Add(new BoardSpace() { ID = 26, type = 'a', x = 96, y = -8, heartSpace = false, greenSpaceEvent = "tentacleDrag", destIDs_DONTUSE = new List<int> { } });
+            boardSpaces.Add(new BoardSpace() { ID = 27, type = 'b', x = 26, y = 105, heartSpace = false, greenSpaceEvent = "", destIDs_DONTUSE = new List<int> { 4, } });
         }
 
         public static void Load() {
@@ -264,6 +265,7 @@ namespace MadelineParty {
                 ['r'] = GFX.Game["decals/madelineparty/redspace"],
                 ['b'] = GFX.Game["decals/madelineparty/bluespace"],
                 ['g'] = GFX.Game["decals/madelineparty/greenspace"],
+                ['a'] = GFX.Game["decals/madelineparty/autogreenspace"],
                 ['i'] = GFX.Game["decals/madelineparty/shopspace"]
             };
 
@@ -528,7 +530,25 @@ namespace MadelineParty {
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelShopEnter);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.ENTERSHOP);
                             level.Add(new MiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Enter_Shop_Prompt_List")));
-                        } else if (playerMoveProgress == playerMoveDistance) { // Check if we've hit our destination
+                        } else if (CurrentPlayerToken.currentSpace.type == 'a') { // If this is an auto green space
+                            status = BoardStatus.WAITING;
+                            DoGreenSpace(CurrentPlayerToken.currentSpace, () => {
+                                AfterChoice();
+
+                                if (playerMoveProgress != playerMoveDistance) {
+                                    // Regenerate the path in case the player has been moved
+                                    playerMovePath[playerMoveProgress] = CurrentPlayerToken.currentSpace;
+                                    playerMovePath.RemoveRange(playerMoveProgress + 1, playerMovePath.Count - playerMoveProgress - 1);
+                                    for (int i = playerMoveProgress; i < playerMoveDistance; i++) {
+                                        if (playerMovePath[i].destinations.Count == 1) {
+                                            playerMovePath.Add(playerMovePath[i].destinations[0]);
+                                        } else {
+                                            break;
+                                        }
+                                    }
+                                }
+                            });
+                        } else if (playerMoveProgress == playerMoveDistance) { // If we've hit our destination
                             playerMoveDistance = 0;
                             playerMovePath = null;
                             playerMoveProgress = 0;
@@ -948,7 +968,7 @@ namespace MadelineParty {
                 matrixBefore * Matrix.CreateTranslation(new Vector3(-level.ShakeVector.X, -level.ShakeVector.Y, 0) * 6));
 
             foreach (BoardSpace space in boardSpaces) {
-                if (space.ID != GameData.Instance.heartSpaceID && space.type == 'g' && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
+                if (space.ID != GameData.Instance.heartSpaceID && (space.type == 'g' || space.type == 'a') && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
                     spaceEvent.RenderSubHUD(space);
                 }
             }
@@ -994,7 +1014,7 @@ namespace MadelineParty {
             foreach (BoardSpace space in boardSpaces) {
                 Vector2 spacePos = Position + new Vector2(space.x, space.y);
                 if (space.ID != GameData.Instance.heartSpaceID) {
-                    if(space.type == 'g' && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
+                    if((space.type == 'g' || space.type == 'a') && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
                         spaceEvent.Render(space);
                     } else if (spaceTextures.ContainsKey(space.type)) {
                         spaceTextures[space.type].DrawCentered(spacePos);

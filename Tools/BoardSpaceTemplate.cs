@@ -58,6 +58,9 @@ namespace MadelineParty.Tools {
                 case 'g':
                     Draw.Circle(X, Y, size / 2, Color.Green, 5);
                     break;
+                case 'a':
+                    Draw.Circle(X, Y, size / 2, Color.PaleGreen, 5);
+                    break;
             }
             
         }

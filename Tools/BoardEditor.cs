@@ -273,6 +273,9 @@ namespace MadelineParty.Tools {
             } else if (MInput.Keyboard.Pressed(Keys.D5)) {
                 SetType('g');
                 SetGreenSpaceEvent(DebugCommands.greenSpaceEvent);
+            } else if (MInput.Keyboard.Pressed(Keys.D6)) {
+                SetType('a');
+                SetGreenSpaceEvent(DebugCommands.greenSpaceEvent);
             }
             if(MInput.Keyboard.Pressed(Keys.H)) {
                 ToggleHeartSpace();
