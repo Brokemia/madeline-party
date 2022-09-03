@@ -64,12 +64,11 @@ namespace MadelineParty {
             if (DrawLerp > 0f) {
                 float y = -56f * Ease.CubeIn(1f - DrawLerp);
                 Level level = Scene as Level;
-                Session session = level.Session;
 
                 TimeSpan timeSpan2 = TimeSpan.FromTicks((long)((finalTime > 0 ? finalTime : level.RawTimeActive - MinigameEntity.startTime) * 10000000));
                 string timeString = timeSpan2.ToString("mm\\:ss\\.fff");
                 timerBg.Draw(new Vector2(816, y));
-                DrawTime(new Vector2(816 + 16f, y + 52f), timeString, 1f + wiggler.Value * 0.15f, session.StartedFromBeginning, level.Completed, session.BeatBestTime);
+                DrawTime(new Vector2(816 + 16f, y + 52f), timeString, 1f + wiggler.Value * 0.15f, true, minigame.completed, false);
             }
         }
 

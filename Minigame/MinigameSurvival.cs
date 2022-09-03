@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Celeste;
-using Celeste.Mod.Core;
 using Celeste.Mod.Entities;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;

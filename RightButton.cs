@@ -6,7 +6,7 @@ using Monocle;
 namespace MadelineParty {
 
     public class RightButton : Solid, IComparable {
-        private const string decalPrefix = "madelineparty/rightbutton";
+        private const string decalPrefix = "madelineparty/rightbutton/";
 
         public enum Modes {
             Cancel,
@@ -14,7 +14,8 @@ namespace MadelineParty {
             CancelHeartBuy,
             CancelShopEnter,
             CancelItemBuy,
-            DoubleDice,
+            UseItem,
+            SingleItem,
             Up,
             Down,
             Left,
@@ -44,6 +45,7 @@ namespace MadelineParty {
         }
 
         protected Modes currentMode;
+        protected int playerID;
 
         protected Decal associatedDecal = null;
         protected BoardController board = null;
@@ -52,19 +54,22 @@ namespace MadelineParty {
 
         public event Action<Modes> OnPressButton;
 
-        public RightButton(Vector2 position, float width, float height, Modes startingMode)
+        public RightButton(Vector2 position, float width, float height, Modes startingMode, int playerID)
             : base(position, width, height, safe: true) {
             this.width = width;
             this.height = height;
+            this.playerID = playerID;
             currentMode = startingMode;
             OnDashCollide = OnDashed;
             SurfaceSoundIndex = SurfaceIndex.TileToIndex[tileType];
+            Depth = Depths.FGDecals - 1;
             AddTag(Tags.PauseUpdate);
             AddTag(Tags.FrozenUpdate);
+            AddTag(TagsExt.SubHUD);
         }
 
         public RightButton(EntityData data, Vector2 offset)
-            : this(data.Position + offset, data.Width, data.Height, data.Enum<Modes>("startingMode", defaultValue: Modes.Inactive)) {
+            : this(data.Position + offset, data.Width, data.Height, data.Enum("startingMode", Modes.Inactive), data.Int("playerID", 0)) {
         }
 
         public Modes GetCurrentMode() {
@@ -78,6 +83,9 @@ namespace MadelineParty {
                 case Modes.CancelItemBuy:
                 case Modes.CancelShopEnter:
                     SwapDecal(decalPrefix + "cancel");
+                    break;
+                case Modes.SingleItem:
+                    SwapDecal(decalPrefix + "useitem_" + GameData.Instance.players[playerID].items[0].Name);
                     break;
                 default:
                     SwapDecal(decalPrefix + currentMode.ToString().ToLower());
@@ -108,9 +116,6 @@ namespace MadelineParty {
                 board = item;
             }
             SwapDecal(decalPrefix + currentMode.ToString().ToLower());
-            TileGrid tileGrid = GFX.FGAutotiler.GenerateBox(tileType, (int)width / 8, (int)height / 8).TileGrid; Add(new LightOcclude());
-            Add(tileGrid);
-            Add(new TileInterceptor(tileGrid, highPriority: true));
         }
 
         private double DistanceBetween(Entity e1, Entity e2) {
@@ -141,11 +146,19 @@ namespace MadelineParty {
         }
 
         private void DoBreakAction() {
-            OnPressButton?.Invoke(currentMode);
+            if (OnPressButton != null) {
+                var oldEvent = OnPressButton;
+                OnPressButton = null;
+                oldEvent(currentMode);
+                return;
+            }
             switch (currentMode) {
-                case Modes.DoubleDice:
-                    SetCurrentMode(Modes.Inactive);
-                    board.RollDice(GetTokenID(), true);
+                case Modes.UseItem:
+                    board.UseItem(playerID);
+                    break;
+                case Modes.SingleItem:
+                    GameData.Instance.players[playerID].items[0].Action?.Invoke(playerID);
+                    GameData.Instance.players[playerID].items.RemoveAt(0);
                     break;
                 case Modes.CancelHeartBuy:
                     board.SkipHeart();
@@ -188,27 +201,20 @@ namespace MadelineParty {
             return DashCollisionResults.Rebound;
         }
 
-        // Get the ID of the token of the player using it
-        public int GetTokenID() {
-            if (X < level.LevelOffset.X + level.Bounds.Width / 2 && Y < level.LevelOffset.Y + level.Bounds.Height / 2) {
-                return 0;
-            }
-            if (X > level.LevelOffset.X + level.Bounds.Width / 2 && Y < level.LevelOffset.Y + level.Bounds.Height / 2) {
-                return 1;
-            }
-            if (X < level.LevelOffset.X + level.Bounds.Width / 2 && Y > level.LevelOffset.Y + level.Bounds.Height / 2) {
-                return 2;
-            }
-            if (X > level.LevelOffset.X + level.Bounds.Width / 2 && Y > level.LevelOffset.Y + level.Bounds.Height / 2) {
-                return 3;
-            }
-
-            return 0;
-        }
-
         public int CompareTo(object obj) {
             if (obj == null) return 1;
-            return obj is RightButton other ? GetTokenID().CompareTo(other.GetTokenID()) : 1;
+            return obj is RightButton other ? playerID.CompareTo(other.playerID) : 1;
+        }
+
+        public override void Render() {
+            base.Render();
+            if (currentMode == Modes.UseItem) {
+                var pItems = GameData.Instance.players[playerID].items;
+                for (int i = 0; i < pItems.Count; i++) {
+                    // 4 pixels of vertical spacing between items
+                    GFX.Game["decals/madelineparty/items/" + GameData.Instance.players[playerID].items[i].Name].DrawCentered((Position - level.LevelOffset) * 6 + new Vector2(8 * 6, 16 * 6 /* center it*/ - 18 * (pItems.Count - 1) /* to top */ + 36 * i /* descend */) - level.ShakeVector * 6, Color.White, new Vector2(2));
+                }
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ namespace MadelineParty
 
     public class LeftButton : Solid, IComparable
     {
-        private const string decalPrefix = "madelineparty/leftbutton";
+        private const string decalPrefix = "madelineparty/leftbutton/";
 
         public enum Modes
         {
@@ -170,11 +170,14 @@ namespace MadelineParty
             DoBreakAction();
         }
 
-        private void DoBreakAction()
-        {
-            OnPressButton?.Invoke(currentMode);
-            switch (currentMode)
-            {
+        private void DoBreakAction() {
+            if (OnPressButton != null) {
+                var oldEvent = OnPressButton;
+                OnPressButton = null;
+                oldEvent(currentMode);
+                return;
+            }
+            switch (currentMode) {
                 case Modes.Dice:
                     SetCurrentMode(Modes.Inactive);
                     if (board != null) {

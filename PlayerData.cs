@@ -13,7 +13,7 @@ namespace MadelineParty
         // What the player rolls at the beginning of the game
         // Determines Turn Order
         public int StartingRoll;
-        public List<GameData.Item> items = new List<GameData.Item>();
+        public List<GameData.Item> items = new() { GameData.items["Double Dice"], GameData.items["Double Dice"] };
 
         public int strawberries {
             get;

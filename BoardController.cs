@@ -380,8 +380,6 @@ namespace MadelineParty {
                         }
                         Logger.Log("MadelineParty", "Delayed emote interpreted as die roll from player " + delayedDieRoll.DisplayName + ". Rolls: " + rollString);
 
-                        if (delayedDieRoll.rolls.Length == 2)
-                            GameData.Instance.players[GameData.Instance.playerSelectTriggers[delayedDieRoll.ID]].items.Remove(GameData.Item.DOUBLEDICE);
                         RollDice(GameData.Instance.playerSelectTriggers[delayedDieRoll.ID], delayedDieRoll.rolls);
                     }
                     delayedDieRoll = null;
@@ -441,14 +439,18 @@ namespace MadelineParty {
             SetLeftButtonStatus(player, LeftButton.Modes.Dice);
         }
 
-        private void SetDoubleDice(int player) {
-            SetRightButtonStatus(player, RightButton.Modes.DoubleDice);
+        private void SetUseItem(int player) {
+            if(GameData.Instance.players[player].items.Count == 1) {
+                SetRightButtonStatus(player, RightButton.Modes.SingleItem);
+            } else {
+                SetRightButtonStatus(player, RightButton.Modes.UseItem);
+            }
         }
 
         private void ChangeTurn(int player) {
             SetDice(player);
-            if (GameData.Instance.players[player].items.Contains(GameData.Item.DOUBLEDICE)) {
-                SetDoubleDice(player);
+            if(GameData.Instance.players[player].items.Count > 0) {
+                SetUseItem(player);
             }
             if(level.Wipe != null) {
                 Action onComplete = level.Wipe.OnComplete;
@@ -605,8 +607,9 @@ namespace MadelineParty {
             }
             shopItemViewing++;
             if (shopItemViewing < GameData.Instance.shopContents.Count) {
-                scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, GameData.Instance.shopContents[shopItemViewing]);
-                if (GameData.Instance.players[turnOrder[playerTurn]].strawberries >= GameData.Instance.itemPrices[GameData.Instance.shopContents[shopItemViewing]]) {
+                var nextItem = GameData.items[GameData.Instance.shopContents[shopItemViewing]];
+                scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, nextItem);
+                if (GameData.Instance.players[turnOrder[playerTurn]].strawberries >= nextItem.Price) {
                     SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmItemBuy);
                 } else {
                     SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
@@ -624,14 +627,14 @@ namespace MadelineParty {
             if (turnOrder[playerTurn] == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "SHOPITEM", choice = 0 });
             }
-            GameData.Item itemBought = GameData.Instance.shopContents[shopItemViewing];
+            var itemBought = GameData.items[GameData.Instance.shopContents[shopItemViewing]];
             GameData.Instance.players[turnOrder[playerTurn]].items.Add(itemBought);
             shopItemViewing = 0;
-            scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL, GameData.Instance.shopContents[shopItemViewing]);
+            scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.Inactive);
 
-            ChangeStrawberries(turnOrder[playerTurn], -GameData.Instance.itemPrices[itemBought], .08f);
+            ChangeStrawberries(turnOrder[playerTurn], -itemBought.Price, .08f);
             AfterChoice();
         }
 
@@ -652,10 +655,10 @@ namespace MadelineParty {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "ENTERSHOP", choice = 0 });
             }
             shopItemViewing = 0;
-            scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, GameData.Instance.shopContents[shopItemViewing]);
+            var firstItem = GameData.items[GameData.Instance.shopContents[shopItemViewing]];
+            scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, firstItem);
             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelItemBuy);
-            Console.WriteLine(GameData.Instance.players[turnOrder[playerTurn]].strawberries + " " + GameData.Instance.itemPrices[GameData.Instance.shopContents[shopItemViewing]]);
-            if (GameData.Instance.players[turnOrder[playerTurn]].strawberries >= GameData.Instance.itemPrices[GameData.Instance.shopContents[shopItemViewing]]) {
+            if (GameData.Instance.players[turnOrder[playerTurn]].strawberries >= firstItem.Price) {
                 SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmItemBuy);
             } else {
                 SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
@@ -824,6 +827,27 @@ namespace MadelineParty {
             };
         }
 
+        public void UseItem(int player, int itemIdx = 0) {
+            scoreboards[player].SetCurrentMode(GameScoreboard.Modes.USEITEM, GameData.Instance.players[player].items[itemIdx]);
+            rightButtons[player].SetCurrentMode(RightButton.Modes.Cancel);
+            leftButtons[player].SetCurrentMode(LeftButton.Modes.Confirm);
+            rightButtons[player].OnPressButton += mode => {
+                leftButtons[player].SetCurrentMode(LeftButton.Modes.Inactive);
+                if (itemIdx == GameData.Instance.players[player].items.Count - 1) {
+                    SetDice(player);
+                    SetUseItem(player);
+                    scoreboards[player].SetCurrentMode(GameScoreboard.Modes.NORMAL);
+                } else {
+                    UseItem(player, itemIdx + 1);
+                }
+            };
+            leftButtons[player].OnPressButton += mode => {
+                rightButtons[player].SetCurrentMode(RightButton.Modes.Inactive);
+                GameData.Instance.players[player].items[itemIdx].Action?.Invoke(player);
+                GameData.Instance.players[player].items.RemoveAt(itemIdx);
+            };
+        }
+
         // Returns which number player this is, ignoring unpicked characters
         private int getRelativePlayerID(int absPlayerID) {
             int currPlayer = 0;
@@ -899,7 +923,6 @@ namespace MadelineParty {
                 }
                 if (doubleDice) {
                     rolls.Add(rand.Next(10) + 1);
-                    GameData.Instance.players[playerID].items.Remove(GameData.Item.DOUBLEDICE);
                 }
             }
             if (playerID == GameData.Instance.realPlayerID) {
@@ -1064,8 +1087,6 @@ namespace MadelineParty {
                         }
                         Logger.Log("MadelineParty", "Received die roll from player " + dieRoll.DisplayName + ". Rolls: " + rollString);
 
-                        if (dieRoll.rolls.Length == 2)
-                            GameData.Instance.players[GameData.Instance.playerSelectTriggers[dieRoll.ID]].items.Remove(GameData.Item.DOUBLEDICE);
                         Instance.RollDice(GameData.Instance.playerSelectTriggers[dieRoll.ID], dieRoll.rolls);
                     }
                 }

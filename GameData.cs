@@ -19,9 +19,33 @@ namespace MadelineParty
         {
         }
 
-        public enum Item
-        {
-            DOUBLEDICE
+        public static readonly IReadOnlyDictionary<string, Item> items = new Dictionary<string, Item>() {
+            {
+                "Double Dice",
+                new() {
+                    Name = "Double Dice",
+                    Price = 10,
+                    Action = (player) => {
+                        BoardController.Instance.RollDice(player, true);
+                    }
+                }
+            },
+            {
+                "Flip Flop",
+                new() {
+                    Name = "Flip Flop",
+                    Price = 7,
+                    Action = (player) => {
+                        
+                    }
+                }
+            }
+        };
+
+        public class Item {
+            public string Name { get; set; }
+            public int Price { get; set; }
+            public Action<int> Action { get; set; }
         }
 
         public const int maxItems = 3;
@@ -47,18 +71,15 @@ namespace MadelineParty
         public int heartCost = 5;
         public string minigame;
         public bool gameStarted;
-        private List<Item> earlyShop = new List<Item>(new Item[] { Item.DOUBLEDICE });
-        private List<Item> lateShop = new List<Item>(new Item[] { Item.DOUBLEDICE });
-        public List<Item> shopContents
+        private List<string> earlyShop = new() { "Double Dice" };
+        private List<string> lateShop = new() { "Flip Flop", "Double Dice" };
+        public List<string> shopContents
         {
             get
             {
                 return turn <= maxTurns / 2 ? earlyShop : lateShop;
             }
         }
-
-        // Set in the Module's Initialize method
-        public Dictionary<Item, int> itemPrices = new Dictionary<Item, int>();
 
         private Random _textRand;
 

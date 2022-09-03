@@ -5,12 +5,8 @@ using System.Linq;
 
 namespace MadelineParty {
     public class MinigameDistanceDisplay : MinigameTimeDisplay {
-        MinigameInfinityTrigger infinityMinigame;
-
-        public MinigameDistanceDisplay(MinigameEntity minigame) : base(minigame) {
+        public MinigameDistanceDisplay(MinigameEntity minigame) : base(minigame, true) {
             Y = 120;
-            infinityMinigame = minigame as MinigameInfinityTrigger;
-
         }
 
         public override void Render() {

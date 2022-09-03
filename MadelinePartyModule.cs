@@ -180,13 +180,6 @@ namespace MadelineParty {
             return false;
         }
 
-
-        // Optional, initialize anything after Celeste has initialized itself properly.
-        public override void Initialize() {
-            // Set the shop prices
-            GameData.Instance.itemPrices[GameData.Item.DOUBLEDICE] = 10;
-        }
-
         // Optional, do anything requiring either the Celeste or mod content here.
         [Obsolete]
         public override void LoadContent() {
