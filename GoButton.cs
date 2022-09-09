@@ -10,7 +10,7 @@ namespace MadelineParty {
     class GoButton : Solid {
         private static MTexture texture = GFX.Game["objects/madelineparty/numberselect/go"];
 
-        public GoButton(EntityData data, Vector2 offset) : base(data.Position + offset, 48, 48, true) {
+        public GoButton(EntityData data, Vector2 offset) : base(data.Position + offset, 40, 40, true) {
             OnDashCollide = OnDashed;
             SurfaceSoundIndex = SurfaceIndex.TileToIndex['3'];
             AddTag(Tags.PauseUpdate);

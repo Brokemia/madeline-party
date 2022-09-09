@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,7 @@ using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
 using Monocle;
+using MonoMod.Utils;
 
 namespace MadelineParty
 {
@@ -19,6 +21,8 @@ namespace MadelineParty
         {
         }
 
+        private static readonly Random rand = new();
+
         public static readonly IReadOnlyDictionary<string, Item> items = new Dictionary<string, Item>() {
             {
                 "Double Dice",
@@ -26,6 +30,10 @@ namespace MadelineParty
                     Name = "Double Dice",
                     Price = 10,
                     Action = (player) => {
+                        // Double dice are special
+                        if(player != Instance.realPlayerID) {
+                            return;
+                        }
                         BoardController.Instance.RollDice(player, true);
                     }
                 }
@@ -36,11 +44,55 @@ namespace MadelineParty
                     Name = "Flip Flop",
                     Price = 7,
                     Action = (player) => {
-                        
+                        BoardController.Instance.SetLeftButtonStatus(player, LeftButton.Modes.Inactive);
+                        BoardController.Instance.SetRightButtonStatus(player, RightButton.Modes.Inactive);
+                        Level level = Engine.Scene as Level;
+                        var swappable = Instance.players.Where(p => p != null && p.token.id != player).ToList();
+                        if(swappable.Count == 0) {
+                            swappable = new List<PlayerData>() { Instance.players[player] };
+                        }
+                        var swapping = swappable[rand.Next(swappable.Count())];
+                        swappable.Remove(swapping);
+                        Dialog.Language.Dialog["MadelineParty_Swappable_Players"] = swapping == Instance.players[player] ? Dialog.Get("MadelineParty_Yourself") : Instance.GetPlayerName(swapping.token.id);
+                        if(swappable.Count > 0) {
+                            Dialog.Language.Dialog["MadelineParty_Swappable_Players"] += "|" + string.Join("|", swappable.ConvertAll(p => Instance.GetPlayerName(p.token.id)));
+                        }
+                        var textbox = new PersistentMiniTextbox("MadelineParty_Item_FlipFlop_Who");
+                        level.Add(textbox);
+                        textbox.OnFinish += () => BoardController.Instance.Add(new Coroutine(FlipFlopCoroutine(textbox, Instance.players[player], swapping, swappable.Count == 0), true));
                     }
                 }
             }
         };
+
+        private static IEnumerator FlipFlopCoroutine(PersistentMiniTextbox textbox, PlayerData p1, PlayerData p2, bool oneOption) {
+            yield return oneOption ? 4f : 7f;
+            yield return DynamicData.For(textbox).Invoke("Close");
+            var vanishTween = Tween.Create(Tween.TweenMode.Oneshot, Ease.ElasticIn, 1.5f, true);
+            vanishTween.OnUpdate += t => p1.token.scaleModifier = p2.token.scaleModifier = new Vector2(1 - t.Eased);
+            BoardController.Instance.Add(vanishTween);
+            while(vanishTween.Percent < 1) {
+                yield return null;
+            }
+            // Swap the positions and spaces of the two players
+            var tempPos = p1.token.Position;
+            p1.token.Position = p2.token.Position;
+            p2.token.Position = tempPos;
+            var tempSpace = p1.token.currentSpace;
+            p1.token.currentSpace = p2.token.currentSpace;
+            p2.token.currentSpace = tempSpace;
+            yield return 1f;
+
+            var appearTween = Tween.Create(Tween.TweenMode.Oneshot, Ease.ElasticOut, 1.5f, true);
+            appearTween.OnUpdate += t => p1.token.scaleModifier = p2.token.scaleModifier = new Vector2(t.Eased);
+            BoardController.Instance.Add(appearTween);
+            while (appearTween.Percent < 1) {
+                yield return null;
+            }
+
+            // Have the player roll as normal
+            BoardController.Instance.SetDice(p1.token.id);
+        }
 
         public class Item {
             public string Name { get; set; }

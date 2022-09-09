@@ -19,7 +19,7 @@ namespace MadelineParty {
             }
 
             public override void Render() {
-                token.textures[(int)token.frame].DrawCentered(token.Position - token.level.ShakeVector * 6, Color.White, token.scale);
+                token.textures[(int)token.frame].DrawCentered(token.Position - token.level.ShakeVector * 6, Color.White, token.scale * token.scaleModifier);
             }
         }
 
@@ -40,6 +40,8 @@ namespace MadelineParty {
         private float timeTilBlink = 10;
 
         public Vector2 scale { get; private set; }
+
+        public Vector2 scaleModifier { get; set; } = Vector2.One;
 
         public float frame { get; private set; }
 
@@ -115,8 +117,7 @@ namespace MadelineParty {
                     respawnEase = -1f;
                     deathEffect = null;
                     image.Visible = true;
-                    Vector2 normalScale = scale;
-                    Add(Wiggler.Create(0.25f, 4f, (f) => scale = normalScale * new Vector2(1, f * 0.15f + 1f), true, true));
+                    Add(Wiggler.Create(0.25f, 4f, (f) => scaleModifier = new Vector2(1, f * 0.15f + 1f), true, true));
                 };
                 Add(respawnTween);
                 OnRespawn?.Invoke(this);

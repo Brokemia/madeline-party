@@ -258,6 +258,8 @@ namespace MadelineParty {
             MultiplayerSingleton.Instance.RegisterHandler<DieRoll>(HandleDieRoll);
             MultiplayerSingleton.Instance.RegisterHandler<PlayerChoice>(HandlePlayerChoice);
             MultiplayerSingleton.Instance.RegisterHandler<MinigameStart>(HandleMinigameStart);
+            MultiplayerSingleton.Instance.RegisterHandler<UseItemMenu>(HandleUseItemMenu);
+            MultiplayerSingleton.Instance.RegisterHandler<UseItem>(HandleUseItem);
         }
 
         public static void LoadContent() {
@@ -435,11 +437,11 @@ namespace MadelineParty {
             rightButtons[player].SetCurrentMode(mode);
         }
 
-        private void SetDice(int player) {
+        public void SetDice(int player) {
             SetLeftButtonStatus(player, LeftButton.Modes.Dice);
         }
 
-        private void SetUseItem(int player) {
+        public void SetUseItem(int player) {
             if(GameData.Instance.players[player].items.Count == 1) {
                 SetRightButtonStatus(player, RightButton.Modes.SingleItem);
             } else {
@@ -828,20 +830,24 @@ namespace MadelineParty {
         }
 
         public void UseItem(int player, int itemIdx = 0) {
+            if (player == GameData.Instance.realPlayerID) {
+                MultiplayerSingleton.Instance.Send(new UseItemMenu { player = player, index = itemIdx });
+            }
+            if (itemIdx == GameData.Instance.players[player].items.Count) {
+                SetDice(player);
+                SetUseItem(player);
+                scoreboards[player].SetCurrentMode(GameScoreboard.Modes.NORMAL);
+                return;
+            }
             scoreboards[player].SetCurrentMode(GameScoreboard.Modes.USEITEM, GameData.Instance.players[player].items[itemIdx]);
             rightButtons[player].SetCurrentMode(RightButton.Modes.Cancel);
             leftButtons[player].SetCurrentMode(LeftButton.Modes.Confirm);
             rightButtons[player].OnPressButton += mode => {
                 leftButtons[player].SetCurrentMode(LeftButton.Modes.Inactive);
-                if (itemIdx == GameData.Instance.players[player].items.Count - 1) {
-                    SetDice(player);
-                    SetUseItem(player);
-                    scoreboards[player].SetCurrentMode(GameScoreboard.Modes.NORMAL);
-                } else {
-                    UseItem(player, itemIdx + 1);
-                }
+                UseItem(player, itemIdx + 1);
             };
             leftButtons[player].OnPressButton += mode => {
+                MultiplayerSingleton.Instance.Send(new UseItem { player = player, itemIdx = itemIdx });
                 rightButtons[player].SetCurrentMode(RightButton.Modes.Inactive);
                 GameData.Instance.players[player].items[itemIdx].Action?.Invoke(player);
                 GameData.Instance.players[player].items.RemoveAt(itemIdx);
@@ -1136,6 +1142,25 @@ namespace MadelineParty {
             if (GameData.Instance.celestenetIDs.Contains(start.ID) && start.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
                 ChoseMinigame(start.choice, start.gameStart);
                 ModeManager.Instance.AfterMinigameChosen();
+            }
+        }
+
+        private static void HandleUseItemMenu(MPData data) {
+            if (data is not UseItemMenu menu) return;
+            Console.WriteLine("Use item menu: " + menu.player + " " + menu.index);
+            if (GameData.Instance.celestenetIDs.Contains(menu.ID) && menu.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+                Instance.UseItem(menu.player, menu.index);
+            }
+        }
+
+        private static void HandleUseItem(MPData data) {
+            if (data is not UseItem use) return;
+            Console.WriteLine("Use item: " + use.player + " " + use.itemIdx);
+            if (GameData.Instance.celestenetIDs.Contains(use.ID) && use.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+                Instance.leftButtons[use.player].SetCurrentMode(LeftButton.Modes.Inactive);
+                Instance.rightButtons[use.player].SetCurrentMode(RightButton.Modes.Inactive);
+                GameData.Instance.players[use.player].items[use.itemIdx].Action?.Invoke(use.player);
+                GameData.Instance.players[use.player].items.RemoveAt(use.itemIdx);
             }
         }
     }

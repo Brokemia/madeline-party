@@ -11,6 +11,8 @@ using System.Reflection;
 
 namespace MadelineParty.Multiplayer {
     class MultiplayerSingleton {
+        public const bool DEBUG_LOGGING = false;
+
         private static MultiplayerSingleton _instance;
         public static MultiplayerSingleton Instance => _instance ??= new MultiplayerSingleton();
 
@@ -85,6 +87,7 @@ namespace MadelineParty.Multiplayer {
                 MultiplayerData data = GetData(args.GetType().Name + "Data");
                 data.Initialize(args);
                 sendMethods[multiplayerBackend](data);
+                if (DEBUG_LOGGING) Console.WriteLine("Multiplayer Sent: " + data.GetType());
             }
         }
 
@@ -130,6 +133,7 @@ namespace MadelineParty.Multiplayer {
         }
 
         private void Handle(MPData data) {
+            if(DEBUG_LOGGING) Console.WriteLine("Multiplayer Received: " + data.GetType());
             if(handlers.TryGetValue(data.GetType(), out List<Action<MPData>> specificHandlers)) {
                 foreach(var handler in specificHandlers) {
                     handler.Invoke(data);

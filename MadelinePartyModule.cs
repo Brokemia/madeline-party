@@ -142,7 +142,7 @@ namespace MadelineParty {
             };
         }
 
-        bool Level_OnLoadEntity(Celeste.Level l, Celeste.LevelData levelData, Vector2 offset, Celeste.EntityData entityData) {
+        bool Level_OnLoadEntity(Level l, LevelData levelData, Vector2 offset, EntityData entityData) {
             if (entityData.Name.StartsWith("madelineparty/", StringComparison.InvariantCulture)) {
                 switch (entityData.Name.Substring("madelineparty/".Length)) {
                     case "leftbutton":

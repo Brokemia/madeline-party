@@ -1,5 +1,7 @@
 ﻿using System;
 using Celeste;
+using MadelineParty.Multiplayer;
+using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -154,9 +156,12 @@ namespace MadelineParty {
             }
             switch (currentMode) {
                 case Modes.UseItem:
+                    SetCurrentMode(Modes.Inactive);
                     board.UseItem(playerID);
                     break;
                 case Modes.SingleItem:
+                    MultiplayerSingleton.Instance.Send(new UseItem { player = playerID, itemIdx = 0 });
+                    SetCurrentMode(Modes.Inactive);
                     GameData.Instance.players[playerID].items[0].Action?.Invoke(playerID);
                     GameData.Instance.players[playerID].items.RemoveAt(0);
                     break;

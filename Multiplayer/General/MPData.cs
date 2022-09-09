@@ -11,6 +11,16 @@ namespace MadelineParty.Multiplayer.General {
         public string DisplayName;
     }
 
+    public class UseItem : MPData {
+        public int player;
+        public int itemIdx;
+    }
+
+    public class UseItemMenu : MPData {
+        public int player;
+        public int index;
+    }
+
     public class DieRoll : MPData {
         public int[] rolls;
     }

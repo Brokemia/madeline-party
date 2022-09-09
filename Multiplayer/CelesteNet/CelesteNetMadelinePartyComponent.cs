@@ -53,5 +53,13 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         public void Handle(CelesteNetConnection con, TiebreakerRolledData data) {
             handleAction.Invoke(data.Data);
         }
+
+        public void Handle(CelesteNetConnection con, UseItemData data) {
+            handleAction.Invoke(data.Data);
+        }
+
+        public void Handle(CelesteNetConnection con, UseItemMenuData data) {
+            handleAction.Invoke(data.Data);
+        }
     }
 }
