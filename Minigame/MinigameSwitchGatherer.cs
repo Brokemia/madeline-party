@@ -19,7 +19,6 @@ namespace MadelineParty {
         public static List<Vector2> switchesOn = new List<Vector2>();
         public List<TouchSwitch> switches;
         public Coroutine endCoroutine;
-        public MinigameScoreDisplay display;
         public Random rand = new Random();
 
         public MinigameSwitchGatherer(EntityData data, Vector2 offset) : base(data, offset) {
@@ -109,8 +108,9 @@ namespace MadelineParty {
             base.AfterStart();
             // Reset timer so it starts at 30 instead of (30 - the time it takes to count down)
             startTime = level.RawTimeActive;
-            level.Add(display = new MinigameScoreDisplay(this));
-            if(GameData.Instance.gnetHost) {
+            level.Add(new MinigameScoreDisplay(this));
+            level.Add(new MinigameTimeDisplay(this, true));
+            if (GameData.Instance.gnetHost) {
                 ActivateSwitch(switches[rand.Next(switches.Count)]);
             }
         }

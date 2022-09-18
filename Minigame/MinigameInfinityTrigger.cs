@@ -21,7 +21,6 @@ namespace MadelineParty {
         public static uint loops = 0;
         public static uint dist;
         public Coroutine endCoroutine;
-        public MinigameDistanceDisplay display;
         public Vector2 backwardsSpot;
         public float xDiff;
         private bool everyOtherFrame;
@@ -131,7 +130,8 @@ namespace MadelineParty {
             base.AfterStart();
             // Reset timer so it starts at 30 instead of (30 - the time it takes to count down)
             startTime = level.RawTimeActive;
-            level.Add(display = new MinigameDistanceDisplay(this));
+            level.Add(new MinigameDistanceDisplay(this));
+            level.Add(new MinigameTimeDisplay(this, true));
         }
 
         public override void Update() {

@@ -23,7 +23,6 @@ namespace MadelineParty {
         private float nextSpawnTime = 6.2f;
         private float spawnTimer = 5.2f;
         protected Vector2 deadRespawn;
-        public MinigameTimeDisplay display;
 
         private bool spawnSeekers;
         private bool spawnOshiro;
@@ -94,7 +93,7 @@ namespace MadelineParty {
             startTime = level.RawTimeActive;
             level.Tracker.GetEntity<Player>().JustRespawned = false;
             level.Session.RespawnPoint = deadRespawn;
-            level.Add(display = new MinigameTimeDisplay(this));
+            level.Add(new MinigameTimeDisplay(this));
         }
 
         private AngryOshiro lastOshiro;

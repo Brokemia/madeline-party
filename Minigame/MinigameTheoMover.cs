@@ -15,7 +15,6 @@ namespace MadelineParty {
         protected Vector2 theoRespawnPoint;
         public static uint theoCount;
         public Coroutine endCoroutine;
-        public MinigameScoreDisplay display;
 
         public MinigameTheoMover(EntityData data, Vector2 offset) : base(data, offset) {
             theoRespawnPoint = data.Nodes[0];
@@ -31,7 +30,8 @@ namespace MadelineParty {
             base.AfterStart();
             // Reset timer so it starts at 0 instead of 4.2
             startTime = level.RawTimeActive;
-            level.Add(display = new MinigameScoreDisplay(this, THEOS_NEEDED, false));
+            level.Add(new MinigameScoreDisplay(this, THEOS_NEEDED));
+            level.Add(new MinigameTimeDisplay(this, true));
         }
 
         public override void Update() {
@@ -44,7 +44,7 @@ namespace MadelineParty {
 
         protected IEnumerator EndMinigame() {
             completed = true;
-            MinigameTimeDisplay display = level.Entities.FindFirst<MinigameScoreDisplay>();
+            MinigameTimeDisplay display = level.Entities.FindFirst<MinigameTimeDisplay>();
             if (display != null)
                 display.finalTime = level.RawTimeActive - startTime;
             uint timeElapsed = theoCount < THEOS_NEEDED ? uint.MaxValue : (uint)((level.RawTimeActive - startTime) * 10000);

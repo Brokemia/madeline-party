@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using Celeste;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
@@ -9,9 +7,6 @@ using Monocle;
 
 namespace MadelineParty {
     public class MinigameFinishTrigger : MinigameEntity {
-
-        public MinigameTimeDisplay timer;
-
         public MinigameFinishTrigger(EntityData data, Vector2 offset) : base(data, offset) {
         }
 
@@ -19,7 +14,7 @@ namespace MadelineParty {
             base.AfterStart();
             // Reset timer so it starts at 0 instead of 4.2
             startTime = level.RawTimeActive;
-            level.Add(timer = new MinigameTimeDisplay(this));
+            level.Add(new MinigameTimeDisplay(this));
         }
 
         public override void OnEnter(Player player) {

@@ -4,36 +4,16 @@ using Monocle;
 using System;
 
 namespace MadelineParty {
-    public abstract class MinigameDisplay : Entity {
-        public float CompleteTimer;
-
-        public const int GuiChapterHeight = 58;
-
-        public const int GuiFileHeight = 78;
+    public class MinigameTimeDisplay : MinigameDisplay {
+        private static float spacerWidth;
 
         private static float numberWidth;
 
-        private static float spacerWidth;
+        private bool countDown;
 
-        protected MTexture bg = GFX.Gui["strawberryCountBG"];
-
-        protected MTexture timerBg = GFX.Gui["madelineparty/timerBG"];
-
-        public float DrawLerp;
-
-        protected Wiggler wiggler;
-
-        protected MinigameEntity minigame;
-
-        public float finalTime = -1;
-
-        public MinigameDisplay(MinigameEntity minigame) {
-            Tag = Tags.HUD | Tags.Global | Tags.PauseUpdate | Tags.TransitionUpdate;
-            Depth = -100;
-            Y = 60f;
+        public MinigameTimeDisplay(MinigameEntity minigame, bool countDown = false) : base(minigame) {
+            this.countDown = countDown;
             CalculateBaseSizes();
-            Add(wiggler = Wiggler.Create(0.5f, 4f));
-            this.minigame = minigame;
         }
 
         public static void CalculateBaseSizes() {
@@ -49,26 +29,26 @@ namespace MadelineParty {
             spacerWidth = pixelFontSize.Measure('.').X;
         }
 
-        public override void Update() {
-            if (minigame.completed) {
-                if (CompleteTimer == 0f) {
-                    wiggler.Start();
-                }
-                CompleteTimer += Engine.DeltaTime;
-            }
-            DrawLerp = Calc.Approach(DrawLerp, 1, Engine.DeltaTime * 4f);
-            base.Update();
-        }
-
         public override void Render() {
-            if (DrawLerp > 0f) {
-                float y = -56f * Ease.CubeIn(1f - DrawLerp);
+            base.Render();
+            if(!countDown) {
+                if (DrawLerp > 0f) {
+                    float y = -56f * Ease.CubeIn(1f - DrawLerp);
+                    Level level = Scene as Level;
+
+                    TimeSpan timeSpan2 = TimeSpan.FromTicks((long)((finalTime > 0 ? finalTime : level.RawTimeActive - MinigameEntity.startTime) * 10000000));
+                    string timeString = timeSpan2.ToString("mm\\:ss\\.fff");
+                    timerBg.Draw(new Vector2(816, y));
+                    DrawTime(new Vector2(816 + 16f, y + 52f), timeString, 1f + wiggler.Value * 0.15f, true, minigame.completed, false);
+                }
+            } else if (DrawLerp > 0f) {
+                float timerY = -56f * Ease.CubeIn(1f - DrawLerp);
                 Level level = Scene as Level;
 
-                TimeSpan timeSpan2 = TimeSpan.FromTicks((long)((finalTime > 0 ? finalTime : level.RawTimeActive - MinigameEntity.startTime) * 10000000));
-                string timeString = timeSpan2.ToString("mm\\:ss\\.fff");
-                timerBg.Draw(new Vector2(816, y));
-                DrawTime(new Vector2(816 + 16f, y + 52f), timeString, 1f + wiggler.Value * 0.15f, true, minigame.completed, false);
+                TimeSpan timeSpan = TimeSpan.FromTicks((long)(((minigame.completed || MinigameEntity.startTime < 0) ? 0 : 30 - (level.RawTimeActive - MinigameEntity.startTime)) * 10000000));
+                string timeString = timeSpan.ToString("ss\\.fff");
+                timerBg.Draw(new Vector2(816, timerY));
+                DrawTime(new Vector2(816 + 64f, timerY + 52f), timeString, 1f + wiggler.Value * 0.15f, true, minigame.completed, false);
             }
         }
 

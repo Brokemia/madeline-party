@@ -58,6 +58,7 @@ namespace MadelineParty {
                 //player.Die(Vector2.Zero, true, false);
                 level.Add(new MinigameReadyPrompt());
                 Player player = level.Tracker.GetEntity<Player>();
+                player.JustRespawned = true;
                 player.StateMachine.State = Player.StFrozen;
                 return;
             }
