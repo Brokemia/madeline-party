@@ -131,6 +131,11 @@ namespace MadelineParty {
             // A check to stop the game from crashing when I hit one of these while testing
             if (winners[0] >= 0 && GameData.Instance.players[winners[0]] != null) {
                 cleanup();
+                if(!GameData.Instance.minigameWins.ContainsKey(winners[0])) {
+                    GameData.Instance.minigameWins[winners[0]] = 1;
+                } else {
+                    GameData.Instance.minigameWins[winners[0]]++;
+                }
                 level.OnEndOfFrame += delegate {
                     level.Remove(player);
                     level.UnloadLevel();

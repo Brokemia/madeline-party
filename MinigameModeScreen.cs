@@ -78,7 +78,7 @@ namespace MadelineParty {
         public MinigameModeScreen(EntityData data, Vector2 offset) : base(data.Position * 6) {
 			width = data.Width;
 			height = data.Height;
-            terminal = new (this, data.NodesOffset(offset)[0]);
+            terminal = new(this, data.NodesOffset(offset)[0]);
 
             AddTag(TagsExt.SubHUD);
         }
@@ -87,6 +87,11 @@ namespace MadelineParty {
             base.Added(scene);
 			Level level = SceneAs<Level>();
             Scene.Add(terminal);
+			GameData.Instance.minigameStatus.Clear();
+			foreach(var kvp in GameData.Instance.minigameWins) {
+				GameData.Instance.minigameStatus[kvp.Key] = kvp.Value;
+			}
+			Scene.Add(new MinigameScoreDisplay(new MinigameFinishTrigger(new(), new())));
 
 			menu = new TextMenuPlus() {
 				DoCrop = true,
@@ -106,6 +111,8 @@ namespace MadelineParty {
 					if (terminal.Interacting) {
 						MultiplayerSingleton.Instance.Send(new MinigameStart { choice = lvl.Name, gameStart = DateTime.UtcNow.AddSeconds(3).ToFileTimeUtc() });
 						GameData.Instance.minigame = lvl.Name;
+						GameData.Instance.minigameStatus.Clear();
+						level.Remove(level.Entities.FindAll<MinigameDisplay>());
 						ModeManager.Instance.AfterMinigameChosen();
 					}
 				}));

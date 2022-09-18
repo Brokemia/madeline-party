@@ -106,7 +106,7 @@ namespace MadelineParty.Minigame {
             ActiveFont.Draw(description, new(1920 / 2, 1080 / 2 - height / 2 + nameTopPadding * 3), new(0.5f, 0), new(0.75f), Color.White);
 
             ActiveFont.DrawOutline(readyText, new(1920 / 2 - (unreadyCheck.Width * buttonScale + 20) / 2, 1080 / 2 + height / 2 - readyVertPadding * (readyStatus.Count == 1 ? 0.5f : 1)), new(0.5f), Vector2.One, Color.White, 2, Color.Black);
-            (readyStatus[GameData.Instance.realPlayerID] ? readyCheck : unreadyCheck).DrawCentered(new(1920 / 2 + (20 + ActiveFont.Measure(readyText).X) / 2, 1080 / 2 + height / 2 - readyVertPadding * (readyStatus.Count == 1 ? 0.5f : 1)), Color.White, buttonScale);
+            ((readyStatus.TryGetValue(GameData.Instance.realPlayerID, out bool ready) && ready) ? readyCheck : unreadyCheck).DrawCentered(new(1920 / 2 + (20 + ActiveFont.Measure(readyText).X) / 2, 1080 / 2 + height / 2 - readyVertPadding * (readyStatus.Count == 1 ? 0.5f : 1)), Color.White, buttonScale);
             int i = 0;
             foreach (var kvp in readyStatus) {
                 if (kvp.Key == GameData.Instance.realPlayerID) continue;

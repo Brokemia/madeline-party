@@ -110,14 +110,16 @@ namespace MadelineParty
         // The ID of the player at this client
         public int realPlayerID = -1;
         public bool gnetHost = true;
-        public List<uint> celestenetIDs = new List<uint>();
+        public List<uint> celestenetIDs = new();
         // Which playerSelectTrigger each player is in
-        public ConcurrentDictionary<uint, int> playerSelectTriggers = new ConcurrentDictionary<uint, int>();
-        public List<string> playedMinigames = new List<string>();
+        public ConcurrentDictionary<uint, int> playerSelectTriggers = new();
+        public List<string> playedMinigames = new();
+        // Matches player token ID to number of minigames won
+        public Dictionary<int, uint> minigameWins = new();
         // Matches player token ID to minigame status
-        public Dictionary<int, uint> minigameStatus = new Dictionary<int, uint>();
+        public Dictionary<int, uint> minigameStatus = new();
         // Matches player token ID to minigame results
-        public List<Tuple<int, uint>> minigameResults = new List<Tuple<int, uint>>();
+        public List<Tuple<int, uint>> minigameResults = new();
         public int heartSpaceID = 12;
         public PlayerSelectTrigger currentPlayerSelection;
         public int heartCost = 5;
