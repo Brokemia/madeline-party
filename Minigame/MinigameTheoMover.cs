@@ -37,7 +37,7 @@ namespace MadelineParty {
         public override void Update() {
             base.Update();
             // If another player beat us to it
-            if (endCoroutine == null && GameData.Instance.minigameResults.Count > 0) {
+            if (started && endCoroutine == null && GameData.Instance.minigameResults.Count > 0) {
                 Add(endCoroutine = new Coroutine(EndMinigame()));
             }
         }

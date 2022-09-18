@@ -125,7 +125,7 @@ namespace MadelineParty.Multiplayer {
             handlers[typeof(T)].Add(handler);
         }
 
-        public void RegisterUniqueHandler<T>(string key, Action<MPData> handler) {
+        public void RegisterUniqueHandler<T>(string key, Action<MPData> handler) where T : MPData {
             if (!uniqueHandlers.ContainsKey(typeof(T))) {
                 uniqueHandlers[typeof(T)] = new();
             }

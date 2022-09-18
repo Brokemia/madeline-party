@@ -11,6 +11,10 @@ namespace MadelineParty.Multiplayer.General {
         public string DisplayName;
     }
 
+    public class MinigameReady : MPData {
+        public int player;
+    }
+
     public class UseItem : MPData {
         public int player;
         public int itemIdx;

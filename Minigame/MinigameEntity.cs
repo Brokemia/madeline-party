@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Celeste;
+using MadelineParty.Minigame;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
@@ -52,9 +53,12 @@ namespace MadelineParty {
             // FIXME hackfix for invis
             if(!didRespawn) {
                 didRespawn = true;
-                startTime = level.RawTimeActive;
+                //startTime = level.RawTimeActive;
+                //Player player = level.Tracker.GetEntity<Player>();
+                //player.Die(Vector2.Zero, true, false);
+                level.Add(new MinigameReadyPrompt());
                 Player player = level.Tracker.GetEntity<Player>();
-                player.Die(Vector2.Zero, true, false);
+                player.StateMachine.State = Player.StFrozen;
                 return;
             }
             if (!started) {
@@ -141,11 +145,11 @@ namespace MadelineParty {
                     if(level.Wipe != null) {
                         Action onComplete = level.Wipe.OnComplete;
                         level.Wipe.OnComplete = delegate {
-                            level.Add(new PersistentMiniTextbox(GetWinnerText(winners)));
+                            level.Add(new PersistentMiniTextbox(GetWinnerText(winners), pauseUpdate: true));
                             onComplete?.Invoke();
                         };
                     } else {
-                        level.Add(new PersistentMiniTextbox(GetWinnerText(winners)));
+                        level.Add(new PersistentMiniTextbox(GetWinnerText(winners), pauseUpdate: true));
                     }
                 };
             }

@@ -83,7 +83,7 @@ namespace MadelineParty {
         private static int nextNodeID = 1;
         private static readonly Dictionary<int, string> nodeTexts = new();
         private static readonly Dictionary<string, int> nodeTextsReverse = new();
-        private static Random rand = new(2354362);
+        private static readonly Random rand = new(2354362);
 
         private static string ProcessDialog(string dialogID) {
             string text = Dialog.Get(dialogID.Trim());
@@ -128,18 +128,26 @@ namespace MadelineParty {
 
         private FancyText.Anchors anchor;
         private DynamicData selfData;
-        private Level level;
 
         public event Action OnFinish;
 
-        public PersistentMiniTextbox(string dialogId, FancyText.Anchors anchor = FancyText.Anchors.Top) : base(dialogId) {
+        private bool pauseUpdate;
+
+        private bool persistent;
+
+        public PersistentMiniTextbox(string dialogId, FancyText.Anchors anchor = FancyText.Anchors.Top, bool pauseUpdate = false, bool persistent = true) : base(dialogId) {
             this.anchor = anchor;
+            this.pauseUpdate = pauseUpdate;
+            this.persistent = persistent;
             selfData = DynamicData.For(this);
+            if(pauseUpdate) {
+                AddTag(Tags.PauseUpdate);
+                AddTag(Tags.FrozenUpdate);
+            }
         }
 
         public override void Added(Scene scene) {
             base.Added(scene);
-            level = SceneAs<Level>();
         }
 
         public override void Render() {
@@ -148,7 +156,7 @@ namespace MadelineParty {
                 return;
             }
             Level level = Scene as Level;
-            if (!level.FrozenOrPaused && level.RetryPlayerCorpse == null && !level.SkippingCutscene) {
+            if ((!level.FrozenOrPaused || pauseUpdate) && level.RetryPlayerCorpse == null && !level.SkippingCutscene) {
                 MTexture box = selfData.Get<MTexture>("box");
                 Sprite portrait = selfData.Get<Sprite>("portrait");
                 FancyText.Text text = selfData.Get<FancyText.Text>("text");
@@ -222,7 +230,7 @@ namespace MadelineParty {
         }
 
         private static IEnumerator MiniTextbox_Routine(On.Celeste.MiniTextbox.orig_Routine orig, MiniTextbox self) {
-            if (self is PersistentMiniTextbox selfPersistent) {
+            if (self is PersistentMiniTextbox selfPersistent && selfPersistent.persistent) {
                 IEnumerator res = orig(self);
                 while (res.MoveNext()) {
                     if (res.Current is float f && f == 3f) {

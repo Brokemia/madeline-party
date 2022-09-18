@@ -31,11 +31,11 @@ namespace MadelineParty {
             if (level.Wipe != null) {
                 Action onComplete = level.Wipe.OnComplete;
                 level.Wipe.OnComplete = delegate {
-                    level.Add(new PersistentMiniTextbox(GetWinnerText(winnerID), FancyText.Anchors.Middle));
+                    level.Add(new PersistentMiniTextbox(GetWinnerText(winnerID), FancyText.Anchors.Middle, pauseUpdate: true));
                     onComplete?.Invoke();
                 };
             } else {
-                level.Add(new PersistentMiniTextbox(GetWinnerText(winnerID), FancyText.Anchors.Middle));
+                level.Add(new PersistentMiniTextbox(GetWinnerText(winnerID), FancyText.Anchors.Middle, pauseUpdate: true));
             }
 
             yield return 10f;

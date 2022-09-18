@@ -315,7 +315,7 @@ namespace MadelineParty {
             }
         }
 
-        static bool hackfixRespawn;
+        public static bool hackfixRespawn;
 
         public override void Awake(Scene scene) {
             base.Awake(scene);
@@ -335,11 +335,11 @@ namespace MadelineParty {
                         if(level.Wipe != null) {
                             Action onComplete = level.Wipe.OnComplete;
                             level.Wipe.OnComplete = delegate {
-                                Scene.Add(new MiniTextbox("MadelineParty_Start"));
+                                Scene.Add(new PersistentMiniTextbox("MadelineParty_Start", pauseUpdate: true, persistent: false));
                                 onComplete?.Invoke();
                             };
                         } else {
-                            Scene.Add(new MiniTextbox("MadelineParty_Start"));
+                            Scene.Add(new PersistentMiniTextbox("MadelineParty_Start", pauseUpdate: true, persistent: false));
                         }
                     });
                 } else {
@@ -457,11 +457,11 @@ namespace MadelineParty {
             if(level.Wipe != null) {
                 Action onComplete = level.Wipe.OnComplete;
                 level.Wipe.OnComplete = delegate {
-                    level.Add(new MiniTextbox(GetCurrentTurnText(player)));
+                    level.Add(new PersistentMiniTextbox(GetCurrentTurnText(player), pauseUpdate: true, persistent: false));
                     onComplete?.Invoke();
                 };
             } else {
-                level.Add(new MiniTextbox(GetCurrentTurnText(player)));
+                level.Add(new PersistentMiniTextbox(GetCurrentTurnText(player), pauseUpdate: true, persistent: false));
             }
         }
 
@@ -525,7 +525,7 @@ namespace MadelineParty {
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelHeartBuy);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYHEART);
                             Dialog.Language.Dialog["MadelineParty_Heart_Cost"] = GameData.Instance.heartCost.ToString();
-                            level.Add(new MiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Buy_Heart_Prompt_List")));
+                            level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Buy_Heart_Prompt_List"), pauseUpdate: true, persistent: false));
                         }
                         // If we're at the item shop and have enough free space
                         else if (CurrentPlayerToken.currentSpace.type == 'i' && GameData.Instance.players[movingPlayerID].items.Count < GameData.maxItems) {
@@ -533,7 +533,7 @@ namespace MadelineParty {
                             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmShopEnter);
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelShopEnter);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.ENTERSHOP);
-                            level.Add(new MiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Enter_Shop_Prompt_List")));
+                            level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Enter_Shop_Prompt_List"), pauseUpdate: true, persistent: false));
                         } else if (CurrentPlayerToken.currentSpace.type == 'a') { // If this is an auto green space
                             status = BoardStatus.WAITING;
                             DoGreenSpace(CurrentPlayerToken.currentSpace, () => {
@@ -789,7 +789,7 @@ namespace MadelineParty {
 
         public IEnumerator InitiateMinigame() {
             yield return 1f;
-            level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Minigame_Time_List")));
+            level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Minigame_Time_List"), pauseUpdate: true));
             hackfixRespawn = false; //FIXME hackfix
             if (GameData.Instance.gnetHost) {
                 List<LevelData> minigames = GameData.Instance.GetAllUnplayedMinigames(level);

@@ -16,6 +16,7 @@ namespace MadelineParty {
     public class MinigameSurvival : MinigameEntity {
         private static FieldInfo diedInGBJInfo = typeof(Player).GetField("diedInGBJ", BindingFlags.Static | BindingFlags.NonPublic);
         private List<Vector2> seekerSpawns = new();
+        private List<Vector2> bossSpawns = new();
         private Random rand;
         private float spawnDecrease;
         private float minSpawnTime;
@@ -26,13 +27,19 @@ namespace MadelineParty {
 
         private bool spawnSeekers;
         private bool spawnOshiro;
+        private bool spawnFinalBoss;
+        private enum SpawnOptions {
+            Seeker, Oshiro, FinalBoss
+        }
+        private List<SpawnOptions> options = new();
 
         public MinigameSurvival(EntityData data, Vector2 offset) : base(data, offset) {
             deadRespawn = data.NodesOffset(offset)[0];
             spawnDecrease = data.Float("spawnDecrease", 0.5f);
             minSpawnTime = data.Float("minSpawnTime", 1.2f);
-            spawnSeekers = data.Bool("spawnSeekers", true);
-            spawnOshiro = data.Bool("spawnOshiro", false);
+            if (spawnSeekers = data.Bool("spawnSeekers", true)) options.Add(SpawnOptions.Seeker);
+            if (spawnOshiro = data.Bool("spawnOshiro", false)) options.Add(SpawnOptions.Oshiro);
+            if (spawnFinalBoss = data.Bool("spawnBadelineBoss", false)) options.Add(SpawnOptions.FinalBoss);
         }
 
         public override void Added(Scene scene) {
@@ -58,13 +65,23 @@ namespace MadelineParty {
                 
                 Add(new Coroutine(EndMinigame(HIGHEST_WINS, () => { })));
             } else {
-                level.PauseLock = true;
-                diedInGBJInfo.SetValue(null, 0);
+                // Don't prevent pausing if we're still on the ready screen
+                if (started) {
+                    level.PauseLock = true;
+                    diedInGBJInfo.SetValue(null, 0);
+                }
                 if (spawnSeekers) {
                     List<Entity> seekers = level.Tracker.GetEntities<Seeker>();
                     seekerSpawns.AddRange(seekers.ConvertAll(e => e.Position));
                     foreach (Seeker seeker in seekers) {
                         seeker.RemoveSelf();
+                    }
+                }
+                if (spawnFinalBoss) {
+                    List<Entity> bosses = level.Tracker.GetEntities<FinalBoss>();
+                    bossSpawns.AddRange(bosses.ConvertAll(e => e.Position));
+                    foreach (FinalBoss boss in bosses) {
+                        boss.RemoveSelf();
                     }
                 }
                 rand = new Random((int)GameData.Instance.turnOrderSeed + (int)Y);
@@ -81,9 +98,11 @@ namespace MadelineParty {
         }
 
         private AngryOshiro lastOshiro;
+        private readonly List<int> validBossPatterns = new() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 14, 15 };
 
         public override void Update() {
             base.Update();
+            if (!started) return;
             spawnTimer -= Engine.DeltaTime;
             if(lastOshiro != null) {
                 DynamicData.For(lastOshiro).Get<StateMachine>("state").State = 0;
@@ -96,17 +115,25 @@ namespace MadelineParty {
                     nextSpawnTime -= spawnDecrease;
                 }
                 nextSpawnTime = Calc.Max(nextSpawnTime, minSpawnTime);
-                if (spawnSeekers && (!spawnOshiro || rand.Next(2) == 0)) {
-                    var data = new EntityData { Position = seekerSpawns[rand.Next(seekerSpawns.Count)] };
-                    data.Values = new();
-                    data.Values["SightDistance"] = 9999f;
-                    data.Values["SpottedLosePlayerTime"] = 2.0f;
-                    level.Add(new CustomSeeker(data, Vector2.Zero));
-                    //level.Add(new Seeker(seekerSpawns[rand.Next(seekerSpawns.Count)], null));
-                } else if(spawnOshiro) {
-                    var oshiro = new AngryOshiro(new Vector2(-64, 0), false);
-                    level.Add(oshiro);
-                    lastOshiro = oshiro;
+                var spawnChoice = options[rand.Next(options.Count)];
+                switch (spawnChoice) {
+                    case SpawnOptions.Seeker:
+                        var data = new EntityData { Position = seekerSpawns[rand.Next(seekerSpawns.Count)] };
+                        data.Values = new();
+                        data.Values["SightDistance"] = 9999f;
+                        data.Values["SpottedLosePlayerTime"] = 2.0f;
+                        level.Add(new CustomSeeker(data, Vector2.Zero));
+                        //level.Add(new Seeker(seekerSpawns[rand.Next(seekerSpawns.Count)], null));
+                        break;
+                    case SpawnOptions.Oshiro:
+                        var oshiro = new AngryOshiro(new Vector2(-64, 0), false);
+                        level.Add(oshiro);
+                        lastOshiro = oshiro;
+                        break;
+                    case SpawnOptions.FinalBoss:
+                        var boss = new FinalBoss(bossSpawns[rand.Next(bossSpawns.Count)], new[] { Vector2.Zero }, validBossPatterns[rand.Next(validBossPatterns.Count)], 120, false, false, false);
+                        level.Add(boss);
+                        break;
                 }
             }
         }

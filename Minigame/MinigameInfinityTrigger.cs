@@ -136,6 +136,7 @@ namespace MadelineParty {
 
         public override void Update() {
             base.Update();
+            if (!started) return;
             if (level.RawTimeActive - startTime >= 30 && endCoroutine == null) {
                 Add(endCoroutine = new Coroutine(FinishMinigame()));
             }

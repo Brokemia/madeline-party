@@ -46,7 +46,7 @@ namespace MadelineParty {
             if (MultiplayerSingleton.Instance.BackendConnected()) {
                 IncremementValue();
             } else {
-                Scene.Add(new MiniTextbox("MadelineParty_CelesteNet_Missing"));
+                Scene.Add(new PersistentMiniTextbox("MadelineParty_CelesteNet_Missing", persistent: false));
                 Logger.Log("MadelineParty", "Multiplayer backend not installed or connected");
             }
             return base.OnPlus(player, direction);
@@ -58,7 +58,7 @@ namespace MadelineParty {
             if (MultiplayerSingleton.Instance.BackendConnected()) {
                 DecremementValue();
             } else {
-                Scene.Add(new MiniTextbox("MadelineParty_CelesteNet_Missing"));
+                Scene.Add(new PersistentMiniTextbox("MadelineParty_CelesteNet_Missing", persistent: false));
                 Logger.Log("MadelineParty", "Multiplayer backend not installed or connected");
             }
             return base.OnMinus(player, direction);

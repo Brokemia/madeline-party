@@ -57,7 +57,7 @@ namespace MadelineParty
                         if(swappable.Count > 0) {
                             Dialog.Language.Dialog["MadelineParty_Swappable_Players"] += "|" + string.Join("|", swappable.ConvertAll(p => Instance.GetPlayerName(p.token.id)));
                         }
-                        var textbox = new PersistentMiniTextbox("MadelineParty_Item_FlipFlop_Who");
+                        var textbox = new PersistentMiniTextbox("MadelineParty_Item_FlipFlop_Who", pauseUpdate: true);
                         level.Add(textbox);
                         textbox.OnFinish += () => BoardController.Instance.Add(new Coroutine(FlipFlopCoroutine(textbox, Instance.players[player], swapping, swappable.Count == 0), true));
                     }
@@ -142,6 +142,7 @@ namespace MadelineParty
         public static void Reset()
         {
             Instance = new GameData();
+            BoardController.hackfixRespawn = false;
             MinigameEntity.startTime = -1;
             MinigameEntity.started = false;
             MinigameEntity.didRespawn = false;
