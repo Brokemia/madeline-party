@@ -193,6 +193,7 @@ namespace MadelineParty {
             On.Celeste.Player.Update -= Player_Update;
             MinigameSwitchGatherer.Unload();
             PersistentMiniTextbox.Unload();
+            TextMenuPlus.Unload();
         }
 
         private void HandleParty(MPData data) {

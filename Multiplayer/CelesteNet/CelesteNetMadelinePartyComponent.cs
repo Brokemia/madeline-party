@@ -65,5 +65,9 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         public void Handle(CelesteNetConnection con, MinigameReadyData data) {
             handleAction.Invoke(data.Data);
         }
+
+        public void Handle(CelesteNetConnection con, MinigameMenuData data) {
+            handleAction.Invoke(data.Data);
+        }
     }
 }

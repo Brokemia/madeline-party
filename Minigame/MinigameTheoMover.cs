@@ -31,7 +31,7 @@ namespace MadelineParty {
             // Reset timer so it starts at 0 instead of 4.2
             startTime = level.RawTimeActive;
             level.Add(new MinigameScoreDisplay(this, THEOS_NEEDED));
-            level.Add(new MinigameTimeDisplay(this, true));
+            level.Add(new MinigameTimeDisplay(this));
         }
 
         public override void Update() {

@@ -12,7 +12,6 @@ namespace MadelineParty {
     public class MinigameModeScreen : Entity {
         public class ScreenTerminal : Entity {
             private MinigameModeScreen parent;
-			private int? lastSelected = null;
 			public bool Interacting { get; private set; }
 
             public ScreenTerminal(MinigameModeScreen parent, Vector2 position) : base(position) {
@@ -48,17 +47,15 @@ namespace MadelineParty {
 				}
 				Audio.Play("event:/game/general/lookout_use", Position);
                 yield return 0.1f;
-				parent.menu.Items.ForEach(i => { if (i is TextMenu.Button) i.Selectable = true; });
-				parent.menu.Selection = lastSelected ?? parent.menu.FirstPossibleSelection;
+				MultiplayerSingleton.Instance.Send(new MinigameMenu { selection = parent.menu.Selection });
+				parent.menu.Focused = true;
 				Interacting = true;
 			}
 
 			public void EndInteraction() {
 				if (Interacting) {
 					Scene.OnEndOfFrame += delegate {
-						lastSelected = parent.menu.Selection;
-						parent.menu.Items.ForEach(i => { if (i is TextMenu.Button) i.Selectable = false; });
-						parent.menu.Selection = -1;
+						parent.menu.Focused = false;
 						Interacting = false;
 						if (Scene.Tracker.GetEntity<Player>() is Player player) {
 							player.StateMachine.State = Player.StNormal;
@@ -69,11 +66,13 @@ namespace MadelineParty {
 			}
         }
 
-		private TextMenu menu;
+		private TextMenuPlus menu;
 
         private int width, height;
 
 		private ScreenTerminal terminal;
+
+		private Level level;
 
         public MinigameModeScreen(EntityData data, Vector2 offset) : base(data.Position * 6) {
 			width = data.Width;
@@ -85,7 +84,7 @@ namespace MadelineParty {
 
         public override void Added(Scene scene) {
             base.Added(scene);
-			Level level = SceneAs<Level>();
+			level = SceneAs<Level>();
             Scene.Add(terminal);
 			GameData.Instance.minigameStatus.Clear();
 			foreach(var kvp in GameData.Instance.minigameWins) {
@@ -95,7 +94,8 @@ namespace MadelineParty {
 
 			menu = new TextMenuPlus() {
 				DoCrop = true,
-				Crop = new Rectangle((int)Position.X, (int)Position.Y, width * 6, height * 6)
+				Crop = new Rectangle((int)Position.X, (int)Position.Y, width * 6, height * 6),
+				AlwaysHighlight = true
 			};
 			menu.Tag = TagsExt.SubHUD;
 			menu.AutoScroll = true;
@@ -105,21 +105,44 @@ namespace MadelineParty {
             };
             menu.Add(header);
 
-			GameData.Instance.GetAllMinigames(level).ForEach((lvl) => {
-				menu.Add(new TextMenu.Button(Dialog.Clean("MadelineParty_Minigame_Name_" + lvl.Name)) { Selectable = false }.Pressed(delegate
-				{
+			var minigameLevels = GameData.Instance.GetAllMinigames(level);
+
+			menu.Add(new TextMenu.Button(Dialog.Clean("MadelineParty_Minigame_List_Random")).Pressed(delegate {
+				if (terminal.Interacting) {
+					SelectLevel(minigameLevels[new Random().Next(minigameLevels.Count)].Name);
+				}
+			}));
+
+			minigameLevels.ForEach((lvl) => {
+				menu.Add(new TextMenu.Button(Dialog.Clean("MadelineParty_Minigame_Name_" + lvl.Name)).Pressed(delegate {
 					if (terminal.Interacting) {
-						MultiplayerSingleton.Instance.Send(new MinigameStart { choice = lvl.Name, gameStart = DateTime.UtcNow.AddSeconds(3).ToFileTimeUtc() });
-						GameData.Instance.minigame = lvl.Name;
-						GameData.Instance.minigameStatus.Clear();
-						level.Remove(level.Entities.FindAll<MinigameDisplay>());
-						ModeManager.Instance.AfterMinigameChosen();
+						SelectLevel(lvl.Name);
 					}
 				}));
 			});
 			menu.OnCancel = terminal.EndInteraction;
 			menu.Position = new Vector2(menu.Width / 2 + Position.X, Engine.Height / 2f);
+			menu.OnSelectionChanged += (oldSelect, newSelect) => {
+				if (terminal.Interacting) {
+					MultiplayerSingleton.Instance.Send(new MinigameMenu { selection = newSelect });
+                }
+			};
+			menu.Focused = false;
+			MultiplayerSingleton.Instance.RegisterUniqueHandler<MinigameMenu>("minigameModeScreen", HandleMinigameMenu);
 			Scene.Add(menu);
 		}
+
+		private void SelectLevel(string levelName) {
+			MultiplayerSingleton.Instance.Send(new MinigameStart { choice = levelName, gameStart = DateTime.UtcNow.AddSeconds(3).ToFileTimeUtc() });
+			GameData.Instance.minigame = levelName;
+			GameData.Instance.minigameStatus.Clear();
+			level.Remove(level.Entities.FindAll<MinigameDisplay>());
+			ModeManager.Instance.AfterMinigameChosen();
+		}
+
+		private void HandleMinigameMenu(MPData data) {
+			if (data is not MinigameMenu mm) return;
+			menu.Selection = mm.selection;
+        }
     }
 }

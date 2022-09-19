@@ -3,6 +3,7 @@ using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
+using System;
 
 namespace MadelineParty {
     [Tracked(true)]
@@ -50,9 +51,13 @@ namespace MadelineParty {
 
         public bool DoCrop = false;
 
+        public bool AlwaysHighlight = false;
+
         public Rectangle Crop;
 
         private VirtualRenderTarget renderTarget;
+
+        public event Action<int, int> OnSelectionChanged;
 
         public override void Awake(Scene scene) {
             base.Awake(scene);
@@ -61,6 +66,27 @@ namespace MadelineParty {
 
         public static void Load() {
             On.Celeste.Mod.UI.SubHudRenderer.BeforeRender += SubHudRenderer_BeforeRender;
+            On.Celeste.TextMenu.Update += TextMenu_Update;
+            On.Celeste.TextMenu.renderItems += TextMenu_renderItems;
+        }
+
+        private static bool TextMenu_renderItems(On.Celeste.TextMenu.orig_renderItems orig, TextMenu self, bool aboveAll) {
+            if(self is TextMenuPlus plus && plus.AlwaysHighlight) {
+                bool oldFocused = self.Focused;
+                self.Focused = true;
+                bool res = orig(self, aboveAll);
+                self.Focused = oldFocused;
+                return res;
+            }
+            return orig(self, aboveAll);
+        }
+
+        private static void TextMenu_Update(On.Celeste.TextMenu.orig_Update orig, TextMenu self) {
+            int oldSelect = self.Selection;
+            orig(self);
+            if(self is TextMenuPlus plus && self.Selection != oldSelect) {
+                plus.OnSelectionChanged?.Invoke(oldSelect, self.Selection);
+            }
         }
 
         private static void SubHudRenderer_BeforeRender(On.Celeste.Mod.UI.SubHudRenderer.orig_BeforeRender orig, Celeste.Mod.UI.SubHudRenderer self, Scene scene) {
@@ -74,6 +100,13 @@ namespace MadelineParty {
                 }
             }
             orig(self, scene);
+        }
+
+        public static void Unload() {
+            On.Celeste.Mod.UI.SubHudRenderer.BeforeRender -= SubHudRenderer_BeforeRender;
+            On.Celeste.TextMenu.Update -= TextMenu_Update;
+            On.Celeste.TextMenu.renderItems -= TextMenu_renderItems;
+
         }
 
         private void RenderContent() {

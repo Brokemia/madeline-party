@@ -30,16 +30,6 @@ namespace MadelineParty.Minigame {
         public override void Added(Scene scene) {
             base.Added(scene);
             MultiplayerSingleton.Instance.RegisterUniqueHandler<MinigameReady>("ReadyPrompt", HandleReady);
-            int i = 0;
-            foreach(var p in GameData.Instance.players) {
-                if(p != null) {
-                    readyStatus[p.TokenSelected] = false;
-                    if (p.TokenSelected != GameData.Instance.realPlayerID) {
-                        AddToken(p.TokenSelected, i);
-                        i++;
-                    }
-                }
-            }
             string lvl = SceneAs<Level>().Session.Level;
             name = Dialog.Clean("MadelineParty_Minigame_Name_" + lvl);
             tagline = Dialog.Clean("MadelineParty_Minigame_Tagline_" + lvl);
@@ -47,6 +37,16 @@ namespace MadelineParty.Minigame {
             readyText = Dialog.Clean("MadelineParty_Minigame_Ready");
             readyCheck = GFX.Gui["madelineparty/ready_checked"];
             unreadyCheck = GFX.Gui["madelineparty/ready_unchecked"];
+            int i = 0;
+            foreach (var p in GameData.Instance.players) {
+                if (p != null) {
+                    readyStatus[p.TokenSelected] = false;
+                    if (p.TokenSelected != GameData.Instance.realPlayerID) {
+                        AddToken(p.TokenSelected, i);
+                        i++;
+                    }
+                }
+            }
         }
 
         private void AddToken(int player, int index) {
