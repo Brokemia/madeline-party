@@ -2,7 +2,7 @@
 using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer.General;
 
-namespace MadelineParty.Multiplayer.CelesteNet {
+namespace MadelineParty.Multiplayer.CelesteNet.Data {
     public class MinigameMenuData : DataType<MinigameMenuData>, MultiplayerData {
         static MinigameMenuData() {
             DataID = "mPartyMinigameMenu";

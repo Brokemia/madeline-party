@@ -1,18 +1,19 @@
 ﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer.General;
+using System.Collections.Generic;
 
-namespace MadelineParty.Multiplayer.CelesteNet {
-    public class DieRollData : DataType<DieRollData>, MultiplayerData {
-        static DieRollData() {
-            DataID = "mPartyDieRoll";
+namespace MadelineParty.Multiplayer.CelesteNet.Data {
+    public class MinigameStartData : DataType<MinigameStartData>, MultiplayerData {
+        static MinigameStartData() {
+            DataID = "mPartyMinigameStart";
         }
 
         public DataPlayerInfo Player;
 
-        private DieRoll data;
+        private MinigameStart data;
 
-        public DieRoll Data {
+        public MinigameStart Data {
             get {
                 data.ID = Player.ID;
                 data.DisplayName = Player.DisplayName;
@@ -20,7 +21,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             }
         }
 
-        public void Initialize(MPData args) => data = args as DieRoll;
+        public void Initialize(MPData args) => data = args as MinigameStart;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -33,17 +34,13 @@ namespace MadelineParty.Multiplayer.CelesteNet {
 
         protected override void Read(CelesteNetBinaryReader reader) {
             data = new();
-            data.rolls = new int[reader.ReadInt32()];
-            for(int i = 0; i < data.rolls.Length; i++) {
-                data.rolls[i] = reader.ReadInt32();
-            }
+            data.choice = reader.ReadString();
+            data.gameStart = reader.ReadInt64();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(data.rolls.Length);
-            foreach(int r in data.rolls) {
-                writer.Write(r);
-            }
+            writer.Write(data.choice);
+            writer.Write(data.gameStart);
         }
     }
 }

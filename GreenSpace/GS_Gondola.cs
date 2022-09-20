@@ -154,7 +154,7 @@ namespace MadelineParty.GreenSpace {
         private void HandlePlayerChoice(MPData data) {
             if (data is not PlayerChoice playerChoice) return;
             // If another player in our party has made a gondola choice
-            if (lastSpace.HasValue && GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID() && playerChoice.choiceType.Equals("TAKEGONDOLA")) {
+            if (lastSpace.HasValue && GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.CurrentPlayerID() && playerChoice.choiceType.Equals("TAKEGONDOLA")) {
                 GondolaChoiceMade(playerChoice.choice == 1, lastBoard, lastSpace.Value, lastAfter);
             }
         }

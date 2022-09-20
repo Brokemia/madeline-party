@@ -2,17 +2,17 @@
 using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer.General;
 
-namespace MadelineParty.Multiplayer.CelesteNet {
-    public class TiebreakerRolledData : DataType<TiebreakerRolledData>, MultiplayerData {
-        static TiebreakerRolledData() {
-            DataID = "mPartyTiebreakerRolled";
+namespace MadelineParty.Multiplayer.CelesteNet.Data {
+    public class UseItemMenuData : DataType<UseItemMenuData>, MultiplayerData {
+        static UseItemMenuData() {
+            DataID = "mPartyUseItemMenu";
         }
 
         public DataPlayerInfo Player;
 
-        private TiebreakerRolled data;
+        private UseItemMenu data;
 
-        public TiebreakerRolled Data {
+        public UseItemMenu Data {
             get {
                 data.ID = Player.ID;
                 data.DisplayName = Player.DisplayName;
@@ -20,7 +20,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             }
         }
 
-        public void Initialize(MPData args) => data = args as TiebreakerRolled;
+        public void Initialize(MPData args) => data = args as UseItemMenu;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -33,11 +33,13 @@ namespace MadelineParty.Multiplayer.CelesteNet {
 
         protected override void Read(CelesteNetBinaryReader reader) {
             data = new();
-            data.ButtonPosition = reader.ReadVector2();
+            data.player = reader.ReadInt32();
+            data.index = reader.ReadInt32();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(data.ButtonPosition);
+            writer.Write(data.player);
+            writer.Write(data.index);
         }
     }
 }

@@ -111,7 +111,7 @@ namespace MadelineParty {
         private static void HandleTiebreakerRolled(MPData data) {
             if (data is not TiebreakerRolled rolled) return;
             // If another player in our party has rolled a tiebreaker die
-            if (GameData.Instance.celestenetIDs.Contains(rolled.ID) && rolled.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(rolled.ID) && rolled.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
                 if (Engine.Scene is not Level level) {
                     return;
                 }

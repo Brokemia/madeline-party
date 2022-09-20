@@ -158,9 +158,9 @@ namespace MadelineParty
         public string GetPlayerName(int id) {
             if (MultiplayerSingleton.Instance.BackendConnected()) {
                 if(realPlayerID == id) {
-                    return MultiplayerSingleton.Instance.GetPlayerName(MultiplayerSingleton.Instance.GetPlayerID());
+                    return MultiplayerSingleton.Instance.GetPlayer(MultiplayerSingleton.Instance.CurrentPlayerID()).Name;
                 }
-                return MultiplayerSingleton.Instance.GetPlayerName(Instance.playerSelectTriggers.First(kvp => kvp.Value == id).Key);
+                return MultiplayerSingleton.Instance.GetPlayer(Instance.playerSelectTriggers.First(kvp => kvp.Value == id).Key).Name;
             } else {
                 return SaveData.Instance.Name;
             }

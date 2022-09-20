@@ -199,12 +199,12 @@ namespace MadelineParty {
         private void HandleParty(MPData data) {
             if(data is not Party party) return;
             if (!IsSIDMadelineParty(level.Session.Area.GetSID())) return;
-            Logger.Log("MadelineParty", "Recieved PartyData. My ID: " + MultiplayerSingleton.Instance.GetPlayerID() + " Player ID: " + party.ID + " Looking for party of size " + party.lookingForParty);
+            Logger.Log("MadelineParty", "Recieved PartyData. My ID: " + MultiplayerSingleton.Instance.CurrentPlayerID() + " Player ID: " + party.ID + " Looking for party of size " + party.lookingForParty);
             if (party.lookingForParty == GameData.Instance.playerNumber // if they want the same party size
                 && party.version.Equals(Metadata.VersionString) // and our versions match
                 && GameData.Instance.celestenetIDs.Count < GameData.Instance.playerNumber - 1 // and we aren't full up
                 && !GameData.Instance.celestenetIDs.Contains(party.ID) // and they aren't in our party
-                && party.ID != MultiplayerSingleton.Instance.GetPlayerID()) { // and they aren't us
+                && party.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) { // and they aren't us
 
                 string joinMsg = party.DisplayName + " has joined the party!";
                 // If they think they're the host and are broadcasting
@@ -228,7 +228,7 @@ namespace MadelineParty {
                             playerSelectTrigger = GameData.Instance.currentPlayerSelection.playerID
                         });
                     }
-                } else if (party.respondingTo == MultiplayerSingleton.Instance.GetPlayerID()) {
+                } else if (party.respondingTo == MultiplayerSingleton.Instance.CurrentPlayerID()) {
                     GameData.Instance.gnetHost = false;
                     GameData.Instance.celestenetIDs.Add(party.ID);
 
@@ -238,7 +238,7 @@ namespace MadelineParty {
             }
 
             // If the other player entered a player select trigger
-            if (party.playerSelectTrigger != -2 && GameData.Instance.celestenetIDs.Contains(party.ID) && (party.respondingTo < 0 || party.respondingTo == MultiplayerSingleton.Instance.GetPlayerID())) {
+            if (party.playerSelectTrigger != -2 && GameData.Instance.celestenetIDs.Contains(party.ID) && (party.respondingTo < 0 || party.respondingTo == MultiplayerSingleton.Instance.CurrentPlayerID())) {
                 Logger.Log("MadelineParty", "Player ID: " + party.ID + " entered player select trigger " + party.playerSelectTrigger);
                 GameData.Instance.playerSelectTriggers[party.ID] = party.playerSelectTrigger;
                 if (GameData.Instance.currentPlayerSelection != null) {
@@ -265,7 +265,7 @@ namespace MadelineParty {
         private void HandleMinigameEnd(MPData data) {
             if (data is not MinigameEnd end) return;
             // If another player in our party has beaten a minigame
-            if (GameData.Instance.celestenetIDs.Contains(end.ID) && end.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(end.ID) && end.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
                 GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.playerSelectTriggers[end.ID], end.results));
                 Logger.Log("MadelineParty", "Player " + end.DisplayName + " has finished the minigame with a result of " + end.results);
             }
@@ -274,7 +274,7 @@ namespace MadelineParty {
         private void HandleMinigameStatus(MPData data) {
             if (data is not MinigameStatus status) return;
             // If another player in our party is sending out a minigame status update
-            if (GameData.Instance.celestenetIDs.Contains(status.ID) && status.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(status.ID) && status.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
                 GameData.Instance.minigameStatus[GameData.Instance.playerSelectTriggers[status.ID]] = status.results;
                 Logger.Log("MadelineParty", "Player " + status.DisplayName + " has updated their minigame status with a result of " + status.results);
             }
@@ -283,7 +283,7 @@ namespace MadelineParty {
         private void HandleRandomSeed(MPData data) {
             if (data is not RandomSeed seed) return;
             // If another player in our party is distributing the randomization seeds
-            if (GameData.Instance.celestenetIDs.Contains(seed.ID) && seed.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(seed.ID) && seed.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
                 GameData.Instance.turnOrderSeed = seed.turnOrderSeed;
                 GameData.Instance.tieBreakerSeed = seed.tieBreakerSeed;
                 BoardController.generateTurnOrderRolls();

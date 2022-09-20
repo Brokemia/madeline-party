@@ -2,17 +2,16 @@
 using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer.General;
 
-namespace MadelineParty.Multiplayer.CelesteNet {
-    public class RandomSeedData : DataType<RandomSeedData>, MultiplayerData {
-        static RandomSeedData() {
-            DataID = "mPartyRandomSeed";
+namespace MadelineParty.Multiplayer.CelesteNet.Data {
+    public class MinigameEndData : DataType<MinigameEndData>, MultiplayerData {
+        static MinigameEndData() {
+            DataID = "mPartyMinigameEnd";
         }
-
         public DataPlayerInfo Player;
 
-        private RandomSeed data;
+        private MinigameEnd data;
 
-        public RandomSeed Data {
+        public MinigameEnd Data {
             get {
                 data.ID = Player.ID;
                 data.DisplayName = Player.DisplayName;
@@ -20,7 +19,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             }
         }
 
-        public void Initialize(MPData args) => data = args as RandomSeed;
+        public void Initialize(MPData args) => data = args as MinigameEnd;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -33,13 +32,11 @@ namespace MadelineParty.Multiplayer.CelesteNet {
 
         protected override void Read(CelesteNetBinaryReader reader) {
             data = new();
-            data.turnOrderSeed = reader.ReadUInt32();
-            data.tieBreakerSeed = reader.ReadUInt32();
+            data.results = reader.ReadUInt32();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(data.turnOrderSeed);
-            writer.Write(data.tieBreakerSeed);
+            writer.Write(data.results);
         }
     }
 }

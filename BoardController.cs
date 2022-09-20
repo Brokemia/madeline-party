@@ -1079,7 +1079,7 @@ namespace MadelineParty {
         private static void HandleDieRoll(MPData data) {
             if (data is not DieRoll dieRoll) return;
             // If another player in our party has rolled the dice and we're waiting on them for an action
-            if (GameData.Instance.celestenetIDs.Contains(dieRoll.ID) && dieRoll.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(dieRoll.ID) && dieRoll.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
 
                 if (!MadelinePartyModule.Instance.level.Session.Level.Equals(MadelinePartyModule.MAIN_ROOM)) {
                     // Activate it once in the right room
@@ -1102,7 +1102,7 @@ namespace MadelineParty {
         private static void HandlePlayerChoice(MPData data) {
             if (data is not PlayerChoice playerChoice) return;
             // If another player in our party has made a choice
-            if (GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
                 Logger.Log("MadelineParty", "Choice detected of type " + playerChoice.choiceType + " with value " + playerChoice.choice);
                 switch (playerChoice.choiceType) {
                     case "HEART":
@@ -1139,7 +1139,7 @@ namespace MadelineParty {
         private static void HandleMinigameStart(MPData data) {
             if (data is not MinigameStart start) return;
             // If we've received information about a minigame starting from another player in our party
-            if (GameData.Instance.celestenetIDs.Contains(start.ID) && start.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(start.ID) && start.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
                 ChoseMinigame(start.choice, start.gameStart);
                 ModeManager.Instance.AfterMinigameChosen();
             }
@@ -1148,7 +1148,7 @@ namespace MadelineParty {
         private static void HandleUseItemMenu(MPData data) {
             if (data is not UseItemMenu menu) return;
             Console.WriteLine("Use item menu: " + menu.player + " " + menu.index);
-            if (GameData.Instance.celestenetIDs.Contains(menu.ID) && menu.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(menu.ID) && menu.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
                 Instance.UseItem(menu.player, menu.index);
             }
         }
@@ -1156,7 +1156,7 @@ namespace MadelineParty {
         private static void HandleUseItem(MPData data) {
             if (data is not UseItem use) return;
             Console.WriteLine("Use item: " + use.player + " " + use.itemIdx);
-            if (GameData.Instance.celestenetIDs.Contains(use.ID) && use.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(use.ID) && use.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
                 Instance.leftButtons[use.player].SetCurrentMode(LeftButton.Modes.Inactive);
                 Instance.rightButtons[use.player].SetCurrentMode(RightButton.Modes.Inactive);
                 GameData.Instance.players[use.player].items[use.itemIdx].Action?.Invoke(use.player);

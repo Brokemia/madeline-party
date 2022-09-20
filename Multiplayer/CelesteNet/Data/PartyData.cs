@@ -3,16 +3,17 @@ using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer.General;
 using System.Collections.Generic;
 
-namespace MadelineParty.Multiplayer.CelesteNet {
-    public class MinigameStatusData : DataType<MinigameStatusData>, MultiplayerData {
-        static MinigameStatusData() {
-            DataID = "mPartyMinigameStatus";
+namespace MadelineParty.Multiplayer.CelesteNet.Data {
+    public class PartyData : DataType<PartyData>, MultiplayerData {
+        static PartyData() {
+            DataID = "mPartyParty";
         }
+
         public DataPlayerInfo Player;
 
-        private MinigameStatus data;
+        private Party data;
 
-        public MinigameStatus Data {
+        public Party Data {
             get {
                 data.ID = Player.ID;
                 data.DisplayName = Player.DisplayName;
@@ -20,7 +21,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             }
         }
 
-        public void Initialize(MPData args) => data = args as MinigameStatus;
+        public void Initialize(MPData args) => data = args as Party;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -33,11 +34,19 @@ namespace MadelineParty.Multiplayer.CelesteNet {
 
         protected override void Read(CelesteNetBinaryReader reader) {
             data = new();
-            data.results = reader.ReadUInt32();
+            data.lookingForParty = reader.ReadByte();
+            data.version = reader.ReadNetString();
+            data.playerSelectTrigger = reader.ReadInt32();
+            data.respondingTo = reader.ReadInt32();
+            data.partyHost = reader.ReadBoolean();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(data.results);
+            writer.Write(data.lookingForParty);
+            writer.WriteNetString(data.version);
+            writer.Write(data.playerSelectTrigger);
+            writer.Write(data.respondingTo);
+            writer.Write(data.partyHost);
         }
     }
 }

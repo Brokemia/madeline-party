@@ -47,7 +47,7 @@ namespace MadelineParty {
         }
 
         private void MultiplayerOccupiedAction() {
-            GameData.Instance.players[playerID] = new PlayerData(playerID, MultiplayerSingleton.Instance.GetPlayerID());
+            GameData.Instance.players[playerID] = new PlayerData(playerID, MultiplayerSingleton.Instance.CurrentPlayerID());
             foreach (KeyValuePair<uint, int> pair in GameData.Instance.playerSelectTriggers) {
                 if (pair.Value != playerID && pair.Value >= 0) {
                     GameData.Instance.players[pair.Value] = new PlayerData(pair.Value, pair.Key);

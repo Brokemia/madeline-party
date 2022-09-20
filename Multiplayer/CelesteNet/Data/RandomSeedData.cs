@@ -1,18 +1,18 @@
 ﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer.General;
-using System.Collections.Generic;
 
-namespace MadelineParty.Multiplayer.CelesteNet {
-    public class MinigameReadyData : DataType<MinigameReadyData>, MultiplayerData {
-        static MinigameReadyData() {
-            DataID = "mPartyMinigameReady";
+namespace MadelineParty.Multiplayer.CelesteNet.Data {
+    public class RandomSeedData : DataType<RandomSeedData>, MultiplayerData {
+        static RandomSeedData() {
+            DataID = "mPartyRandomSeed";
         }
+
         public DataPlayerInfo Player;
 
-        private MinigameReady data;
+        private RandomSeed data;
 
-        public MinigameReady Data {
+        public RandomSeed Data {
             get {
                 data.ID = Player.ID;
                 data.DisplayName = Player.DisplayName;
@@ -20,7 +20,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             }
         }
 
-        public void Initialize(MPData args) => data = args as MinigameReady;
+        public void Initialize(MPData args) => data = args as RandomSeed;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -33,11 +33,13 @@ namespace MadelineParty.Multiplayer.CelesteNet {
 
         protected override void Read(CelesteNetBinaryReader reader) {
             data = new();
-            data.player = reader.ReadInt32();
+            data.turnOrderSeed = reader.ReadUInt32();
+            data.tieBreakerSeed = reader.ReadUInt32();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(data.player);
+            writer.Write(data.turnOrderSeed);
+            writer.Write(data.tieBreakerSeed);
         }
     }
 }

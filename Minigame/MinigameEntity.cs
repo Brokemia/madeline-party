@@ -193,7 +193,7 @@ namespace MadelineParty {
         private static void HandleMinigameVector2(MPData data) {
             if (data is not MinigameVector2 vector2) return;
             // If another player in our party is sending out minigame vector2 data
-            if (GameData.Instance.celestenetIDs.Contains(vector2.ID) && vector2.ID != MultiplayerSingleton.Instance.GetPlayerID()) {
+            if (GameData.Instance.celestenetIDs.Contains(vector2.ID) && vector2.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
                 MinigameEntity mge;
                 if ((mge = Engine.Scene?.Tracker.GetEntity<MinigameEntity>()) != null) {
                     mge.MultiplayerReceiveVector2(vector2.vec, vector2.extra);

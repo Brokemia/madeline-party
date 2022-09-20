@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using Celeste;
 using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.Client;
-using Celeste.Mod.CelesteNet.DataTypes;
-using Logger = Celeste.Mod.Logger;
 using Microsoft.Xna.Framework;
-using Monocle;
 using MadelineParty.Multiplayer.General;
+using MadelineParty.Multiplayer.CelesteNet.Data;
 
 namespace MadelineParty.Multiplayer.CelesteNet {
     public class CelesteNetMadelinePartyComponent : CelesteNetGameComponent {

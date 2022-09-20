@@ -1,18 +1,19 @@
-﻿using Celeste.Mod.CelesteNet;
+﻿using System.Collections.Generic;
+using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer.General;
 
-namespace MadelineParty.Multiplayer.CelesteNet {
-    public class UseItemMenuData : DataType<UseItemMenuData>, MultiplayerData {
-        static UseItemMenuData() {
-            DataID = "mPartyUseItemMenu";
+namespace MadelineParty.Multiplayer.CelesteNet.Data {
+    public class PlayerChoiceData : DataType<PlayerChoiceData>, MultiplayerData {
+        static PlayerChoiceData() {
+            DataID = "mPartyPlayerChoice";
         }
 
         public DataPlayerInfo Player;
 
-        private UseItemMenu data;
+        private PlayerChoice data;
 
-        public UseItemMenu Data {
+        public PlayerChoice Data {
             get {
                 data.ID = Player.ID;
                 data.DisplayName = Player.DisplayName;
@@ -20,7 +21,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             }
         }
 
-        public void Initialize(MPData args) => data = args as UseItemMenu;
+        public void Initialize(MPData args) => data = args as PlayerChoice;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -33,13 +34,13 @@ namespace MadelineParty.Multiplayer.CelesteNet {
 
         protected override void Read(CelesteNetBinaryReader reader) {
             data = new();
-            data.player = reader.ReadInt32();
-            data.index = reader.ReadInt32();
+            data.choiceType = reader.ReadString();
+            data.choice = reader.ReadInt32();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(data.player);
-            writer.Write(data.index);
+            writer.Write(data.choiceType);
+            writer.Write(data.choice);
         }
     }
 }

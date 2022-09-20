@@ -2,16 +2,17 @@
 using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer.General;
 
-namespace MadelineParty.Multiplayer.CelesteNet {
-    public class MinigameEndData : DataType<MinigameEndData>, MultiplayerData {
-        static MinigameEndData() {
-            DataID = "mPartyMinigameEnd";
+namespace MadelineParty.Multiplayer.CelesteNet.Data {
+    public class DieRollData : DataType<DieRollData>, MultiplayerData {
+        static DieRollData() {
+            DataID = "mPartyDieRoll";
         }
+
         public DataPlayerInfo Player;
 
-        private MinigameEnd data;
+        private DieRoll data;
 
-        public MinigameEnd Data {
+        public DieRoll Data {
             get {
                 data.ID = Player.ID;
                 data.DisplayName = Player.DisplayName;
@@ -19,7 +20,7 @@ namespace MadelineParty.Multiplayer.CelesteNet {
             }
         }
 
-        public void Initialize(MPData args) => data = args as MinigameEnd;
+        public void Initialize(MPData args) => data = args as DieRoll;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -32,11 +33,17 @@ namespace MadelineParty.Multiplayer.CelesteNet {
 
         protected override void Read(CelesteNetBinaryReader reader) {
             data = new();
-            data.results = reader.ReadUInt32();
+            data.rolls = new int[reader.ReadInt32()];
+            for(int i = 0; i < data.rolls.Length; i++) {
+                data.rolls[i] = reader.ReadInt32();
+            }
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(data.results);
+            writer.Write(data.rolls.Length);
+            foreach(int r in data.rolls) {
+                writer.Write(r);
+            }
         }
     }
 }
