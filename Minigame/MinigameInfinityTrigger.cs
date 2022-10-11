@@ -18,9 +18,6 @@ namespace MadelineParty {
         public float tpDist;
         private bool everyOtherFrame;
         private bool vertical;
-
-        
-
         public static new void Load() { }
 
         public MinigameInfinityTrigger(EntityData data, Vector2 offset) : base(data, offset) {
@@ -63,7 +60,7 @@ namespace MadelineParty {
         }
 
         private uint calculateDist(uint loops, Vector2 pos) {
-            return (uint)Math.Max(loops * tpDist + (vertical ? backwardsSpot.Y - pos.Y : pos.X - backwardsSpot.X) - 10, 0);
+            return (uint)Math.Max(loops * (vertical ? -tpDist : tpDist) + (vertical ? backwardsSpot.Y - pos.Y : pos.X - backwardsSpot.X) - 10, 0);
         }
 
         protected IEnumerator FinishMinigame() {
