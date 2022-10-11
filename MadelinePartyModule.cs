@@ -66,7 +66,6 @@ namespace MadelineParty {
             MinigameSwitchGatherer.Load();
             BoardController.Load();
             TiebreakerController.Load();
-            PersistentMiniTextbox.Load();
             TextMenuPlus.Load();
 
             MultiplayerSingleton.Instance.RegisterHandler<Party>(HandleParty);
@@ -194,7 +193,6 @@ namespace MadelineParty {
             Everest.Events.Level.OnLoadEntity -= Level_OnLoadEntity;
             On.Celeste.Player.Update -= Player_Update;
             MinigameSwitchGatherer.Unload();
-            PersistentMiniTextbox.Unload();
             TextMenuPlus.Unload();
         }
 

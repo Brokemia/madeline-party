@@ -40,6 +40,9 @@
     <Reference Include=".\lib-stripped\CelesteNet.Shared.dll">
       <Private>False</Private>
     </Reference>
+    <Reference Include="BrokemiaHelper">
+      <HintPath>lib-stripped\BrokemiaHelper.dll</HintPath>
+    </Reference>
     <Reference Include="VivHelper">
       <HintPath>lib-stripped\VivHelper.dll</HintPath>
     </Reference>

@@ -1,4 +1,5 @@
-﻿using Celeste;
+﻿using BrokemiaHelper;
+using Celeste;
 using Celeste.Mod;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
@@ -46,7 +47,7 @@ namespace MadelineParty {
             if (MultiplayerSingleton.Instance.BackendConnected()) {
                 IncremementValue();
             } else {
-                Scene.Add(new PersistentMiniTextbox("MadelineParty_CelesteNet_Missing", persistent: false));
+                Scene.Add(new PersistentMiniTextbox("MadelineParty_CelesteNet_Missing", time: 3));
                 Logger.Log("MadelineParty", "Multiplayer backend not installed or connected");
             }
             return base.OnPlus(player, direction);
@@ -58,7 +59,7 @@ namespace MadelineParty {
             if (MultiplayerSingleton.Instance.BackendConnected()) {
                 DecremementValue();
             } else {
-                Scene.Add(new PersistentMiniTextbox("MadelineParty_CelesteNet_Missing", persistent: false));
+                Scene.Add(new PersistentMiniTextbox("MadelineParty_CelesteNet_Missing", time: 3));
                 Logger.Log("MadelineParty", "Multiplayer backend not installed or connected");
             }
             return base.OnMinus(player, direction);

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using BrokemiaHelper;
 using Celeste;
 using Celeste.Mod;
 using MadelineParty.GreenSpace;
@@ -335,11 +336,11 @@ namespace MadelineParty {
                         if(level.Wipe != null) {
                             Action onComplete = level.Wipe.OnComplete;
                             level.Wipe.OnComplete = delegate {
-                                Scene.Add(new PersistentMiniTextbox("MadelineParty_Start", pauseUpdate: true, persistent: false));
+                                Scene.Add(new PersistentMiniTextbox("MadelineParty_Start", pauseUpdate: true, time: 3));
                                 onComplete?.Invoke();
                             };
                         } else {
-                            Scene.Add(new PersistentMiniTextbox("MadelineParty_Start", pauseUpdate: true, persistent: false));
+                            Scene.Add(new PersistentMiniTextbox("MadelineParty_Start", pauseUpdate: true, time: 3));
                         }
                     });
                 } else {
@@ -457,11 +458,11 @@ namespace MadelineParty {
             if(level.Wipe != null) {
                 Action onComplete = level.Wipe.OnComplete;
                 level.Wipe.OnComplete = delegate {
-                    level.Add(new PersistentMiniTextbox(GetCurrentTurnText(player), pauseUpdate: true, persistent: false));
+                    level.Add(new PersistentMiniTextbox(GetCurrentTurnText(player), pauseUpdate: true, time: 3));
                     onComplete?.Invoke();
                 };
             } else {
-                level.Add(new PersistentMiniTextbox(GetCurrentTurnText(player), pauseUpdate: true, persistent: false));
+                level.Add(new PersistentMiniTextbox(GetCurrentTurnText(player), pauseUpdate: true, time: 3));
             }
         }
 
@@ -525,7 +526,7 @@ namespace MadelineParty {
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelHeartBuy);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYHEART);
                             Dialog.Language.Dialog["MadelineParty_Heart_Cost"] = GameData.Instance.heartCost.ToString();
-                            level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Buy_Heart_Prompt_List"), pauseUpdate: true, persistent: false));
+                            level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Buy_Heart_Prompt_List"), pauseUpdate: true, time: 3));
                         }
                         // If we're at the item shop and have enough free space
                         else if (CurrentPlayerToken.currentSpace.type == 'i' && GameData.Instance.players[movingPlayerID].items.Count < GameData.maxItems) {
@@ -533,7 +534,7 @@ namespace MadelineParty {
                             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmShopEnter);
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelShopEnter);
                             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.ENTERSHOP);
-                            level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Enter_Shop_Prompt_List"), pauseUpdate: true, persistent: false));
+                            level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Enter_Shop_Prompt_List"), pauseUpdate: true, time: 3));
                         } else if (CurrentPlayerToken.currentSpace.type == 'a') { // If this is an auto green space
                             status = BoardStatus.WAITING;
                             DoGreenSpace(CurrentPlayerToken.currentSpace, () => {
