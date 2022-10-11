@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using Celeste;
 using Celeste.Mod;
 using Celeste.Mod.Entities;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
-using Mono.Cecil.Cil;
 using Monocle;
-using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
-using MonoMod.Utils;
 
 namespace MadelineParty {
     [CustomEntity("madelineparty/minigameInfinityTrigger")]
@@ -26,101 +19,9 @@ namespace MadelineParty {
         private bool everyOtherFrame;
         private bool vertical;
 
-        // Most things DreamParticle related were taken from CommunalHelper
-        /*
-        MIT License
+        
 
-        Copyright (c) 2020 Flynn Swainston-Calcutt
-
-        Permission is hereby granted, free of charge, to any person obtaining a copy
-        of this software and associated documentation files (the "Software"), to deal
-        in the Software without restriction, including without limitation the rights
-        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-        copies of the Software, and to permit persons to whom the Software is
-        furnished to do so, subject to the following conditions:
-
-        The above copyright notice and this permission notice shall be included in all
-        copies or substantial portions of the Software.
-
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-        SOFTWARE.
-         */
-
-        // Don't worry about it
-        internal class NoInliningException : Exception { public NoInliningException() : base("Something went horribly wrong.") { } }
-
-        /*
-         * We want to tie the Custom DreamParticles to the vanilla DreamParticles, but since DreamBlock.DreamParticle is private it would require a lot of reflection.
-         * Instead we just IL hook stuff and ignore accessibility modifiers entirely. It's fine.
-         */
-        protected struct DreamParticle {
-            internal static Type t_DreamParticle = typeof(DreamBlock).GetNestedType("DreamParticle", BindingFlags.NonPublic);
-
-#pragma warning disable IDE0052, CS0414, CS0649 // Remove unread private members; Field is assigned to but never read; Field is never assigned to
-            // Used in IL hooks
-            private readonly DreamBlock dreamBlock;
-            private readonly int idx;
-            private static Vector2 tempVec2;
-#pragma warning restore IDE0052, CS0414, CS0649
-
-            public Vector2 Position {
-                get { UpdatePos(); return tempVec2; }
-                //[MethodImpl(MethodImplOptions.NoInlining)]
-                //get { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                set { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
-            }
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            private void UpdatePos() { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
-
-            public int Layer {
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                get { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                set { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
-            }
-            public Color Color {
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                get { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                set { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
-            }
-            public float TimeOffset {
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                get { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                set { Console.Error.Write("NoInlining"); throw new NoInliningException(); }
-            }
-
-            public DreamParticle(DreamBlock block, int idx)
-                : this() {
-                dreamBlock = block;
-                this.idx = idx;
-            }
-        }
-
-        private static List<IDetour> hooks_DreamParticle_Properties = new List<IDetour>();
-
-        public static new void Load() {
-            foreach (PropertyInfo prop in typeof(DreamParticle).GetProperties()) {
-                FieldInfo targetField = DreamParticle.t_DreamParticle.GetField(prop.Name);
-                if (targetField != null) {
-                    if (prop.Name == "Position") {
-                        hooks_DreamParticle_Properties.Add(new ILHook(
-                            typeof(DreamParticle).GetMethod("UpdatePos", BindingFlags.NonPublic | BindingFlags.Instance),
-                            ctx => DreamParticle_UpdatePos(ctx, targetField)));
-                    } else {
-                        hooks_DreamParticle_Properties.Add(new ILHook(prop.GetGetMethod(), ctx => DreamParticle_get_Prop(ctx, targetField)));
-                    }
-                    hooks_DreamParticle_Properties.Add(new ILHook(prop.GetSetMethod(), ctx => DreamParticle_set_Prop(ctx, targetField)));
-                }
-            }
-        }
+        public static new void Load() { }
 
         public MinigameInfinityTrigger(EntityData data, Vector2 offset) : base(data, offset) {
             backwardsSpot = data.NodesOffset(offset)[0];
@@ -227,20 +128,16 @@ namespace MadelineParty {
                 }
             }
 
-            DynData<ParticleSystem> fgParticles = new DynData<ParticleSystem>(level.ParticlesFG);
-            Particle[] particles = fgParticles.Get<Particle[]>("particles");
-            for(int i = 0; i < particles.Length; i++) {
-                particles[i].Position += diff;
+            for(int i = 0; i < level.ParticlesFG.particles.Length; i++) {
+                level.ParticlesFG.particles[i].Position += diff;
             }
-            DynData<ParticleSystem> bgParticles = new DynData<ParticleSystem>(level.ParticlesBG);
-            particles = bgParticles.Get<Particle[]>("particles");
-            for (int i = 0; i < particles.Length; i++) {
-                particles[i].Position += diff;
+
+            for (int i = 0; i < level.ParticlesBG.particles.Length; i++) {
+                level.ParticlesBG.particles[i].Position += diff;
             }
-            DynData<ParticleSystem> particlesParticles = new DynData<ParticleSystem>(level.Particles);
-            particles = particlesParticles.Get<Particle[]>("particles");
-            for (int i = 0; i < particles.Length; i++) {
-                particles[i].Position += diff;
+
+            for (int i = 0; i < level.Particles.particles.Length; i++) {
+                level.Particles.particles[i].Position += diff;
             }
 
             for(int i = 0; i < StarClimbGraphicsController.rays.Length; i++) {
@@ -249,78 +146,12 @@ namespace MadelineParty {
             }
 
             foreach (DreamBlock db in level.Tracker.GetEntities<DreamBlock>()) {
-                DynamicData dbData = DynamicData.For(db);
-                DynamicData particlesData = DynamicData.For(dbData.Get("particles"));
-                for (int i = 0; i < particlesData.Get<int>("Length"); i++) {
-                    DreamParticle particleProxy = new(db, i);
+                for (int i = 0; i < db.particles.Length; i++) {
                     //Console.WriteLine(db.Position + " " + (particleProxy.Position + (level.Camera.Position - asVector) * (0.3f + 0.25f * particleProxy.Layer)) + " " +
                         //(particleProxy.Position + (level.Camera.Position) * (0.3f + 0.25f * particleProxy.Layer)) + " " + asVector * (0.3f + 0.25f * particleProxy.Layer));
-                    particleProxy.Position -= diff * .5f * (0.3f + 0.25f * particleProxy.Layer);
+                    db.particles[i].Position -= diff * .5f * (0.3f + 0.25f * db.particles[i].Layer);
                 }
             }
         }
-
-        #region Cursed
-
-        private static FieldInfo f_CustomDreamParticle_dreamBlock = typeof(DreamParticle).GetField("dreamBlock", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static FieldInfo f_DreamBlock_particles = typeof(DreamBlock).GetField("particles", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static FieldInfo f_CustomDreamParticle_idx = typeof(DreamParticle).GetField("idx", BindingFlags.NonPublic | BindingFlags.Instance);
-
-        /*
-         * Position needs some extra care because of issues with methods that return Structs.
-         * We use a static field (not threadsafe!) to temporarily store the variable, then return it normally in the property accessor.
-         */
-        private static void DreamParticle_UpdatePos(ILContext context, FieldInfo targetField) {
-            FieldInfo f_DreamParticle_tempVec2 = typeof(DreamParticle).GetField("tempVec2", BindingFlags.NonPublic | BindingFlags.Static);
-            context.Instrs.Clear();
-
-            ILCursor cursor = new ILCursor(context);
-            // this.dreamBlock.particles
-            cursor.Emit(OpCodes.Ldarg_0);
-            cursor.Emit(OpCodes.Ldfld, f_CustomDreamParticle_dreamBlock);
-            cursor.Emit(OpCodes.Ldfld, f_DreamBlock_particles);
-            // [this.idx].Position
-            cursor.Emit(OpCodes.Ldarg_0);
-            cursor.Emit(OpCodes.Ldfld, f_CustomDreamParticle_idx);
-            cursor.Emit(OpCodes.Ldelema, DreamParticle.t_DreamParticle);
-            cursor.Emit(OpCodes.Ldfld, targetField);
-            // -> DreamParticle.tempVec2
-            cursor.Emit(OpCodes.Stsfld, f_DreamParticle_tempVec2);
-            cursor.Emit(OpCodes.Ret);
-        }
-
-        private static void DreamParticle_set_Prop(ILContext context, FieldInfo targetField) {
-            context.Instrs.Clear();
-
-            ILCursor cursor = new ILCursor(context);
-            // this.dreamBlock.particles[this.idx].{targetField} = value
-            cursor.Emit(OpCodes.Ldarg_0);
-            cursor.Emit(OpCodes.Ldfld, f_CustomDreamParticle_dreamBlock);
-            cursor.Emit(OpCodes.Ldfld, f_DreamBlock_particles);
-            cursor.Emit(OpCodes.Ldarg_0);
-            cursor.Emit(OpCodes.Ldfld, f_CustomDreamParticle_idx);
-            cursor.Emit(OpCodes.Ldelema, DreamParticle.t_DreamParticle);
-            cursor.Emit(OpCodes.Ldarg_1);
-            cursor.Emit(OpCodes.Stfld, targetField);
-            // return
-            cursor.Emit(OpCodes.Ret);
-        }
-
-        private static void DreamParticle_get_Prop(ILContext context, FieldInfo targetField) {
-            context.Instrs.Clear();
-
-            ILCursor cursor = new ILCursor(context);
-            // return this.dreamBlock.particles[this.idx].{targetField}
-            cursor.Emit(OpCodes.Ldarg_0);
-            cursor.Emit(OpCodes.Ldfld, f_CustomDreamParticle_dreamBlock);
-            cursor.Emit(OpCodes.Ldfld, f_DreamBlock_particles);
-            cursor.Emit(OpCodes.Ldarg_0);
-            cursor.Emit(OpCodes.Ldfld, f_CustomDreamParticle_idx);
-            cursor.Emit(OpCodes.Ldelema, DreamParticle.t_DreamParticle);
-            cursor.Emit(OpCodes.Ldfld, targetField);
-            cursor.Emit(OpCodes.Ret);
-        }
-
-        #endregion
     }
 }
