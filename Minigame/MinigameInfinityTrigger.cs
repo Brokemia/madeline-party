@@ -22,8 +22,9 @@ namespace MadelineParty {
         public static uint dist;
         public Coroutine endCoroutine;
         public Vector2 backwardsSpot;
-        public float xDiff;
+        public float tpDist;
         private bool everyOtherFrame;
+        private bool vertical;
 
         // Most things DreamParticle related were taken from CommunalHelper
         /*
@@ -122,8 +123,9 @@ namespace MadelineParty {
         }
 
         public MinigameInfinityTrigger(EntityData data, Vector2 offset) : base(data, offset) {
-            backwardsSpot = data.Nodes[0];
-            xDiff = Position.X - backwardsSpot.X;
+            backwardsSpot = data.NodesOffset(offset)[0];
+            vertical = data.Bool("vertical", false);
+            tpDist = vertical ? Position.Y - backwardsSpot.Y : Position.X - backwardsSpot.X;
         }
 
         protected override void AfterStart() {
@@ -142,25 +144,25 @@ namespace MadelineParty {
             }
 
             Player player = level.Tracker.GetEntity<Player>();
-            
-            if (player != null && loops > 0 && player.X < backwardsSpot.X - 3 * 8) {
+
+            if (player != null && loops > 0 && (vertical ? player.Y > backwardsSpot.Y + Height + 3 * 8 : player.X < backwardsSpot.X - Width - 3 * 8)) {
                 loops--;
-                Teleport(player, xDiff);
+                Teleport(player, tpDist * (vertical ? Vector2.UnitY : Vector2.UnitX));
             }
 
-            if(everyOtherFrame) {
+            if (everyOtherFrame) {
                 MultiplayerSingleton.Instance.Send(new MinigameStatus { results = dist });
             }
             everyOtherFrame = !everyOtherFrame;
 
             if (player != null) {
-                dist = calculateDist(loops, player.X);
+                dist = calculateDist(loops, player.Position);
                 GameData.Instance.minigameStatus[GameData.Instance.realPlayerID] = dist;
             }
         }
 
-        private uint calculateDist(uint loops, float x) {
-            return (uint)Math.Max(loops * xDiff + x - backwardsSpot.X - 10, 0);
+        private uint calculateDist(uint loops, Vector2 pos) {
+            return (uint)Math.Max(loops * tpDist + (vertical ? backwardsSpot.Y - pos.Y : pos.X - backwardsSpot.X) - 10, 0);
         }
 
         protected IEnumerator FinishMinigame() {
@@ -178,7 +180,7 @@ namespace MadelineParty {
             started = false;
             didRespawn = false;
             level.CanRetry = false;
-            dist = calculateDist(loops, player.X);
+            dist = calculateDist(loops, player.Position);
             Console.WriteLine("Minigame Distance: " + dist);
             GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, dist));
             MultiplayerSingleton.Instance.Send(new MinigameEnd { results = dist });
@@ -191,55 +193,69 @@ namespace MadelineParty {
 
         public override void OnEnter(Player player) {
             loops++;
-            Teleport(player, -xDiff);
+            Teleport(player, -tpDist * (vertical ? Vector2.UnitY : Vector2.UnitX));
         }
 
-        private void Teleport(Player player, float dx) {
-            Vector2 asVector = new Vector2(dx, 0);
+        private void Teleport(Player player, Vector2 diff) {
             Level level = SceneAs<Level>();
             foreach (TrailManager.Snapshot snapshot in level.Tracker.GetEntities<TrailManager.Snapshot>()) {
-                snapshot.X += dx;
+                snapshot.Position += diff;
             }
             foreach (SlashFx slash in level.Tracker.GetEntities<SlashFx>()) {
-                slash.X += dx;
+                slash.Position += diff;
             }
             foreach (SpeedRing ring in level.Tracker.GetEntities<SpeedRing>()) {
-                ring.X += dx;
+                ring.Position += diff;
             }
-            player.X += dx;
-            player.Hair.MoveHairBy(asVector);
-            level.Camera.Position += asVector;
+            player.Position += diff;
+            player.Hair.MoveHairBy(diff);
+            level.Camera.Position += diff;
             foreach (Backdrop backdrop in level.Background.Backdrops) {
-                backdrop.Position += new Vector2(dx * backdrop.Scroll.X, 0);
+                backdrop.Position += diff * backdrop.Scroll;
+                if(backdrop is NorthernLights lights) {
+                    for(int i = 0; i < lights.particles.Length; i++) {
+                        lights.particles[i].Position += diff * 0.2f;
+                    }
+                }
             }
             foreach (Backdrop backdrop in level.Foreground.Backdrops) {
-                backdrop.Position += new Vector2(dx * backdrop.Scroll.X, 0);
+                backdrop.Position += diff * backdrop.Scroll;
+                if (backdrop is NorthernLights lights) {
+                    for (int i = 0; i < lights.particles.Length; i++) {
+                        lights.particles[i].Position += diff * 0.2f;
+                    }
+                }
             }
 
             DynData<ParticleSystem> fgParticles = new DynData<ParticleSystem>(level.ParticlesFG);
             Particle[] particles = fgParticles.Get<Particle[]>("particles");
             for(int i = 0; i < particles.Length; i++) {
-                particles[i].Position += asVector;
+                particles[i].Position += diff;
             }
             DynData<ParticleSystem> bgParticles = new DynData<ParticleSystem>(level.ParticlesBG);
             particles = bgParticles.Get<Particle[]>("particles");
             for (int i = 0; i < particles.Length; i++) {
-                particles[i].Position += asVector;
+                particles[i].Position += diff;
             }
             DynData<ParticleSystem> particlesParticles = new DynData<ParticleSystem>(level.Particles);
             particles = particlesParticles.Get<Particle[]>("particles");
             for (int i = 0; i < particles.Length; i++) {
-                particles[i].Position += asVector;
+                particles[i].Position += diff;
+            }
+
+            for(int i = 0; i < StarClimbGraphicsController.rays.Length; i++) {
+                StarClimbGraphicsController.rays[i].X += diff.X * 0.9f;
+                StarClimbGraphicsController.rays[i].Y += diff.Y * 0.7f;
             }
 
             foreach (DreamBlock db in level.Tracker.GetEntities<DreamBlock>()) {
-                DynamicData dbData = new DynamicData(db);
-                DynamicData particlesData = new DynamicData(dbData.Get("particles"));
+                DynamicData dbData = DynamicData.For(db);
+                DynamicData particlesData = DynamicData.For(dbData.Get("particles"));
                 for (int i = 0; i < particlesData.Get<int>("Length"); i++) {
-                    DreamParticle particleProxy = new DreamParticle(db, i);
+                    DreamParticle particleProxy = new(db, i);
                     //Console.WriteLine(db.Position + " " + (particleProxy.Position + (level.Camera.Position - asVector) * (0.3f + 0.25f * particleProxy.Layer)) + " " +
                         //(particleProxy.Position + (level.Camera.Position) * (0.3f + 0.25f * particleProxy.Layer)) + " " + asVector * (0.3f + 0.25f * particleProxy.Layer));
-                    particleProxy.Position -= (asVector) * .5f * (0.3f + 0.25f * particleProxy.Layer);
+                    particleProxy.Position -= diff * .5f * (0.3f + 0.25f * particleProxy.Layer);
                 }
             }
         }

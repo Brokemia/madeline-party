@@ -22,19 +22,19 @@ namespace MadelineParty {
                         scoreBg.Draw(new Vector2(lerpIn, Y + 44 * (index + 1)));
                         
                         RenderScore((GameData.Instance.minigameStatus.ContainsKey(i) ? GameData.Instance.minigameStatus[i].ToString() : "0") + (max > 0 ? "/" + max : ""),
-                            i, index, lerpIn);
+                            i, index, lerpIn, 120);
                         index++;
                     }
                 }
             }
         }
 
-        protected void RenderScore(string text, int player, int index, float lerpIn) {
+        protected void RenderScore(string text, int player, int index, float lerpIn, float xOffset) {
             GFX.Gui[PlayerToken.GetFullPath(BoardController.TokenPaths[player]) + "00"].DrawCentered(new Vector2(lerpIn + 40, Y - 8 + 44 * (index + 1.5f)), Color.White, .3f);
 
             PixelFont font = Dialog.Languages["english"].Font;
             float fontFaceSize = Dialog.Languages["english"].FontFaceSize;
-            font.DrawOutline(fontFaceSize, text, new Vector2(lerpIn + 120, Y + 44f * (index + 2)), new Vector2(0.5f, 1f), Vector2.One * (1f + wiggler.Value * 0.15f), Color.White, 2f, Color.Black);
+            font.DrawOutline(fontFaceSize, text, new Vector2(lerpIn + xOffset, Y + 44f * (index + 2)), new Vector2(0.5f, 1f), Vector2.One * (1f + wiggler.Value * 0.15f), Color.White, 2f, Color.Black);
         }
 
     }

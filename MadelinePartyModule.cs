@@ -7,10 +7,12 @@ using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using System.Collections.Generic;
 using Monocle;
+using System.Runtime.CompilerServices;
 
 // TODO minigames for most bounces of oshiro, seekers, snowballs, etc...
 // TODO survive the longest minigames
 
+[assembly: IgnoresAccessChecksTo("Celeste")]
 namespace MadelineParty {
     public class MadelinePartyModule : EverestModule {
 

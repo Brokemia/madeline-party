@@ -19,7 +19,7 @@ namespace MadelineParty {
                         bg.Draw(new Vector2(lerpIn, Y + 44 * (index + 1)));
 
                         RenderScore(string.Format("{0:F1} M", (GameData.Instance.minigameResults.FirstOrDefault((t) => t.Item1 == i)?.Item2 ?? GameData.Instance.minigameStatus[i]) / 50.0),
-                            i, index, lerpIn);
+                            i, index, lerpIn, 190);
                         index++;
                     }
                 }
