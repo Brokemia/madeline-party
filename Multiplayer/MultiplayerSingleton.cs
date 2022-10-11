@@ -22,10 +22,8 @@ namespace MadelineParty.Multiplayer {
 
         private MultiplayerSingleton() { }
 
-        // General
-
-        private Dictionary<Type, List<Action<MPData>>> handlers = new();
-        private Dictionary<Type, Dictionary<string, Action<MPData>>> uniqueHandlers = new();
+        private readonly Dictionary<Type, List<Action<MPData>>> handlers = new();
+        private readonly Dictionary<Type, Dictionary<string, Action<MPData>>> uniqueHandlers = new();
 
         public void LoadContent() {
             if (BackendInstalled()) {
@@ -95,7 +93,7 @@ namespace MadelineParty.Multiplayer {
             if (DEBUG_LOGGING) Console.WriteLine("Multiplayer Received: " + data.GetType());
 #pragma warning restore CS0162 // Unreachable code detected
             if (handlers.TryGetValue(data.GetType(), out List<Action<MPData>> specificHandlers)) {
-                foreach(var handler in specificHandlers) {
+                foreach (var handler in specificHandlers) {
                     handler.Invoke(data);
                 }
             }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod;
+using Celeste.Mod.Entities;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
@@ -10,20 +11,32 @@ using Monocle;
 
 namespace MadelineParty {
     // Move an infinite number of Theos from one place to another
+    [Tracked(true)]
     public class MinigameTheoMover : MinigameEntity {
         private const int THEOS_NEEDED = 5;
         protected Vector2 theoRespawnPoint;
         public static uint theoCount;
         public Coroutine endCoroutine;
+        public string entityToUse;
 
         public MinigameTheoMover(EntityData data, Vector2 offset) : base(data, offset) {
             theoRespawnPoint = data.Nodes[0];
+            entityToUse = data.Attr("spawnEntity", "Celeste.TheoCrystal");
             Add(new HoldableCollider(OnHoldable));
         }
 
         public override void Added(Scene scene) {
             base.Added(scene);
-            level.Add(new TheoCrystal(theoRespawnPoint));
+            level.Add(createEntity(entityToUse));
+        }
+
+        // TODO maybe replace with reflection at some point
+        private Entity createEntity(string entity) {
+            return entity switch {
+                "Celeste.TheoCrystal" => new TheoCrystal(theoRespawnPoint),
+                "Celeste.Glider" => new Glider(theoRespawnPoint, false, false) { Speed = new(0, -270f) },
+                _ => null,
+            };
         }
 
         protected override void AfterStart() {
@@ -62,9 +75,8 @@ namespace MadelineParty {
         }
 
         private void OnHoldable(Holdable h) {
-            if (h.Entity is TheoCrystal) {
-                TheoCrystal theoCrystal = h.Entity as TheoCrystal;
-                theoCrystal.RemoveSelf();
+            if (h.Entity.GetType().FullName == entityToUse) {
+                h.Entity.RemoveSelf();
                 theoCount++;
                 
                 GameData.Instance.minigameStatus[GameData.Instance.realPlayerID] = theoCount;
@@ -72,9 +84,43 @@ namespace MadelineParty {
                 if (theoCount >= THEOS_NEEDED && endCoroutine == null) {
                     Add(endCoroutine = new Coroutine(EndMinigame()));
                 } else {
-                    level.Add(new TheoCrystal(theoRespawnPoint));
+                    if (!justSpawned) {
+                        SpawnNext();
+                    }
+                    justSpawned = false;
                 }
             }
+        }
+
+        public void SpawnNext() {
+            if (justSpawned) return;
+            justSpawned = true;
+            level.Add(createEntity(entityToUse));
+        }
+
+        private bool justSpawned;
+    }
+
+    [CustomEntity("madelineparty/theoMoverEarlySpawn")]
+    public class EarlyTheoMoverSpawn : Entity {
+        private MinigameTheoMover minigame;
+
+        public EarlyTheoMoverSpawn(EntityData data, Vector2 offset) : base(data.Position + offset) {
+            Collider = new Hitbox(data.Width, data.Height);
+            Visible = false;
+            Add(new HoldableCollider(OnHoldable));
+        }
+
+        public override void Awake(Scene scene) {
+            base.Awake(scene);
+            minigame = scene.Tracker.GetEntity<MinigameTheoMover>();
+            if(minigame == null) {
+                RemoveSelf();
+            }
+        }
+
+        private void OnHoldable(Holdable h) {
+            minigame.SpawnNext();
         }
     }
 }

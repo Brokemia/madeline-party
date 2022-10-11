@@ -5,6 +5,7 @@ using Celeste.Mod.CelesteNet.DataTypes;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MadelineParty.Multiplayer.CelesteNet {
     public class CelesteNetBackend : MultiplayerBackend {
@@ -26,8 +27,10 @@ namespace MadelineParty.Multiplayer.CelesteNet {
         public override uint CurrentPlayerID() => CelesteNetClientModule.Instance.Client.PlayerInfo.ID;
 
         public override List<PlayerInfo> GetPlayers() {
-            throw new NotImplementedException();
-            //return CelesteNetClientModule.Instance.Client.Data.Get.TryGetRef(id, out DataPlayerInfo value);
+            return CelesteNetClientModule.Instance.Context?.Get<CelesteNetPlayerListComponent>()
+                .Channels.List.FirstOrDefault(c => c.Players.Contains(CurrentPlayerID()))
+                .Players.Select(id => GetPlayer(id))
+                .ToList();
         }
 
         public override void LoadContent() {
