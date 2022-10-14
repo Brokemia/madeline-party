@@ -53,24 +53,24 @@ namespace MadelineParty {
 
         public Action<PlayerToken> OnRespawn;
 
-        private static Dictionary<string, Color> colors = new Dictionary<string, Color> {
-            { "madeline/normal00", Player.NormalHairColor },
-            { "badeline/normal00", Player.NormalBadelineHairColor },
-            { "theo/excited00", Color.ForestGreen },
-            { "granny/normal00", Color.Blue }, // It's obviously because of the bird
-            { "luigi/normal00", Color.LimeGreen }
+        public static readonly Dictionary<string, Color> colors = new() {
+            { "madelineparty/tokens/madeline/normal", Player.NormalHairColor },
+            { "madelineparty/tokens/badeline/normal", Player.NormalBadelineHairColor },
+            { "madelineparty/tokens/theo/excited", Color.ForestGreen },
+            { "madelineparty/tokens/granny/normal", Color.Blue }, // It's obviously because of the bird
+            { "madelineparty/tokens/luigi/normal", Color.LimeGreen }
         };
 
-        private Color color;
+        public Color color;
 
         public PlayerToken(int id, string texture, Vector2 position, Vector2 scale, int depth, BoardSpace space) : base(position) {
             this.id = id;
-            color = colors[texture];
             Collider = new Hitbox(20, 20, -5, -5);
             AnimationSpeed = 12f;
             Depth = depth;
             this.scale = scale;
             Name = GetFullPath(texture);
+            color = colors[Name];
             textures = GFX.Gui.GetAtlasSubtextures(Name);
             AddTag(TagsExt.SubHUD);
             AddTag(Tags.PauseUpdate);

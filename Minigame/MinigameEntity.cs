@@ -65,7 +65,7 @@ namespace MadelineParty {
             }
             if (!started) {
                 Player player = level.Tracker.GetEntity<Player>();
-                player.StateMachine.State = 11;
+                player.StateMachine.State = Player.StFrozen;
                 // Stops the player from being moved by wind immediately
                 // Probably saves you from Badeline too
                 player.JustRespawned = true;
@@ -77,7 +77,7 @@ namespace MadelineParty {
 
         private IEnumerator Countdown() {
             Player player = level.Tracker.GetEntity<Player>();
-            player.StateMachine.State = 11;
+            player.StateMachine.State = Player.StFrozen;
             // Stops the player from being moved by wind immediately
             // Probably saves you from Badeline too
             player.JustRespawned = true;
@@ -106,12 +106,17 @@ namespace MadelineParty {
 
         protected IEnumerator EndMinigame(Comparison<Tuple<int, uint>> placeOrderer, Action cleanup) {
             Player player = level.Tracker.GetEntity<Player>();
-            // Wait until all players have finished
-            while (GameData.Instance.minigameResults.Count < GameData.Instance.playerNumber) {
+            // A little extra gap so you aren't teleported quite as suddenly
+            float extraTime = 1;
+            while (extraTime > 0) {
                 if(player != null || (player = level.Tracker.GetEntity<Player>()) != null) {
                     // Freeze the player so they can't do anything else until everyone else is done
                     player.StateMachine.State = Player.StFrozen;
                     player.Speed = Vector2.Zero;
+                }
+                // Wait until all players have finished
+                if (GameData.Instance.minigameResults.Count >= GameData.Instance.playerNumber) {
+                    extraTime -= Engine.DeltaTime;
                 }
                 yield return null;
             }
@@ -142,7 +147,7 @@ namespace MadelineParty {
                     level.UnloadLevel();
 
                     level.Session.Level = "Game_PlayerRanking";
-                    List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns.ToArray());
+                    List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns);
                     // Sort the spawns so the highest ones are first
                     spawns.Sort((x, y) => { return x.Y.CompareTo(y.Y); });
                     level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));

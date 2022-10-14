@@ -50,6 +50,7 @@ namespace MadelineParty {
             // If we have just died
             if (level.Session.RespawnPoint == deadRespawn) {
                 level.Tracker.GetEntities<Seeker>().ForEach(e => e.RemoveSelf());
+                level.Tracker.GetEntities<FinalBoss>().ForEach(e => e.RemoveSelf());
                 completed = true;
                 MinigameTimeDisplay display = level.Entities.FindFirst<MinigameTimeDisplay>();
                 if (display != null)

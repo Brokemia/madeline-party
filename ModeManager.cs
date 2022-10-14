@@ -52,7 +52,7 @@ namespace MadelineParty {
             Level level = Engine.Scene as Level;
             if (Mode.Equals(MINIGAME_MODE) && level != null) {
                 level.OnEndOfFrame += delegate {
-                    level.Teleport(GameData.Instance.minigame);
+                    level.Teleport(GameData.Instance.minigame, () => level.Session.LevelData.Spawns[level.Session.LevelData.Spawns.Count > 1 ? GameData.Instance.realPlayerID : 0]);
                     level.Session.Audio.Music.Event = GameData.GetMinigameMusic(GameData.Instance.minigame);
                 };
             }

@@ -290,10 +290,8 @@ namespace MadelineParty {
                     sfx.RemoveSelf();
                 });
             }
-            Console.WriteLine("before: " + Position + " " + crushDir);
             MoveVExact(crushDir.Y < 0 ? (int)Math.Round(Math.Floor(Position.Y / 8)*8 - Position.Y) : (int)Math.Round(Math.Ceiling(Position.Y / 8)*8 - Position.Y));
             MoveHExact(crushDir.X < 0 ? (int)Math.Round(Math.Floor(Position.X / 8) * 8 - Position.X) : (int)Math.Round(Math.Ceiling(Position.X / 8) * 8 - Position.X));
-            Console.WriteLine("after: "+ Position);
             Add(currentMoveLoopSfx = new SoundSource());
             currentMoveLoopSfx.Position = new Vector2(Width, Height) / 2f;
             if (randomlyCovert || (SaveData.Instance != null && SaveData.Instance.Name != null && SaveData.Instance.Name.StartsWith("FWAHAHA", StringComparison.InvariantCultureIgnoreCase))) {

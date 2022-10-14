@@ -104,7 +104,7 @@ namespace MadelineParty {
         }
 
         private Vector2 ScreenCoordsFromGameCoords(Vector2 gameCoords) {
-            return ScreenCoordsFromGameCoords(gameCoords, new Vector2(0, 0));
+            return ScreenCoordsFromGameCoords(gameCoords, Vector2.Zero);
         }
 
         private Vector2 ScreenCoordsFromGameCoords(Vector2 gameCoords, Vector2 offsetInPxls) {
