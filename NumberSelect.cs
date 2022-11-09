@@ -11,7 +11,7 @@ namespace MadelineParty {
 
     public class NumberSelect : Solid {
         public class NumberPlus : Solid {
-            private MTexture texture;
+            public MTexture texture;
 
             public NumberPlus(Vector2 position, NumberSelect parent) : base(position, 16, 16, true) {
                 OnDashCollide = parent.OnPlus;
@@ -28,7 +28,7 @@ namespace MadelineParty {
         }
 
         public class NumberMinus : Solid {
-            private MTexture texture;
+            public MTexture texture;
 
             public NumberMinus(Vector2 position, NumberSelect parent) : base(position, 16, 16, true) {
                 OnDashCollide = parent.OnMinus;
@@ -46,8 +46,8 @@ namespace MadelineParty {
 
         private const string texturePrefix = "objects/madelineparty/numberselect/number";
 
-        private NumberPlus plus;
-        private NumberMinus minus;
+        protected NumberPlus plus;
+        protected NumberMinus minus;
 
         public int Value => possibleValues[valueIdx];
 

@@ -19,7 +19,6 @@ namespace MadelineParty {
         // Only one alive module instance can exist at any given time.
         public static MadelinePartyModule Instance;
         public static string START_ROOM = "Game_PlayerNumberSelect";
-        public static string MAIN_ROOM = "Game_MainRoom";
 
         public Level level;
 
@@ -39,7 +38,10 @@ namespace MadelineParty {
             // Stuff that runs orig(self) always
             /* ************************************************ */
             Everest.Events.Level.OnLoadEntity += Level_OnLoadEntity;
-            Everest.Events.Level.OnLoadLevel += (level, playerIntro, isFromLoader) => this.level = level;
+            Everest.Events.Level.OnLoadLevel += (level, playerIntro, isFromLoader) => {
+                BoardController.boardEntityData.Clear();
+                this.level = level;
+            };
             DreamBlockRNGSyncer.Load();
             MinigameInfinityTrigger.Load();
             On.Celeste.LevelEnter.Go += (orig, session, fromSaveData) => {
@@ -177,6 +179,9 @@ namespace MadelineParty {
                         return true;
                     case "theominigamecontroller":
                         l.Add(new MinigameTheoMover(entityData, offset));
+                        return true;
+                    case "_board_space":
+                        BoardController.boardEntityData.Add(entityData);
                         return true;
                 }
             }

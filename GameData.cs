@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BrokemiaHelper;
 using Celeste;
-using Celeste.Mod.CelesteNet.Client;
-using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -29,7 +27,7 @@ namespace MadelineParty
                 "Double Dice",
                 new() {
                     Name = "Double Dice",
-                    Price = 10,
+                    Price = 3,
                     Action = (player) => {
                         // Double dice are special
                         if(player != Instance.realPlayerID) {
@@ -43,7 +41,7 @@ namespace MadelineParty
                 "Flip Flop",
                 new() {
                     Name = "Flip Flop",
-                    Price = 7,
+                    Price = 4,
                     Action = (player) => {
                         BoardController.Instance.SetLeftButtonStatus(player, LeftButton.Modes.Inactive);
                         BoardController.Instance.SetRightButtonStatus(player, RightButton.Modes.Inactive);
@@ -63,7 +61,39 @@ namespace MadelineParty
                         textbox.OnFinish += () => BoardController.Instance.Add(new Coroutine(FlipFlopCoroutine(textbox, Instance.players[player], swapping, swappable.Count == 0), true));
                     }
                 }
-            }
+            },
+            {
+                "Minigame Skip",
+                new() {
+                    Name = "Minigame Skip",
+                    Price = 7,
+                    CanUseInTurn = false,
+                    Action = (player) => {
+                        Level level = Engine.Scene as Level;
+                        if(level.Tracker.GetEntity<MinigameSelectUI>() is { } ui) {
+                            ui.Reroll(player);
+                        }
+                    }
+                }
+            },
+            {
+                "Heart Block",
+                new() {
+                    Name = "Heart Block",
+                    Price = 10,
+                    Action = (player) => {
+                        BoardController.Instance.SetLeftButtonStatus(player, LeftButton.Modes.Inactive);
+                        BoardController.Instance.SetRightButtonStatus(player, RightButton.Modes.Inactive);
+                        Instance.heartBlocks.Add(player);
+                        Engine.Scene.Add(new HeartBlock(
+                            BoardController.Instance.boardSpaces.Find(s => s.ID == Instance.heartSpaceID).screenPosition - new Vector2(48), 48, 48));
+                        var alarm = new Alarm();
+                        alarm.OnComplete += () => BoardController.Instance.SetDice(player);
+                        BoardController.Instance.Add(alarm);
+                        alarm.Start(2);
+                    }
+                }
+            },
         };
 
         private static IEnumerator FlipFlopCoroutine(PersistentMiniTextbox textbox, PlayerData p1, PlayerData p2, bool oneOption) {
@@ -98,6 +128,7 @@ namespace MadelineParty
         public class Item {
             public string Name { get; set; }
             public int Price { get; set; }
+            public bool CanUseInTurn { get; set; } = true;
             public Action<int> Action { get; set; }
         }
 
@@ -121,13 +152,15 @@ namespace MadelineParty
         public Dictionary<int, uint> minigameStatus = new();
         // Matches player token ID to minigame results
         public List<Tuple<int, uint>> minigameResults = new();
-        public int heartSpaceID = 12;
+        public int heartSpaceID = -1;
+        public List<int> heartBlocks = new();
         public PlayerSelectTrigger currentPlayerSelection;
         public int heartCost = 5;
         public string minigame;
+        public string board;
         public bool gameStarted;
-        private List<string> earlyShop = new() { "Double Dice" };
-        private List<string> lateShop = new() { "Flip Flop", "Double Dice" };
+        private List<string> earlyShop = new() { "Double Dice", "Minigame Skip" };
+        private List<string> lateShop = new() { "Double Dice", "Minigame Skip", "Flip Flop", "Heart Block" };
         public List<string> shopContents
         {
             get

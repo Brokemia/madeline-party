@@ -1,18 +1,18 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MadelineParty.GreenSpace {
-    abstract class GreenSpaceEvent {
+    public abstract class GreenSpaceEvent {
 
         public virtual void LoadContent() { }
 
         public abstract void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after);
 
-        public virtual void Render(BoardController.BoardSpace space) {
+        public virtual void Render(BoardController.BoardSpace space, List<BoardController.BoardSpace> spaces) {
             BoardController.spaceTextures[space.type].DrawCentered(BoardController.Instance.Position + space.position);
         }
 
-        public virtual void RenderSubHUD(BoardController.BoardSpace space) { }
+        public virtual void RenderSubHUD(BoardController.BoardSpace space, List<BoardController.BoardSpace> spaces) { }
 
     }
 }

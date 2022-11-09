@@ -51,31 +51,37 @@ namespace MadelineParty {
 
         public override void Awake(Scene scene) {
             base.Awake(scene);
-            // FIXME hackfix for invis
-            if(!didRespawn) {
-                didRespawn = true;
-                //startTime = level.RawTimeActive;
-                //Player player = level.Tracker.GetEntity<Player>();
-                //player.Die(Vector2.Zero, true, false);
-                level.Add(new MinigameReadyPrompt());
-                Player player = level.Tracker.GetEntity<Player>();
-                player.JustRespawned = true;
-                player.StateMachine.State = Player.StFrozen;
-                return;
-            }
             if (!started) {
+                level.Add(new MinigameReadyPrompt(this));
                 Player player = level.Tracker.GetEntity<Player>();
-                player.StateMachine.State = Player.StFrozen;
-                // Stops the player from being moved by wind immediately
-                // Probably saves you from Badeline too
                 player.JustRespawned = true;
-                startTime = level.RawTimeActive;
-                started = true;
-                Add(new Coroutine(Countdown()));
+                player.StateMachine.State = Player.StFrozen;
             }
+            //// FIXME hackfix for invis
+            //if (!didRespawn) {
+            //    didRespawn = true;
+            //    //startTime = level.RawTimeActive;
+            //    //Player player = level.Tracker.GetEntity<Player>();
+            //    //player.Die(Vector2.Zero, true, false);
+            //    level.Add(new MinigameReadyPrompt());
+            //    Player player = level.Tracker.GetEntity<Player>();
+            //    player.JustRespawned = true;
+            //    player.StateMachine.State = Player.StFrozen;
+            //    return;
+            //}
+            //if (!started) {
+            //    Player player = level.Tracker.GetEntity<Player>();
+            //    player.StateMachine.State = Player.StFrozen;
+            //    // Stops the player from being moved by wind immediately
+            //    // Probably saves you from Badeline too
+            //    player.JustRespawned = true;
+            //    startTime = level.RawTimeActive;
+            //    started = true;
+            //    Add(new Coroutine(Countdown()));
+            //}
         }
 
-        private IEnumerator Countdown() {
+        public IEnumerator Countdown() {
             Player player = level.Tracker.GetEntity<Player>();
             player.StateMachine.State = Player.StFrozen;
             // Stops the player from being moved by wind immediately
@@ -112,6 +118,7 @@ namespace MadelineParty {
                 if(player != null || (player = level.Tracker.GetEntity<Player>()) != null) {
                     // Freeze the player so they can't do anything else until everyone else is done
                     player.StateMachine.State = Player.StFrozen;
+                    player.ForceCameraUpdate = true;
                     player.Speed = Vector2.Zero;
                 }
                 // Wait until all players have finished

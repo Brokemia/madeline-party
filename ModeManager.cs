@@ -25,7 +25,7 @@ namespace MadelineParty {
             level.OnEndOfFrame += delegate {
                 GameData.Instance.minigameResults.Clear();
                 GameData.Instance.minigameStatus.Clear();
-                level.Teleport(Mode.Equals(MINIGAME_MODE) ? "Game_MinigameHub" : "Game_MainRoom",
+                level.Teleport(Mode.Equals(MINIGAME_MODE) ? "Game_MinigameHub" : GameData.Instance.board,
                     () => {
                         if(Mode.Equals(MINIGAME_MODE)) {
                             return level.GetSpawnPoint(new Vector2(level.Bounds.Left, GameData.Instance.gnetHost ? level.Bounds.Top : level.Bounds.Bottom));

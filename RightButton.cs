@@ -87,7 +87,7 @@ namespace MadelineParty {
                     SwapDecal(decalPrefix + "cancel");
                     break;
                 case Modes.SingleItem:
-                    SwapDecal(decalPrefix + "useitem_" + GameData.Instance.players[playerID].items[0].Name);
+                    SwapDecal(decalPrefix + "useitem_" + GameData.Instance.players[playerID].items.Find(item => item.CanUseInTurn).Name);
                     break;
                 default:
                     SwapDecal(decalPrefix + currentMode.ToString().ToLower());
@@ -162,7 +162,7 @@ namespace MadelineParty {
                 case Modes.SingleItem:
                     MultiplayerSingleton.Instance.Send(new UseItem { player = playerID, itemIdx = 0 });
                     SetCurrentMode(Modes.Inactive);
-                    GameData.Instance.players[playerID].items[0].Action?.Invoke(playerID);
+                    GameData.Instance.players[playerID].items.Find(item => item.CanUseInTurn).Action?.Invoke(playerID);
                     GameData.Instance.players[playerID].items.RemoveAt(0);
                     break;
                 case Modes.CancelHeartBuy:
@@ -214,7 +214,7 @@ namespace MadelineParty {
         public override void Render() {
             base.Render();
             if (currentMode == Modes.UseItem) {
-                var pItems = GameData.Instance.players[playerID].items;
+                var pItems = GameData.Instance.players[playerID].items.FindAll(item => item.CanUseInTurn);
                 for (int i = 0; i < pItems.Count; i++) {
                     // 4 pixels of vertical spacing between items
                     GFX.Game["decals/madelineparty/items/" + GameData.Instance.players[playerID].items[i].Name].DrawCentered((Position - level.LevelOffset) * 6 + new Vector2(8 * 6, 16 * 6 /* center it*/ - 18 * (pItems.Count - 1) /* to top */ + 36 * i /* descend */) - level.ShakeVector * 6, Color.White, new Vector2(2));

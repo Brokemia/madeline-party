@@ -60,7 +60,7 @@ namespace MadelineParty {
                 Add(new Coroutine(EndMinigame(HIGHEST_WINS, () => { })));
             } else {
                 // Don't prevent pausing if we're still on the ready screen
-                if (started) {
+                //if (started) {
                     level.PauseLock = true;
                     diedInGBJInfo.SetValue(null, 0);
                     for (int i = 0; i < 4; i++) {
@@ -70,7 +70,7 @@ namespace MadelineParty {
                             trails[i] = null;
                         }
                     }
-                }
+                //}
             }
         }
 

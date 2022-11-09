@@ -45,7 +45,7 @@ namespace MadelineParty {
                 level.Remove(player);
                 level.UnloadLevel();
 
-                level.Session.Level = "Game_MainRoom";
+                level.Session.Level = GameData.Instance.board;
                 switch (GameData.Instance.realPlayerID) {
                     case 0:
                         level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));

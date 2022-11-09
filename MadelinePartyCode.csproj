@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <AssemblyName>MadelineParty</AssemblyName>
     <RootNamespace>MadelineParty</RootNamespace>
     <LangVersion>latest</LangVersion>
@@ -28,9 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include=".\lib-stripped\Celeste.exe">
-      <Private>false</Private>
-    </Reference>
     <Reference Include="$(CelestePrefix)\MMHOOK_Celeste.dll">
       <Private>false</Private>
     </Reference>
@@ -42,6 +39,9 @@
     </Reference>
     <Reference Include="BrokemiaHelper">
       <HintPath>lib-stripped\BrokemiaHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Celeste">
+      <HintPath>lib-stripped\Celeste.exe</HintPath>
     </Reference>
     <Reference Include="VivHelper">
       <HintPath>lib-stripped\VivHelper.dll</HintPath>

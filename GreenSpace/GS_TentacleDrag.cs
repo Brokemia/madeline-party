@@ -47,10 +47,10 @@ namespace MadelineParty.GreenSpace {
             // The highest space with the exact same x
             // Or if there is no space with the same x
             // Then the closest space to the point at the bottom of the screen but with the same x
-            BoardController.BoardSpace endSpace = BoardController.boardSpaces
+            BoardController.BoardSpace endSpace = BoardController.Instance.boardSpaces
                 .FindAll(s => s.x == startSpace.x && !s.screenPosition.Equals(startSpace.screenPosition))
                 .OrderBy(a => a.y)
-                .DefaultIfEmpty(BoardController.boardSpaces
+                .DefaultIfEmpty(BoardController.Instance.boardSpaces
                     .OrderBy(a => (a.screenPosition - new Vector2(startSpace.screenPosition.X, Engine.ViewHeight)).LengthSquared())
                     .First(s => !s.screenPosition.Equals(startSpace.screenPosition)))
                 .First();

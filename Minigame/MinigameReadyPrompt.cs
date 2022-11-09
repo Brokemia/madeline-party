@@ -22,9 +22,11 @@ namespace MadelineParty.Minigame {
         private MTexture readyCheck, unreadyCheck;
         private Dictionary<int, bool> readyStatus = new();
         private Dictionary<int, PlayerToken> tokens = new();
+        private MinigameEntity minigameEntity;
 
-        public MinigameReadyPrompt() {
+        public MinigameReadyPrompt(MinigameEntity entity) {
             AddTag(TagsExt.SubHUD);
+            minigameEntity = entity;
         }
 
         public override void Added(Scene scene) {
@@ -86,9 +88,17 @@ namespace MadelineParty.Minigame {
             RemoveSelf();
             Level level = SceneAs<Level>();
             MinigameEntity.startTime = level.RawTimeActive;
-            Player player = level.Tracker.GetEntity<Player>();
-            player.Die(Vector2.Zero, true, false);
+            //Player player = level.Tracker.GetEntity<Player>();
+            //player.Die(Vector2.Zero, true, false);
             // FIXME change to just start MinigameEntity instead once hackfix can be removed
+            Player player = level.Tracker.GetEntity<Player>();
+            player.StateMachine.State = Player.StFrozen;
+            // Stops the player from being moved by wind immediately
+            // Probably saves you from Badeline too
+            player.JustRespawned = true;
+            MinigameEntity.startTime = level.RawTimeActive;
+            MinigameEntity.started = true;
+            minigameEntity.Add(new Coroutine(minigameEntity.Countdown()));
         }
 
         public override void Render() {
