@@ -7,6 +7,7 @@ using MonoMod.Utils;
 using System;
 
 namespace MadelineParty {
+    [Tracked(false)]
     public class HeartBlock : Entity {
         private const int SCALE = 2;
 
@@ -14,11 +15,11 @@ namespace MadelineParty {
 
         private float startY;
 
-        private float yLerp;
-
         private float renderLerp;
 
         private float width, height;
+
+        public bool fadeOut;
 
         public HeartBlock(Vector2 position, float width, float height) : base(position) {
             this.width = width;
@@ -31,7 +32,7 @@ namespace MadelineParty {
                     nineSlice[i, j] = mTexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
                 }
             }
-            Depth = -10000;
+            Depth = 0;
             AddTag(TagsExt.SubHUD);
         }
 
@@ -71,10 +72,15 @@ namespace MadelineParty {
         public override void Update() {
             base.Update();
             if (Visible) {
-                renderLerp = Calc.Approach(renderLerp, 0f, Engine.DeltaTime * 3f);
+                renderLerp = Calc.Approach(renderLerp, fadeOut ? 1f : 0f, Engine.DeltaTime * 3f);
             }
-            yLerp = Calc.Approach(yLerp, 0f, 1f * Engine.DeltaTime);
-            Y = MathHelper.Lerp(startY, startY + 12f, Ease.SineInOut(yLerp));
+            if (fadeOut && renderLerp >= .999f) {
+                RemoveSelf();
+            }
+        }
+
+        public void FadeOut() {
+            fadeOut = true;
         }
     }
 }

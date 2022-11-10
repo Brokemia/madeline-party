@@ -377,6 +377,14 @@ namespace MadelineParty {
                 }
                 GameData.Instance.heartSpaceID = heartStartID;
             }
+
+            // Re-add heart blocks
+            for (int i = 0; i < GameData.Instance.heartBlocks.Count; i++) {
+                Console.WriteLine(boardSpaces.Find(s => s.ID == GameData.Instance.heartSpaceID).screenPosition - new Vector2(48));
+                scene.Add(new HeartBlock(
+                            boardSpaces.Find(s => s.ID == GameData.Instance.heartSpaceID).screenPosition - new Vector2(48), 48, 48));
+            }
+
             GameData.Instance.gameStarted = true;
         }
 
@@ -409,7 +417,7 @@ namespace MadelineParty {
                     for (int k = 0; k < GameData.Instance.players.Length; k++) {
                         if (GameData.Instance.players[k] != null) {
                             if (!GameData.Instance.gameStarted) {
-                                PlayerToken token = new PlayerToken(k, TokenPaths[GameData.Instance.players[k].TokenSelected], space.screenPosition + new Vector2(0, tokensAdded * 18), new Vector2(.25f, .25f), -1, space);
+                                PlayerToken token = new(k, TokenPaths[GameData.Instance.players[k].TokenSelected], space.screenPosition + new Vector2(0, tokensAdded * 18), new Vector2(.25f, .25f), -1, space);
                                 playerTokens[k] = token;
                                 GameData.Instance.players[k].token = token;
                             } else {
@@ -488,9 +496,15 @@ namespace MadelineParty {
                 level.Wipe.OnComplete = delegate {
                     level.Add(new PersistentMiniTextbox(GetCurrentTurnText(player), pauseUpdate: true, time: 3));
                     onComplete?.Invoke();
+                    if (GameData.Instance.heartBlocks.Remove(player)) {
+                        Alarm.Set(this, 0.7f, () => level.Tracker.GetEntity<HeartBlock>()?.FadeOut());
+                    }
                 };
             } else {
                 level.Add(new PersistentMiniTextbox(GetCurrentTurnText(player), pauseUpdate: true, time: 3));
+                if (GameData.Instance.heartBlocks.Remove(player)) {
+                    Alarm.Set(this, 0.7f, () => level.Tracker.GetEntity<HeartBlock>()?.FadeOut());
+                }
             }
         }
 

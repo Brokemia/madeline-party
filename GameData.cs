@@ -87,10 +87,7 @@ namespace MadelineParty
                         Instance.heartBlocks.Add(player);
                         Engine.Scene.Add(new HeartBlock(
                             BoardController.Instance.boardSpaces.Find(s => s.ID == Instance.heartSpaceID).screenPosition - new Vector2(48), 48, 48));
-                        var alarm = new Alarm();
-                        alarm.OnComplete += () => BoardController.Instance.SetDice(player);
-                        BoardController.Instance.Add(alarm);
-                        alarm.Start(2);
+                        Alarm.Set(BoardController.Instance, 2, () => BoardController.Instance.SetDice(player));
                     }
                 }
             },
