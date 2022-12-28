@@ -60,6 +60,7 @@ namespace MadelineParty.Multiplayer.General {
     public class Party : MPData {
         // The size of the party being looked for
         public byte lookingForParty;
+        public string desiredMode;
         public string version = MadelinePartyModule.Instance.Metadata.VersionString;
         public int playerSelectTrigger = -2;
 

@@ -13,7 +13,8 @@ namespace MadelineParty
         // What the player rolls at the beginning of the game
         // Determines Turn Order
         public int StartingRoll;
-        public List<GameData.Item> items = new() { GameData.items["Heart Block"] };
+        public List<GameData.Item> items = new() { };
+        public List<int> pastBoardSpaceIDs = new();
 
         public int strawberries {
             get;

@@ -8,6 +8,7 @@ using MadelineParty.Multiplayer.General;
 using System.Collections.Generic;
 using Monocle;
 using System.Runtime.CompilerServices;
+using MadelineParty.SubHud;
 
 // TODO minigames for most bounces of oshiro, seekers, snowballs, etc...
 // TODO survive the longest minigames
@@ -71,6 +72,7 @@ namespace MadelineParty {
             BoardController.Load();
             TiebreakerController.Load();
             TextMenuPlus.Load();
+            SubHudLevelForwarder.Load();
 
             MultiplayerSingleton.Instance.RegisterHandler<Party>(HandleParty);
             MultiplayerSingleton.Instance.RegisterHandler<MinigameEnd>(HandleMinigameEnd);
@@ -202,13 +204,15 @@ namespace MadelineParty {
             MinigameSwitchGatherer.Unload();
             MinigameTron.Unload();
             TextMenuPlus.Unload();
+            SubHudLevelForwarder.Unload();
         }
 
         private void HandleParty(MPData data) {
             if(data is not Party party) return;
             if (!IsSIDMadelineParty(level.Session.Area.GetSID())) return;
-            Logger.Log("MadelineParty", "Recieved PartyData. My ID: " + MultiplayerSingleton.Instance.CurrentPlayerID() + " Player ID: " + party.ID + " Looking for party of size " + party.lookingForParty);
+            Logger.Log("MadelineParty", $"Recieved PartyData. My ID: ${MultiplayerSingleton.Instance.CurrentPlayerID()} Player ID: ${party.ID} Looking for party of size ${party.lookingForParty} to play mode ${party.desiredMode}");
             if (party.lookingForParty == GameData.Instance.playerNumber // if they want the same party size
+                && party.desiredMode.Equals(ModeManager.Instance.Mode) // and they want the same mode
                 && party.version.Equals(Metadata.VersionString) // and our versions match
                 && GameData.Instance.celestenetIDs.Count < GameData.Instance.playerNumber - 1 // and we aren't full up
                 && !GameData.Instance.celestenetIDs.Contains(party.ID) // and they aren't in our party
@@ -220,6 +224,7 @@ namespace MadelineParty {
                     // Tell them that they aren't the host and are instead joining our party
                     MultiplayerSingleton.Instance.Send(new Party {
                         respondingTo = (int)party.ID,
+                        desiredMode = ModeManager.Instance.Mode,
                         lookingForParty = (byte)GameData.Instance.playerNumber,
                         partyHost = GameData.Instance.gnetHost
                     });
@@ -233,6 +238,7 @@ namespace MadelineParty {
                     if (GameData.Instance.currentPlayerSelection != null) {
                         MultiplayerSingleton.Instance.Send(new Party {
                             respondingTo = (int)party.ID,
+                            desiredMode = ModeManager.Instance.Mode,
                             playerSelectTrigger = GameData.Instance.currentPlayerSelection.playerID
                         });
                     }

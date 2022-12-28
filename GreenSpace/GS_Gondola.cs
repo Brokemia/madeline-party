@@ -90,6 +90,7 @@ namespace MadelineParty.GreenSpace {
                 token.Position = Calc.Approach(token.Position, destPos, BoardController.TOKEN_SPEED * Engine.DeltaTime);
             }
             board.CurrentPlayerToken.currentSpace = dest;
+            GameData.Instance.players[board.CurrentPlayerToken.id].pastBoardSpaceIDs.Add(dest.ID);
             yield return 0.2f;
             // Send gondola back
             progress[space.screenPosition] = 1;

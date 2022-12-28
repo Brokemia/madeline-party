@@ -1,4 +1,5 @@
 ﻿using Celeste;
+using MadelineParty.SubHud;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
@@ -6,14 +7,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MadelineParty.GreenSpace {
+namespace MadelineParty.GreenSpace
+{
     [GreenSpace("tentacleDrag")]
     class GS_TentacleDrag : GreenSpaceEvent {
         private const float scaleFactor = 3;
 
         public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after) {
             Sprite tentacleSprite = GFX.SpriteBank.Create("madelinePartyTentacle");
-            SubHUDSprite tentacle = new SubHUDSprite(tentacleSprite);
+            SubHudSprite tentacle = new SubHudSprite(tentacleSprite);
             Vector2 targetPosition = space.screenPosition - new Vector2(tentacleSprite.Width * scaleFactor / 2, 27 * scaleFactor);
             tentacle.Depth = -40000;
             board.Scene.Add(tentacle);
@@ -42,7 +44,7 @@ namespace MadelineParty.GreenSpace {
             board.Add(riseTween);
         }
 
-        private IEnumerator PullDown(BoardController board, Action after, SubHUDSprite tentacle, BoardController.BoardSpace startSpace) {
+        private IEnumerator PullDown(BoardController board, Action after, SubHudSprite tentacle, BoardController.BoardSpace startSpace) {
             yield return 1.5f;
             // The highest space with the exact same x
             // Or if there is no space with the same x
@@ -84,10 +86,11 @@ namespace MadelineParty.GreenSpace {
 
             foreach(PlayerToken token in grabbed) {
                 token.currentSpace = endSpace;
+                GameData.Instance.players[token.id].pastBoardSpaceIDs.Add(endSpace.ID);
             }
         }
 
-        private void dragToPos(SubHUDSprite tentacle, IEnumerable<PlayerToken> tokens, Vector2 position, Vector2 tentacleOffset) {
+        private void dragToPos(SubHudSprite tentacle, IEnumerable<PlayerToken> tokens, Vector2 position, Vector2 tentacleOffset) {
             tentacle.Position = position - tentacleOffset;
             foreach(PlayerToken token in tokens) {
                 token.Position = position;

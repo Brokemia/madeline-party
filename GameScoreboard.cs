@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Celeste;
+using Celeste.Mod.UI;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 
 namespace MadelineParty {
@@ -42,6 +44,9 @@ namespace MadelineParty {
                     }
                 }
 
+                SubHudRenderer.EndRender();
+                SubHudRenderer.BeginRender(sampler: SamplerState.PointClamp);
+
                 // Display items
                 for (int i = 0; i < GameData.Instance.players[parent.playerID].items.Count; i++) {
                     GFX.Game["decals/madelineparty/items/" + GameData.Instance.players[parent.playerID].items[i].Name].Draw((parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x0C + i * 0x24, 0x0C) - parent.level.ShakeVector * 6, Vector2.Zero, Color.White, new Vector2(2, 2));
@@ -52,6 +57,9 @@ namespace MadelineParty {
                         GFX.Game["decals/madelineparty/items/" + GameData.Instance.shopContents[i]].Draw((parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x12 * 6 + 2 + i * 0x24 - (GameData.Instance.shopContents.Count - 1) * 18, 0x20 * 6) - parent.level.ShakeVector * 6, Vector2.Zero, Color.White, new Vector2(2, 2));
                     }
                 }
+
+                SubHudRenderer.EndRender();
+                SubHudRenderer.BeginRender();
             }
         }
 
@@ -89,7 +97,7 @@ namespace MadelineParty {
         private int arbitraryCost;
 
         public GameScoreboard(Vector2 pos, int playerID) : base(pos) {
-            Depth = -10000;
+            Depth = -12000;
             baseTexture = GFX.Game["objects/madelineparty/scoreboardbase"];
             arrowTexture = GFX.Game["objects/madelineparty/scoreboardarrow"];
             shopTexture = GFX.Game["decals/madelineparty/shopspace"];
@@ -110,14 +118,13 @@ namespace MadelineParty {
                 strawberrySprite = GFX.SpriteBank.Create("strawberry");
                 Add(strawberrySprite);
                 strawberrySprite.Rate = 1f;
-                strawberrySprite.Position += new Vector2(0x08, 0x10);
+                strawberrySprite.Position += new Vector2(0x08, 0x0F);
                 strawberrySprite.Play("idle");
 
-                heartSprite = GFX.SpriteBank.Create("heartgem0");
+                heartSprite = GFX.SpriteBank.Create("madelineparty_miniheart");
                 Add(heartSprite);
                 heartSprite.Play("spin");
-                heartSprite.Position += new Vector2(0x1D, 0x10);
-                heartSprite.Scale = new Vector2(.75f, .75f);
+                heartSprite.Position += new Vector2(0x1D, 0x0F);
             }
         }
 

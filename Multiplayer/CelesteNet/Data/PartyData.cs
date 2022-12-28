@@ -1,7 +1,6 @@
 ﻿using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.DataTypes;
 using MadelineParty.Multiplayer.General;
-using System.Collections.Generic;
 
 namespace MadelineParty.Multiplayer.CelesteNet.Data {
     public class PartyData : DataType<PartyData>, MultiplayerData {
@@ -33,16 +32,19 @@ namespace MadelineParty.Multiplayer.CelesteNet.Data {
         }
 
         protected override void Read(CelesteNetBinaryReader reader) {
-            data = new();
-            data.lookingForParty = reader.ReadByte();
-            data.version = reader.ReadNetString();
-            data.playerSelectTrigger = reader.ReadInt32();
-            data.respondingTo = reader.ReadInt32();
-            data.partyHost = reader.ReadBoolean();
+            data = new() {
+                lookingForParty = reader.ReadByte(),
+                desiredMode = reader.ReadNetString(),
+                version = reader.ReadNetString(),
+                playerSelectTrigger = reader.ReadInt32(),
+                respondingTo = reader.ReadInt32(),
+                partyHost = reader.ReadBoolean()
+            };
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
             writer.Write(data.lookingForParty);
+            writer.WriteNetString(data.desiredMode);
             writer.WriteNetString(data.version);
             writer.Write(data.playerSelectTrigger);
             writer.Write(data.respondingTo);

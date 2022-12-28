@@ -20,7 +20,7 @@ namespace MadelineParty {
             ModeManager.Instance.Mode = mode;
             GameData.Instance.playerNumber = Scene.Tracker.GetEntity<PlayerNumberSelect>()?.Value ?? 1;
             if (GameData.Instance.playerNumber != 1) {
-                MultiplayerSingleton.Instance.Send(new Party { respondingTo = -1, lookingForParty = (byte)GameData.Instance.playerNumber });
+                MultiplayerSingleton.Instance.Send(new Party { respondingTo = -1, desiredMode = mode, lookingForParty = (byte)GameData.Instance.playerNumber });
             }
 
             Level level = SceneAs<Level>();

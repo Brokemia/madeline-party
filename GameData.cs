@@ -9,6 +9,7 @@ using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
+using static MadelineParty.BoardController;
 
 namespace MadelineParty
 {
@@ -33,7 +34,31 @@ namespace MadelineParty
                         if(player != Instance.realPlayerID) {
                             return;
                         }
-                        BoardController.Instance.RollDice(player, true);
+                        BoardController.Instance.RollDice(player, 2);
+                    }
+                }
+            },
+            {
+                "Triple Dice",
+                new() {
+                    Name = "Triple Dice",
+                    Price = 6,
+                    Action = (player) => {
+                        // Triple dice are special
+                        if(player != Instance.realPlayerID) {
+                            return;
+                        }
+                        BoardController.Instance.RollDice(player, 3);
+                    }
+                }
+            },
+            {
+                "eciD esreveR",
+                new() {
+                    Name = "eciD esreveR",
+                    Price = 5,
+                    Action = (player) => {
+                        BoardController.Instance.Add(new Coroutine(BoardController.Instance.DieRollAnimation(player, new[] { 0, -5, 0 }, ReverseDieRolled)));
                     }
                 }
             },
@@ -93,6 +118,20 @@ namespace MadelineParty
             },
         };
 
+        private static void ReverseDieRolled(int playerID, int roll) {
+            var board = BoardController.Instance;
+            board.SetLeftButtonStatus(playerID, LeftButton.Modes.Inactive);
+            board.SetRightButtonStatus(playerID, RightButton.Modes.Inactive);
+            board.Add(new Coroutine(board.RemoveDieRollsAnimation()));
+            // Get the past roll + 1 spaces
+            board.playerMovePath = Instance.players[playerID].pastBoardSpaceIDs.Take(-roll + 1).Reverse().Select(id => board.boardSpaces.Find(s => s.ID == id)).ToList();
+            board.movingPlayerID = playerID;
+            board.playerMoveDistance = board.playerMovePath.Count - 1;
+            board.playerMoveProgress = 0;
+
+            board.status = BoardStatus.PLAYERMOVE;
+        }
+
         private static IEnumerator FlipFlopCoroutine(PersistentMiniTextbox textbox, PlayerData p1, PlayerData p2, bool oneOption) {
             yield return oneOption ? 4f : 7f;
             yield return DynamicData.For(textbox).Invoke("Close");
@@ -109,6 +148,8 @@ namespace MadelineParty
             var tempSpace = p1.token.currentSpace;
             p1.token.currentSpace = p2.token.currentSpace;
             p2.token.currentSpace = tempSpace;
+            p1.pastBoardSpaceIDs.Clear();
+            p2.pastBoardSpaceIDs.Clear();
             yield return 1f;
 
             var appearTween = Tween.Create(Tween.TweenMode.Oneshot, Ease.ElasticOut, 1.5f, true);
@@ -129,7 +170,8 @@ namespace MadelineParty
             public Action<int> Action { get; set; }
         }
 
-        public const int maxItems = 3;
+        public const int START_BERRIES = 10;
+        public const int MAX_ITEMS = 3;
         public int turn = 1;
         public int maxTurns = 10;
         public int playerNumber = -1;
@@ -152,12 +194,12 @@ namespace MadelineParty
         public int heartSpaceID = -1;
         public List<int> heartBlocks = new();
         public PlayerSelectTrigger currentPlayerSelection;
-        public int heartCost = 5;
+        public int heartCost = 15;
         public string minigame;
         public string board;
         public bool gameStarted;
-        private List<string> earlyShop = new() { "Double Dice", "Minigame Skip" };
-        private List<string> lateShop = new() { "Double Dice", "Minigame Skip", "Flip Flop", "Heart Block" };
+        private static List<string> earlyShop = new() { "Double Dice", "Minigame Skip", "Flip Flop", "eciD esreveR" };
+        private static List<string> lateShop = new() { "Double Dice", "Triple Dice", "Minigame Skip", "Heart Block" };
         public List<string> shopContents
         {
             get
