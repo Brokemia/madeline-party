@@ -13,14 +13,17 @@ namespace MadelineParty
         // What the player rolls at the beginning of the game
         // Determines Turn Order
         public int StartingRoll;
-        public List<GameData.Item> items = new() { };
+        public List<GameData.Item> Items = new() { };
         public List<int> pastBoardSpaceIDs = new();
 
-        public int strawberries {
+        public int Strawberries {
             get;
             private set;
         }
-        public int hearts;
+        public int Hearts {
+            get;
+            private set;
+        }
 
         public PlayerData(int token)
         {
@@ -35,10 +38,37 @@ namespace MadelineParty
         // Adds or subtracts the specified number of strawberries from the total
         public void ChangeStrawberries(int strawberries)
         {
-            this.strawberries += strawberries;
-            if (this.strawberries < 0)
-            {
-                this.strawberries = 0;
+            var change = Math.Max(-Strawberries, strawberries);
+            if(change > 0 && TokenSelected == GameData.Instance.realPlayerID) {
+                MadelinePartyModule.SaveData.BerriesCollected += change;
+                
+                if(MadelinePartyModule.SaveData.BerriesCollected >= 500) {
+                    AchievementHelperImports.TriggerAchievement?.Invoke("MadelineParty", "Collect_Strawberries_500");
+                    if (MadelinePartyModule.SaveData.BerriesCollected >= 1000) {
+                        AchievementHelperImports.TriggerAchievement?.Invoke("MadelineParty", "Collect_Strawberries_1000");
+                        if (MadelinePartyModule.SaveData.BerriesCollected >= 5000) {
+                            AchievementHelperImports.TriggerAchievement?.Invoke("MadelineParty", "Collect_Strawberries_5000");
+                        }
+                    }
+                }
+            }
+            Strawberries += change;
+            if(Strawberries == 202 && TokenSelected == GameData.Instance.realPlayerID) {
+                AchievementHelperImports.TriggerAchievement?.Invoke("MadelineParty", "Game_Strawberries_202");
+            }
+        }
+
+        public void AddHeart() {
+            
+            MadelinePartyModule.SaveData.HeartsCollected++;
+            Hearts++;
+            
+            AchievementHelperImports.TriggerAchievement?.Invoke("MadelineParty", "Collect_Hearts_1");
+            if (MadelinePartyModule.SaveData.HeartsCollected >= 24) {
+                AchievementHelperImports.TriggerAchievement?.Invoke("MadelineParty", "Collect_Hearts_24");
+                if (MadelinePartyModule.SaveData.HeartsCollected >= 88) {
+                    AchievementHelperImports.TriggerAchievement?.Invoke("MadelineParty", "Collect_Hearts_88");
+                }
             }
         }
 

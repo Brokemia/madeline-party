@@ -7,7 +7,7 @@ namespace MadelineParty.Tools {
     class DebugCommands {
         [Command("rig_minigame", "set the next minigame that will be chosen (if you are the host)")]
         private static void CmdRigMinigame(int id = 1) {
-            if (GameData.Instance.gnetHost) {
+            if (GameData.Instance.celesteNetHost) {
                 BoardController.riggedMinigame = (Engine.Scene as Level).Session.MapData.Levels.Find((obj) => obj.Name.StartsWith(string.Format("z_Minigame{0, 0:D2}-", id)));
                 Engine.Commands.Log("Playing minigame " + BoardController.riggedMinigame.Name + " next");
             } else {
@@ -35,12 +35,14 @@ namespace MadelineParty.Tools {
 
         [Command("set_berries", "set the strawberries of a player in madeline party")]
         private static void SetBerries(int playerID, int amount) {
-        GameData.Instance.players[playerID].ChangeStrawberries(amount - GameData.Instance.players[playerID].strawberries);
+        GameData.Instance.players[playerID].ChangeStrawberries(amount - GameData.Instance.players[playerID].Strawberries);
         }
 
         [Command("set_hearts", "set the hearts of a player in madeline party")]
         private static void SetHearts(int playerID, int amount) {
-            GameData.Instance.players[playerID].hearts = amount;
+            while (GameData.Instance.players[playerID].Hearts < amount) {
+                GameData.Instance.players[playerID].AddHeart();
+            }
         }
 
         [Command("set_turn", "set the current turn in madeline party")]

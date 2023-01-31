@@ -12,6 +12,7 @@ using MadelineParty.Multiplayer.General;
 using MadelineParty.SubHud;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Utils;
 using Logger = Celeste.Mod.Logger;
@@ -22,6 +23,7 @@ namespace MadelineParty {
             WAITING,
             GAMESTART,
             PLAYERMOVE,
+            ADJUST_POSITION
         }
 
         public enum Direction {
@@ -99,6 +101,7 @@ namespace MadelineParty {
         public static readonly Color pathOutlineColor = Color.DarkGray; // Use Black in dark mode
 
         public const float TOKEN_SPEED = 80f;
+        public const float TOKEN_SPACING = 18f;
         public static string[] TokenPaths = { "madeline/normal00", "badeline/normal00", "theo/excited00", "granny/normal00" };
 
         public List<BoardSpace> playerMovePath = null;
@@ -107,6 +110,8 @@ namespace MadelineParty {
         public int playerMoveDistance = 0;
         public int playerMoveProgress = 0;
         public int movingPlayerID = 0;
+
+        private Dictionary<int, Vector2> adjustedSpacePositions = new();
 
         // The index of the item in the shop being viewed
         private int shopItemViewing = 0;
@@ -417,7 +422,8 @@ namespace MadelineParty {
             for (int k = 0; k < GameData.Instance.players.Length; k++) {
                 if (GameData.Instance.players[k] != null) {
                     if (!GameData.Instance.gameStarted) {
-                        PlayerToken token = new(k, TokenPaths[GameData.Instance.players[k].TokenSelected], space.screenPosition + new Vector2(0, tokensAdded * 18), new Vector2(.25f, .25f), -1, space);
+                        // TODO Convert token offset to use same method as calculateAdjustedSpacePosition()
+                        PlayerToken token = new(k, TokenPaths[GameData.Instance.players[k].TokenSelected], space.screenPosition + new Vector2(0, tokensAdded * TOKEN_SPACING), new Vector2(.25f, .25f), -1, space);
                         playerTokens[k] = token;
                         GameData.Instance.players[k].token = token;
                         GameData.Instance.players[k].pastBoardSpaceIDs.Clear();
@@ -479,7 +485,7 @@ namespace MadelineParty {
         }
 
         public void SetUseItem(int player) {
-            if(GameData.Instance.players[player].items.Count(item => item.CanUseInTurn) == 1) {
+            if(GameData.Instance.players[player].Items.Count(item => item.CanUseInTurn) == 1) {
                 SetRightButtonStatus(player, RightButton.Modes.SingleItem);
             } else {
                 SetRightButtonStatus(player, RightButton.Modes.UseItem);
@@ -488,7 +494,7 @@ namespace MadelineParty {
 
         private void ChangeTurn(int player) {
             SetDice(player);
-            if(GameData.Instance.players[player].items.Count(item => item.CanUseInTurn) > 0) {
+            if(GameData.Instance.players[player].Items.Count(item => item.CanUseInTurn) > 0) {
                 SetUseItem(player);
             }
             if(level.Wipe != null) {
@@ -522,8 +528,24 @@ namespace MadelineParty {
             return new Vector2((X - level.LevelOffset.X + boardCoords.X * 10) * 6 + offsetInPxls.X, (Y - level.LevelOffset.Y + boardCoords.Y * 10) * 6 + offsetInPxls.Y);
         }
 
-        private Vector2 SwapXY(Vector2 v) {
-            return new Vector2(v.Y, v.X);
+        // Calculate where the player should end up to avoid overlapping with other players too much
+        // Players on the same space should roughly splay out in a line perpendicular to the next space to move
+        // If there are two spaces the player could go to, the destination should be considered as the average of the two spaces
+        private void calculateAdjustedSpacePositions(BoardSpace space) {
+            adjustedSpacePositions.Clear();
+            var avg = Vector2.Zero;
+            var destinations = space.GetDestinations(boardSpaces);
+            foreach (var dst in destinations) {
+                avg += (space.screenPosition - dst.screenPosition).SafeNormalize();
+            }
+            avg.Normalize();
+
+            var playersHere = playerTokens.Where(t => t != null && t.currentSpace.Equals(space)).ToList();
+
+            for(int i = 0; i < playersHere.Count; i++) {
+                playersHere[i].Depth = -i;
+                adjustedSpacePositions[playersHere[i].id] = space.screenPosition + avg.Perpendicular() * TOKEN_SPACING * (i - playersHere.Count / 2f);
+            }
         }
 
         public override void Update() {
@@ -536,8 +558,8 @@ namespace MadelineParty {
                         playerMoveDistance = 0;
                         playerMovePath = null;
                         playerMoveProgress = 0;
-                        status = BoardStatus.WAITING;
-                        HandleSpaceAction(EndTurn);
+                        status = BoardStatus.ADJUST_POSITION;
+                        calculateAdjustedSpacePositions(CurrentPlayerToken.currentSpace);
                         break;
                     }
                     // If we've reached the end of the path but not the end of our movement
@@ -579,7 +601,7 @@ namespace MadelineParty {
 
                         // If we're on the heart space
                         if (GameData.Instance.heartSpaceID == CurrentPlayerToken.currentSpace.ID) {
-                            bool canAfford = GameData.Instance.players[movingPlayerID].strawberries >= GameData.Instance.heartCost;
+                            bool canAfford = GameData.Instance.players[movingPlayerID].Strawberries >= GameData.Instance.heartCost;
                             status = BoardStatus.WAITING;
                             if (canAfford) {
                                 SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmHeartBuy);
@@ -590,7 +612,7 @@ namespace MadelineParty {
                             level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID(canAfford ? "MadelineParty_Buy_Heart_Prompt_List" : "MadelineParty_Heart_TooPoor_List"), pauseUpdate: true, time: 3));
                         }
                         // If we're at the item shop and have enough free space
-                        else if (CurrentPlayerToken.currentSpace.type == BoardSpaceType.Shop && GameData.Instance.players[movingPlayerID].items.Count < GameData.MAX_ITEMS) {
+                        else if (CurrentPlayerToken.currentSpace.type == BoardSpaceType.Shop && GameData.Instance.players[movingPlayerID].Items.Count < GameData.MAX_ITEMS) {
                             status = BoardStatus.WAITING;
                             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmShopEnter);
                             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelShopEnter);
@@ -619,15 +641,37 @@ namespace MadelineParty {
                     }
                     CurrentPlayerToken.Position = Calc.Approach(CurrentPlayerToken.Position, approaching.screenPosition, TOKEN_SPEED * Engine.DeltaTime);
                     break;
+                case BoardStatus.ADJUST_POSITION:
+                    var stillMoving = false;
+                    foreach(var kvp in adjustedSpacePositions) {
+                        if ((playerTokens[kvp.Key].Position - kvp.Value).LengthSquared() >= 0.1f) {
+                            stillMoving = true;
+                        }
+                        playerTokens[kvp.Key].Position = Calc.Approach(playerTokens[kvp.Key].Position, kvp.Value, TOKEN_SPEED * Engine.DeltaTime);
+                    }
+                    if(!stillMoving) {
+                        status = BoardStatus.WAITING;
+                        HandleSpaceAction(EndTurn);
+                    }
+                    
+                    break;
             }
         }
 
         private void HandleSpaceAction(Action next) {
+            var space = CurrentPlayerToken.currentSpace;
             // Don't do an action if we're on the heart space
-            if(GameData.Instance.heartSpaceID == CurrentPlayerToken.currentSpace.ID) {
+            if (GameData.Instance.heartSpaceID == space.ID) {
                 next();
+                return;
             }
-            switch (CurrentPlayerToken.currentSpace.type) {
+            
+            if(!MadelinePartyModule.SaveData.SpacesHit.ContainsKey(space.type)) {
+                MadelinePartyModule.SaveData.SpacesHit[space.type] = 0;
+            }
+            MadelinePartyModule.SaveData.SpacesHit[space.type]++;
+            
+            switch (space.type) {
                 case BoardSpaceType.Blue:
                     ChangeStrawberries(movingPlayerID, 3);
                     next();
@@ -637,7 +681,7 @@ namespace MadelineParty {
                     next();
                     break;
                 case BoardSpaceType.Event:
-                    DoGreenSpace(CurrentPlayerToken.currentSpace, next);
+                    DoGreenSpace(space, next);
                     break;
                 default:
                     next();
@@ -667,7 +711,7 @@ namespace MadelineParty {
             if (shopItemViewing < GameData.Instance.shopContents.Count) {
                 var nextItem = GameData.items[GameData.Instance.shopContents[shopItemViewing]];
                 scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, nextItem);
-                if (GameData.Instance.players[turnOrder[playerTurn]].strawberries >= nextItem.Price) {
+                if (GameData.Instance.players[turnOrder[playerTurn]].Strawberries >= nextItem.Price) {
                     SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmItemBuy);
                 } else {
                     SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
@@ -681,12 +725,16 @@ namespace MadelineParty {
         }
 
         public void BuyItem() {
+            var itemBought = GameData.items[GameData.Instance.shopContents[shopItemViewing]];
             // Only send out data if we are the player that bought the item
             if (turnOrder[playerTurn] == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "SHOPITEM", choice = 0 });
+                if(!MadelinePartyModule.SaveData.ItemsBought.ContainsKey(itemBought.Name)) {
+                    MadelinePartyModule.SaveData.ItemsBought[itemBought.Name] = 0;
+                }
+                MadelinePartyModule.SaveData.ItemsBought[itemBought.Name]++;
             }
-            var itemBought = GameData.items[GameData.Instance.shopContents[shopItemViewing]];
-            GameData.Instance.players[turnOrder[playerTurn]].items.Add(itemBought);
+            GameData.Instance.players[turnOrder[playerTurn]].Items.Add(itemBought);
             shopItemViewing = 0;
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
             SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
@@ -716,7 +764,7 @@ namespace MadelineParty {
             var firstItem = GameData.items[GameData.Instance.shopContents[shopItemViewing]];
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.BUYITEM, firstItem);
             SetRightButtonStatus(CurrentPlayerToken, RightButton.Modes.CancelItemBuy);
-            if (GameData.Instance.players[turnOrder[playerTurn]].strawberries >= firstItem.Price) {
+            if (GameData.Instance.players[turnOrder[playerTurn]].Strawberries >= firstItem.Price) {
                 SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.ConfirmItemBuy);
             } else {
                 SetLeftButtonStatus(CurrentPlayerToken, LeftButton.Modes.Inactive);
@@ -740,7 +788,7 @@ namespace MadelineParty {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "HEART", choice = 0 });
             }
             ChangeStrawberries(turnOrder[playerTurn], -GameData.Instance.heartCost, 0.08f);
-            GameData.Instance.players[turnOrder[playerTurn]].hearts++;
+            GameData.Instance.players[turnOrder[playerTurn]].AddHeart();
             scoreboards[turnOrder[playerTurn]].SetCurrentMode(GameScoreboard.Modes.NORMAL);
             rightButtons[turnOrder[playerTurn]].SetCurrentMode(RightButton.Modes.Inactive);
 
@@ -830,6 +878,7 @@ namespace MadelineParty {
             status = BoardStatus.WAITING;
             playerTurn++;
             if (playerTurn >= GameData.Instance.playerNumber) {
+                MadelinePartyModule.SaveData.TurnsPlayed++;
                 playerTurn = 0;
                 turnDisplay = GameData.Instance.turn;
                 GameData.Instance.turn++;
@@ -847,7 +896,7 @@ namespace MadelineParty {
             yield return 1f;
             level.Add(new PersistentMiniTextbox(GameData.Instance.GetRandomDialogID("MadelineParty_Minigame_Time_List"), pauseUpdate: true));
             hackfixRespawn = false; //FIXME hackfix
-            if (GameData.Instance.gnetHost) {
+            if (GameData.Instance.celesteNetHost) {
                 List<LevelData> minigames = GameData.Instance.GetAllUnplayedMinigames(level);
                 string chosenMinigame = minigames[rand.Next(minigames.Count)].Name;
                 if (riggedMinigame != null && minigames.IndexOf(riggedMinigame) >= 0) {
@@ -859,7 +908,7 @@ namespace MadelineParty {
                 ChoseMinigame(chosenMinigame);
                 MultiplayerSingleton.Instance.Send(new MinigameStart { choice = chosenMinigame, gameStart = minigameStartTime.ToFileTimeUtc() });
             }
-            Console.WriteLine("Host? " + GameData.Instance.gnetHost);
+            Console.WriteLine("Host? " + GameData.Instance.celesteNetHost);
 
             Console.WriteLine("Begin minigame wait");
             while (GameData.Instance.minigame == null /*|| minigameStartTime.CompareTo(DateTime.UtcNow) < 0*/) {
@@ -889,19 +938,19 @@ namespace MadelineParty {
 
         public void UseItem(int player, int itemIdx = 0) {
             // Skip over items that can't be used
-            while (itemIdx < GameData.Instance.players[player].items.Count && !GameData.Instance.players[player].items[itemIdx].CanUseInTurn) {
+            while (itemIdx < GameData.Instance.players[player].Items.Count && !GameData.Instance.players[player].Items[itemIdx].CanUseInTurn) {
                 itemIdx++;
             }
             if (player == GameData.Instance.realPlayerID) {
                 MultiplayerSingleton.Instance.Send(new UseItemMenu { player = player, index = itemIdx });
             }
-            if (itemIdx == GameData.Instance.players[player].items.Count) {
+            if (itemIdx == GameData.Instance.players[player].Items.Count) {
                 SetDice(player);
                 SetUseItem(player);
                 scoreboards[player].SetCurrentMode(GameScoreboard.Modes.NORMAL);
                 return;
             }
-            scoreboards[player].SetCurrentMode(GameScoreboard.Modes.USEITEM, GameData.Instance.players[player].items[itemIdx]);
+            scoreboards[player].SetCurrentMode(GameScoreboard.Modes.USEITEM, GameData.Instance.players[player].Items[itemIdx]);
             rightButtons[player].SetCurrentMode(RightButton.Modes.Cancel);
             leftButtons[player].SetCurrentMode(LeftButton.Modes.Confirm);
             rightButtons[player].OnPressButton += mode => {
@@ -911,8 +960,8 @@ namespace MadelineParty {
             leftButtons[player].OnPressButton += mode => {
                 MultiplayerSingleton.Instance.Send(new UseItem { player = player, itemIdx = itemIdx });
                 rightButtons[player].SetCurrentMode(RightButton.Modes.Inactive);
-                GameData.Instance.players[player].items[itemIdx].Action?.Invoke(player);
-                GameData.Instance.players[player].items.RemoveAt(itemIdx);
+                GameData.Instance.players[player].Items[itemIdx].UseItem(player);
+                GameData.Instance.players[player].Items.RemoveAt(itemIdx);
             };
         }
 
@@ -1228,8 +1277,8 @@ namespace MadelineParty {
             if (GameData.Instance.celestenetIDs.Contains(use.ID) && use.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
                 Instance.leftButtons[use.player].SetCurrentMode(LeftButton.Modes.Inactive);
                 Instance.rightButtons[use.player].SetCurrentMode(RightButton.Modes.Inactive);
-                GameData.Instance.players[use.player].items[use.itemIdx].Action?.Invoke(use.player);
-                GameData.Instance.players[use.player].items.RemoveAt(use.itemIdx);
+                GameData.Instance.players[use.player].Items[use.itemIdx].UseItem(use.player);
+                GameData.Instance.players[use.player].Items.RemoveAt(use.itemIdx);
             }
         }
     }

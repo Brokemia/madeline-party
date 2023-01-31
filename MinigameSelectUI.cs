@@ -51,7 +51,7 @@ namespace MadelineParty {
             Depth = -10000;
             statusText = Dialog.Clean("MadelineParty_Minigame_Select_Choosing");
             skipPrompt = Dialog.Clean("MadelineParty_Minigame_Select_Skip_Prompt");
-            skipItemIdx = GameData.Instance.players[GameData.Instance.realPlayerID].items.IndexOf(GameData.items["Minigame Skip"]);
+            skipItemIdx = GameData.Instance.players[GameData.Instance.realPlayerID].Items.IndexOf(GameData.items["Minigame Skip"]);
         }
 
         public override void Added(Scene scene) {
@@ -106,10 +106,10 @@ namespace MadelineParty {
                 }
             }
             if(skipItemIdx >= 0 && settled && Input.MenuCancel.Pressed) {
-                var action = GameData.Instance.players[GameData.Instance.realPlayerID].items[skipItemIdx].Action;
-                GameData.Instance.players[GameData.Instance.realPlayerID].items.RemoveAt(skipItemIdx);
-                skipItemIdx = GameData.Instance.players[GameData.Instance.realPlayerID].items.IndexOf(GameData.items["Minigame Skip"]);
-                action?.Invoke(GameData.Instance.realPlayerID);
+                var item = GameData.Instance.players[GameData.Instance.realPlayerID].Items[skipItemIdx];
+                GameData.Instance.players[GameData.Instance.realPlayerID].Items.RemoveAt(skipItemIdx);
+                skipItemIdx = GameData.Instance.players[GameData.Instance.realPlayerID].Items.IndexOf(GameData.items["Minigame Skip"]);
+                item.UseItem(GameData.Instance.realPlayerID);
             }
             countdownTimer -= Engine.DeltaTime;
             switchDelay -= Engine.DeltaTime;

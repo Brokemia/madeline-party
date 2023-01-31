@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using Monocle;
 using System.Runtime.CompilerServices;
 using MadelineParty.SubHud;
+using MonoMod.ModInterop;
 
 // TODO minigames for most bounces of oshiro, seekers, snowballs, etc...
 // TODO survive the longest minigames
@@ -27,15 +28,17 @@ namespace MadelineParty {
             Instance = this;
         }
 
-        // If you don't need to store any settings, => null
         public override Type SettingsType => null;
 
-        // If you don't need to store any save data, => null
-        public override Type SaveDataType => null;
+        public override Type SaveDataType => typeof(MadelinePartySaveData);
+
+        public static MadelinePartySaveData SaveData => (MadelinePartySaveData)Instance._SaveData;
 
         // Set up any hooks, event handlers and your mod in general here.
         // Load runs before Celeste itself has initialized properly.
         public override void Load() {
+            typeof(AchievementHelperImports).ModInterop();
+
             // Stuff that runs orig(self) always
             /* ************************************************ */
             Everest.Events.Level.OnLoadEntity += Level_OnLoadEntity;
@@ -73,6 +76,7 @@ namespace MadelineParty {
             TiebreakerController.Load();
             TextMenuPlus.Load();
             SubHudLevelForwarder.Load();
+            BoardSelect.Load();
 
             MultiplayerSingleton.Instance.RegisterHandler<Party>(HandleParty);
             MultiplayerSingleton.Instance.RegisterHandler<MinigameEnd>(HandleMinigameEnd);
@@ -81,7 +85,7 @@ namespace MadelineParty {
         }
 
         public static bool IsSIDMadelineParty(string sid) {
-            return sid.StartsWith("Brokemia/MadelineParty/madelineparty");
+            return sid.Equals("Brokemia/MadelineParty/madelineparty");
         }
 
         private float disconnectLeniency = 2f;
@@ -195,6 +199,7 @@ namespace MadelineParty {
         public override void LoadContent() {
             MultiplayerSingleton.Instance.LoadContent();
             BoardController.LoadContent();
+            BoardSelect.LoadContent();
         }
 
         // Unload the entirety of your mod's content, remove any event listeners and undo all hooks.
@@ -205,6 +210,7 @@ namespace MadelineParty {
             MinigameTron.Unload();
             TextMenuPlus.Unload();
             SubHudLevelForwarder.Unload();
+            BoardSelect.Unload();
         }
 
         private void HandleParty(MPData data) {
@@ -226,7 +232,7 @@ namespace MadelineParty {
                         respondingTo = (int)party.ID,
                         desiredMode = ModeManager.Instance.Mode,
                         lookingForParty = (byte)GameData.Instance.playerNumber,
-                        partyHost = GameData.Instance.gnetHost
+                        partyHost = GameData.Instance.celesteNetHost
                     });
 
                     GameData.Instance.celestenetIDs.Add(party.ID);
@@ -243,7 +249,7 @@ namespace MadelineParty {
                         });
                     }
                 } else if (party.respondingTo == MultiplayerSingleton.Instance.CurrentPlayerID()) {
-                    GameData.Instance.gnetHost = false;
+                    GameData.Instance.celesteNetHost = false;
                     GameData.Instance.celestenetIDs.Add(party.ID);
 
                     Logger.Log("MadelineParty", joinMsg);

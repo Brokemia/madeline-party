@@ -60,7 +60,7 @@ namespace MadelineParty {
             }
             MultiplayerSingleton.Instance.Send(new MinigameStatus { results = switchCount });
             MultiplayerSingleton.Instance.Send(new MinigameVector2 { vec = pos, extra = -1 });
-            if (GameData.Instance.gnetHost && switchesOn.Count == 0) {
+            if (GameData.Instance.celesteNetHost && switchesOn.Count == 0) {
                 NewSwitcheDistribution(ts);
             }
         }
@@ -110,7 +110,7 @@ namespace MadelineParty {
             startTime = level.RawTimeActive;
             level.Add(new MinigameScoreDisplay(this));
             level.Add(new MinigameTimeDisplay(this, true));
-            if (GameData.Instance.gnetHost) {
+            if (GameData.Instance.celesteNetHost) {
                 ActivateSwitch(switches[rand.Next(switches.Count)]);
             }
         }
@@ -154,7 +154,7 @@ namespace MadelineParty {
                             float num = Calc.Random.NextFloat((float)Math.PI * 2f);
                             level.Particles.Emit(TouchSwitch.P_FireWhite, ts.Position + Calc.AngleToVector(num, 6f), num);
                         }
-                        if (GameData.Instance.gnetHost && switchesOn.Count == 0) {
+                        if (GameData.Instance.celesteNetHost && switchesOn.Count == 0) {
                             NewSwitcheDistribution(ts);
                         }
                     } else {

@@ -14,10 +14,15 @@ namespace MadelineParty {
         public string Mode { get; set; } = BOARD_MODE;
 
         public void AfterPlayerSelect(Level level) {
+            if (!MadelinePartyModule.SaveData.CharacterChoices.ContainsKey(GameData.Instance.realPlayerID)) {
+                MadelinePartyModule.SaveData.CharacterChoices[GameData.Instance.realPlayerID] = 0;
+            }
+            MadelinePartyModule.SaveData.CharacterChoices[GameData.Instance.realPlayerID]++;
+
             level.OnEndOfFrame += delegate {
                 GameData.Instance.currentPlayerSelection = null;
                 level.Teleport(Mode.Equals(MINIGAME_MODE) ? "Game_MinigameHub" : "Game_SettingsConfig",
-                    () => level.GetSpawnPoint(new Vector2(level.Bounds.Left, GameData.Instance.gnetHost ? level.Bounds.Top : level.Bounds.Bottom)));
+                    () => level.GetSpawnPoint(new Vector2(level.Bounds.Left, GameData.Instance.celesteNetHost ? level.Bounds.Top : level.Bounds.Bottom)));
             };
         }
 
@@ -28,7 +33,7 @@ namespace MadelineParty {
                 level.Teleport(Mode.Equals(MINIGAME_MODE) ? "Game_MinigameHub" : GameData.Instance.board,
                     () => {
                         if(Mode.Equals(MINIGAME_MODE)) {
-                            return level.GetSpawnPoint(new Vector2(level.Bounds.Left, GameData.Instance.gnetHost ? level.Bounds.Top : level.Bounds.Bottom));
+                            return level.GetSpawnPoint(new Vector2(level.Bounds.Left, GameData.Instance.celesteNetHost ? level.Bounds.Top : level.Bounds.Bottom));
                         }
                         return GameData.Instance.realPlayerID switch {
                             0 => level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top)),
@@ -49,10 +54,11 @@ namespace MadelineParty {
         }
 
         public void AfterMinigameChosen() {
-            Level level = Engine.Scene as Level;
-            if (Mode.Equals(MINIGAME_MODE) && level != null) {
+            if (Mode.Equals(MINIGAME_MODE) && Engine.Scene is Level level) {
+                GameData.Instance.minigameStatus.Clear();
+                level.Remove(level.Entities.FindAll<MinigameDisplay>());
                 level.OnEndOfFrame += delegate {
-                    level.Teleport(GameData.Instance.minigame, () => level.Session.LevelData.Spawns[level.Session.LevelData.Spawns.Count > 1 ? GameData.Instance.realPlayerID : 0]);
+                    level.Teleport(GameData.Instance.minigame, () => level.Session.LevelData.Spawns[level.Session.LevelData.Spawns.Count >= 4 ? GameData.Instance.realPlayerID : 0]);
                     level.Session.Audio.Music.Event = GameData.GetMinigameMusic(GameData.Instance.minigame);
                 };
             }

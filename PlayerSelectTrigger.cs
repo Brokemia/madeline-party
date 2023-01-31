@@ -55,7 +55,7 @@ namespace MadelineParty {
             }
             // Host determines the random seeds for the game
             // Seeds are determined in advance to avoid duplicate rolls when it matters
-            if (GameData.Instance.gnetHost) {
+            if (GameData.Instance.celesteNetHost) {
                 MultiplayerSingleton.Instance.Send(new RandomSeed { turnOrderSeed = GameData.Instance.turnOrderSeed, tieBreakerSeed = GameData.Instance.tieBreakerSeed });
             }
         }
@@ -95,7 +95,7 @@ namespace MadelineParty {
             otherChoices.Sort();
             for (int i = 0; i < otherChoices.Count; i++) {
                 if (otherChoices[i] == this) {
-                    PlayerToken token = new PlayerToken(i, BoardController.TokenPaths[i], ScreenCoordsFromGameCoords(Position, new Vector2(Width, Height) * 3), new Vector2(.25f, .25f), -900000000, new BoardController.BoardSpace());
+                    PlayerToken token = new PlayerToken(i, BoardController.TokenPaths[i], ScreenCoordsFromGameCoords(Position, new Vector2(Width, Height) * 3), new(.25f), -900000000, new BoardController.BoardSpace());
                     level.Add(token);
                     playerID = i;
                 }

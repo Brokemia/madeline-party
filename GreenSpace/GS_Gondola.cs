@@ -37,7 +37,7 @@ namespace MadelineParty.GreenSpace {
             lastBoard = board;
             lastSpace = space;
             lastAfter = after;
-            if (GameData.Instance.players[board.CurrentPlayerToken.id].strawberries >= GONDOLA_COST && (GameData.Instance.heartBlocks.Count <= 0 || GameData.Instance.heartSpaceID != getDestination(space, board.boardSpaces).ID)) {
+            if (GameData.Instance.players[board.CurrentPlayerToken.id].Strawberries >= GONDOLA_COST && (GameData.Instance.heartBlocks.Count <= 0 || GameData.Instance.heartSpaceID != getDestination(space, board.boardSpaces).ID)) {
                 board.GetLeftButton(board.CurrentPlayerToken).OnPressButton += delegate {
                     MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "TAKEGONDOLA", choice = 1 });
                     GondolaChoiceMade(true, board, space, after);

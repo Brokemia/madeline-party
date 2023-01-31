@@ -106,12 +106,16 @@ namespace MadelineParty.SubHud {
 
         private static void Scene_AfterUpdate(On.Monocle.Scene.orig_AfterUpdate orig, Scene self) {
             orig(self);
-            self.Tracker.GetEntities<SubHudLevelForwarder>().ForEach(e => (e as SubHudLevelForwarder).AfterUpdate());
+            if (self is Level) {
+                self.Tracker.GetEntities<SubHudLevelForwarder>().ForEach(e => (e as SubHudLevelForwarder).AfterUpdate());
+            }
         }
 
         private static void Scene_BeforeUpdate(On.Monocle.Scene.orig_BeforeUpdate orig, Scene self) {
             orig(self);
-            self.Tracker.GetEntities<SubHudLevelForwarder>().ForEach(e => (e as SubHudLevelForwarder).BeforeUpdate());
+            if (self is Level) {
+                self.Tracker.GetEntities<SubHudLevelForwarder>().ForEach(e => (e as SubHudLevelForwarder).BeforeUpdate());
+            }
         }
 
         private static void Level_AfterRender(On.Celeste.Level.orig_AfterRender orig, Level self) {

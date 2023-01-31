@@ -39,25 +39,30 @@ namespace MadelineParty.Minigame {
             readyText = Dialog.Clean("MadelineParty_Minigame_Ready");
             readyCheck = GFX.Gui["madelineparty/ready_checked"];
             unreadyCheck = GFX.Gui["madelineparty/ready_unchecked"];
+            
             int i = 0;
+            // TODO could definitely be cleaned up to not have two loops
             foreach (var p in GameData.Instance.players) {
                 if (p != null) {
                     readyStatus[p.TokenSelected] = false;
-                    if (p.TokenSelected != GameData.Instance.realPlayerID) {
-                        AddToken(p.TokenSelected, i);
-                        i++;
-                    }
+                }
+            }
+            foreach (var p in GameData.Instance.players) {
+                if (p != null && p.TokenSelected != GameData.Instance.realPlayerID) {
+                    AddToken(p.TokenSelected, i);
+                    i++;
                 }
             }
         }
 
         private void AddToken(int player, int index) {
             Scene.Add(tokens[player] = new PlayerToken(player, BoardController.TokenPaths[player],
-                new(1920 / 2 /* center it */ - (readyCheck.Width * buttonScale / 2 + checkHorizPadding / 2) * (readyStatus.Count - 2) /* to left */ + (readyCheck.Width * buttonScale + checkHorizPadding) * index /* shift right */ + readyCheck.Height / 4, (1080 + height) / 2 - readyChecksPadding + readyCheck.Width / 4), 
+                new(1920 / 2 /* center it */ - (readyCheck.Width * buttonScale / 2 + checkHorizPadding / 2) * (readyStatus.Count - 2) /* to left */ + (readyCheck.Width * buttonScale + checkHorizPadding) * index /* shift right */ + readyCheck.Height / 4, (1080 + height) / 2 - readyChecksPadding + readyCheck.Width / 4),
+              //new(1920 / 2 /* center it */ - (readyCheck.Width * buttonScale / 2 + checkHorizPadding / 2) * (readyStatus.Count - 2) /* to left */ + (readyCheck.Width * buttonScale + checkHorizPadding) * i /* shift right */, (1080 + height) / 2 - readyChecksPadding),
                 new Vector2(.3f), -900000000, new()));
         }
 
-        //int added = 0;
+        int added = 0;
         public override void Update() {
             base.Update();
             // Wait until the screen wipe is done to allow readying
@@ -66,18 +71,18 @@ namespace MadelineParty.Minigame {
                 MultiplayerSingleton.Instance.Send(new MinigameReady { player = GameData.Instance.realPlayerID });
                 CheckReady();
             }
-            //if (Input.MenuCancel.Released) {
-            //    readyStatus[added] = false;
-            //    added++;
-            //    int i = 0;
-            //    foreach (var kvp in readyStatus) {
-            //        if (kvp.Key == GameData.Instance.realPlayerID) continue;
-            //        if(tokens.ContainsKey(kvp.Key))
-            //            tokens[kvp.Key].RemoveSelf();
-            //        AddToken(kvp.Key > 3 ? 0 : kvp.Key, i);
-            //        i++;
-            //    }
-            //}
+            if (Input.MenuCancel.Released) {
+                readyStatus[added] = false;
+                added++;
+                int i = 0;
+                foreach (var kvp in readyStatus) {
+                    if (kvp.Key == GameData.Instance.realPlayerID) continue;
+                    if (tokens.ContainsKey(kvp.Key))
+                        tokens[kvp.Key].RemoveSelf();
+                    AddToken(kvp.Key > 3 ? 0 : kvp.Key, i);
+                    i++;
+                }
+            }
         }
 
         private void CheckReady() {
@@ -86,6 +91,9 @@ namespace MadelineParty.Minigame {
             }
 
             RemoveSelf();
+            foreach(var token in tokens) {
+                token.Value?.RemoveSelf();
+            }
             Level level = SceneAs<Level>();
             MinigameEntity.startTime = level.RawTimeActive;
             //Player player = level.Tracker.GetEntity<Player>();

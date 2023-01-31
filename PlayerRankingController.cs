@@ -22,17 +22,16 @@ namespace MadelineParty {
 
         private void EndGame() {
             List<PlayerData> playerList = new List<PlayerData>(Array.FindAll(GameData.Instance.players, (x) => x != null));
-            // TODO Tiebreaker die roll
             playerList.Sort((x, y) => {
-                if (x.hearts == y.hearts) {
-                    return y.strawberries.CompareTo(x.strawberries);
+                if (x.Hearts == y.Hearts) {
+                    return y.Strawberries.CompareTo(x.Strawberries);
                 }
-                return y.hearts.CompareTo(x.hearts);
+                return y.Hearts.CompareTo(x.Hearts);
             });
 
             int tieCount = 1;
             for(int i = 1; i < playerList.Count; i++) {
-                if(playerList[i].hearts == playerList[0].hearts && playerList[i].strawberries == playerList[0].strawberries) {
+                if(playerList[i].Hearts == playerList[0].Hearts && playerList[i].Strawberries == playerList[0].Strawberries) {
                     tieCount++;
                 }
             }

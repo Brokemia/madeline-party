@@ -135,8 +135,6 @@ namespace MadelineParty {
 		private void SelectLevel(string levelName) {
 			MultiplayerSingleton.Instance.Send(new MinigameStart { choice = levelName, gameStart = DateTime.UtcNow.AddSeconds(3).ToFileTimeUtc() });
 			GameData.Instance.minigame = levelName;
-			GameData.Instance.minigameStatus.Clear();
-			level.Remove(level.Entities.FindAll<MinigameDisplay>());
 			ModeManager.Instance.AfterMinigameChosen();
 		}
 

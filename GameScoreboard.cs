@@ -25,15 +25,15 @@ namespace MadelineParty {
                 base.Render();
                 if (parent.currentMode != Modes.ENTERSHOP && parent.currentMode != Modes.USEITEM) {
                     if (parent == null || GameData.Instance.players[parent.PlayerID] == null) return;
-                    string strawberryText = ((parent.tempStrawberries == -1) ? GameData.Instance.players[parent.PlayerID].strawberries : parent.tempStrawberries) + "";
-                    string heartText = GameData.Instance.players[parent.PlayerID].hearts + "";
+                    string strawberryText = ((parent.tempStrawberries == -1) ? GameData.Instance.players[parent.PlayerID].Strawberries : parent.tempStrawberries) + "";
+                    string heartText = GameData.Instance.players[parent.PlayerID].Hearts + "";
                     if (parent.currentMode == Modes.BUYHEART) {
                         ActiveFont.DrawOutline("-" + GameData.Instance.heartCost, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Red, 2f, Color.Black);
                         ActiveFont.DrawOutline("+1", (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x1E, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.LimeGreen, 2f, Color.Black);
                     } else if (parent.currentMode == Modes.BUYITEM) {
                         ActiveFont.DrawOutline("-" + parent.itemBeingBought.Price, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Red, 2f, Color.Black);
                         ActiveFont.DrawOutline("+1", (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x1E, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.LimeGreen, 2f, Color.Black);
-                        heartText = GameData.Instance.players[parent.PlayerID].items.Count((i) => i == parent.itemBeingBought) + "";
+                        heartText = GameData.Instance.players[parent.PlayerID].Items.Count((i) => i == parent.itemBeingBought) + "";
                     } else if (parent.currentMode == Modes.BUYARBITRARY) {
                         ActiveFont.DrawOutline("-" + parent.arbitraryCost, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(8, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.Red, 2f, Color.Black);
                         ActiveFont.DrawOutline("+" + parent.arbitraryPurchaseAmount, (parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x1E, 34) * 6 - parent.level.ShakeVector * 6, new Vector2(0.5f, 0.5f), Vector2.One, Color.LimeGreen, 2f, Color.Black);
@@ -48,8 +48,8 @@ namespace MadelineParty {
                 SubHudRenderer.BeginRender(sampler: SamplerState.PointClamp);
 
                 // Display items
-                for (int i = 0; i < GameData.Instance.players[parent.playerID].items.Count; i++) {
-                    GFX.Game["decals/madelineparty/items/" + GameData.Instance.players[parent.playerID].items[i].Name].Draw((parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x0C + i * 0x24, 0x0C) - parent.level.ShakeVector * 6, Vector2.Zero, Color.White, new Vector2(2, 2));
+                for (int i = 0; i < GameData.Instance.players[parent.playerID].Items.Count; i++) {
+                    GFX.Game["decals/madelineparty/items/" + GameData.Instance.players[parent.playerID].Items[i].Name].Draw((parent.Position - parent.level.LevelOffset) * 6 + new Vector2(0x0C + i * 0x24, 0x0C) - parent.level.ShakeVector * 6, Vector2.Zero, Color.White, new Vector2(2, 2));
                 }
                 // Display items in the shop
                 if (parent.currentMode == Modes.ENTERSHOP) {
@@ -154,7 +154,7 @@ namespace MadelineParty {
 
         public void StrawberryChange(int changeBy, float changeSpeed) {
             strawberryChangeSpeed = changeSpeed;
-            tempStrawberries = GameData.Instance.players[playerID].strawberries;
+            tempStrawberries = GameData.Instance.players[playerID].Strawberries;
             Add(new Coroutine(StrawberryChangeRoutine(changeBy)));
         }
 

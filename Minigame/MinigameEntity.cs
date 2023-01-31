@@ -137,6 +137,12 @@ namespace MadelineParty {
                 }
             }
 
+            MadelinePartyModule.SaveData.MinigamesPlayed++;
+
+            if(winners.Contains(GameData.Instance.realPlayerID)) {
+                MadelinePartyModule.SaveData.MinigamesWon++;
+            }
+
             ModeManager.Instance.DistributeMinigameRewards(winners);
 
             // Winners share the top pedestal, everyone else is placed below that
@@ -157,6 +163,7 @@ namespace MadelineParty {
                     List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns);
                     // Sort the spawns so the highest ones are first
                     spawns.Sort((x, y) => { return x.Y.CompareTo(y.Y); });
+                    Console.WriteLine(spawns + " " + realPlayerPlace + " " + GameData.Instance.minigameResults.FindIndex((obj) => obj.Item1 == GameData.Instance.realPlayerID));
                     level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));
 
                     level.LoadLevel(Player.IntroTypes.None);

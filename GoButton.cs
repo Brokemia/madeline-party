@@ -37,7 +37,8 @@ namespace MadelineParty {
 
         private DashCollisionResults OnDashed(Player player, Vector2 direction) {
             Level level = SceneAs<Level>();
-            if(GameData.Instance.gnetHost) {
+            MadelinePartyModule.SaveData.GamesStarted++;
+            if(GameData.Instance.celesteNetHost) {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "GOBUTTON" });
             }
             level.OnEndOfFrame += delegate {

@@ -20,6 +20,13 @@ namespace MadelineParty {
             Add(new Coroutine(GameEndRoutine()));
             AddTag(Tags.PauseUpdate);
             AddTag(Tags.FrozenUpdate);
+
+            if (GameData.Instance.RealPlayer.Strawberries > MadelinePartyModule.SaveData.BerryRecord) {
+                MadelinePartyModule.SaveData.BerryRecord = GameData.Instance.RealPlayer.Strawberries;
+            }
+            if (GameData.Instance.RealPlayer.Hearts > MadelinePartyModule.SaveData.HeartRecord) {
+                MadelinePartyModule.SaveData.HeartRecord = GameData.Instance.RealPlayer.Hearts;
+            }
         }
 
         private string GetWinnerText(int player) {
@@ -29,6 +36,11 @@ namespace MadelineParty {
         }
 
         private IEnumerator GameEndRoutine() {
+            if(winnerID == GameData.Instance.realPlayerID) {
+                MadelinePartyModule.SaveData.GamesWon++;
+            }
+            MadelinePartyModule.SaveData.GamesFinished++;
+            
             if (level.Wipe != null) {
                 Action onComplete = level.Wipe.OnComplete;
                 level.Wipe.OnComplete = delegate {

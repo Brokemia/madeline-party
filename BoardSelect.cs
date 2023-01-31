@@ -7,13 +7,13 @@ using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
-using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using static MadelineParty.BoardController;
 
 namespace MadelineParty {
+    [Tracked]
     [CustomEntity("madelineparty/boardSelect")]
     public class BoardSelect : NumberSelect {
         private readonly Dictionary<string, List<BoardSpace>> boardSpaces = new();
@@ -21,15 +21,58 @@ namespace MadelineParty {
         private readonly Dictionary<string, LevelData> boardLevels = new();
         private readonly List<string> boardOptions;
         private Level level;
-        private DynamicData spriteBatchData;
         private readonly Dictionary<string, VirtualRenderTarget> lineRenderTargets = new();
+        public static VirtualRenderTarget playerTarget;
+        public static Effect renderBehindPlayerShader;
 
         public BoardSelect(EntityData data, Vector2 offset) : base(data.Position + offset, data.NodesOffset(offset), Enumerable.Range(0, data.Attr("boards").Split(',').Length).ToArray()) {
             boardOptions = data.Attr("boards").Split(',').ToList();
             plus.texture = GFX.Game["objects/madelineparty/numberselect/arrow_left"];
             minus.texture = GFX.Game["objects/madelineparty/numberselect/arrow_right"];
             AddTag(TagsExt.SubHUD);
+            Add(new RenderPlayerToBuffer(AfterGameplay));
             Collider = null;
+        }
+
+        public static void LoadContent() {
+            playerTarget = VirtualContent.CreateRenderTarget("madelineparty-board-select-player-target", 320, 180);
+            renderBehindPlayerShader = new Effect(Engine.Graphics.GraphicsDevice, Everest.Content.Get("Effects/MadelineParty/behindPlayer.cso").Data);
+        }
+
+        public static void Load() {
+            On.Celeste.Player.Render += Player_Render;
+            On.Celeste.GameplayRenderer.Render += GameplayRenderer_Render;
+        }
+
+        private static void GameplayRenderer_Render(On.Celeste.GameplayRenderer.orig_Render orig, GameplayRenderer self, Scene scene) {
+            orig(self, scene);
+            foreach (RenderPlayerToBuffer component in scene.Tracker.GetComponents<RenderPlayerToBuffer>()) {
+                component.AfterGameplay();
+            }
+        }
+
+        private static void Player_Render(On.Celeste.Player.orig_Render orig, Player self) {
+            if (self.Scene.Tracker.GetComponent<RenderPlayerToBuffer>() != null) {
+                GameplayRenderer.End();
+
+                var oldTargets = Engine.Graphics.GraphicsDevice.GetRenderTargets();
+                Engine.Graphics.GraphicsDevice.SetRenderTarget(playerTarget);
+                Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+                GameplayRenderer.Begin();
+                orig(self);
+                Draw.SpriteBatch.End();
+                Engine.Graphics.GraphicsDevice.SetRenderTargets(oldTargets);
+                
+                GameplayRenderer.Begin();
+                Draw.SpriteBatch.Draw(playerTarget, GameplayRenderer.instance.Camera.Position, Color.White);
+            } else {
+                orig(self);
+            }
+        }
+
+        public static void Unload() {
+            On.Celeste.Player.Render -= Player_Render;
+            On.Celeste.GameplayRenderer.Render -= GameplayRenderer_Render;
         }
 
         public override void Added(Scene scene) {
@@ -44,9 +87,7 @@ namespace MadelineParty {
             GameData.Instance.board = "Board_" + boardOptions[Value];
         }
 
-        public override void Render() {
-            Draw.SpriteBatch.End();
-
+        public void AfterGameplay() {
             if (!lineRenderTargets.ContainsKey(boardOptions[Value])) {
                 lineRenderTargets[boardOptions[Value]] = VirtualContent.CreateRenderTarget("madelineparty-board-select-lines-" + boardOptions[Value], 160, 160);
                 Engine.Graphics.GraphicsDevice.SetRenderTarget(lineRenderTargets[boardOptions[Value]]);
@@ -60,18 +101,13 @@ namespace MadelineParty {
                     }
                 }
                 Draw.SpriteBatch.End();
-                Engine.Instance.GraphicsDevice.SetRenderTarget(SubHudRenderer.Buffer);
             }
-
-            spriteBatchData ??= DynamicData.For(Draw.SpriteBatch);
-            SamplerState before = spriteBatchData.Get<SamplerState>("samplerState");
-            Draw.SpriteBatch.Begin(SpriteSortMode.Deferred,
-                spriteBatchData.Get<BlendState>("blendState"),
-                SamplerState.PointClamp,
-                spriteBatchData.Get<DepthStencilState>("depthStencilState"),
-                spriteBatchData.Get<RasterizerState>("rasterizerState"),
-                spriteBatchData.Get<Effect>("customEffect"),
-                spriteBatchData.Get<Matrix>("transformMatrix"));
+            
+            Engine.Graphics.GraphicsDevice.Textures[1] = playerTarget;
+            var oldUsage = Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage;
+            Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
+            Engine.Graphics.GraphicsDevice.SetRenderTarget(SubHudRenderer.Buffer);
+            Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, renderBehindPlayerShader, Matrix.Identity);
 
             Vector2 renderPos = (Position - level.Camera.Position) * 6;
             Draw.SpriteBatch.Draw(lineRenderTargets[boardOptions[Value]], renderPos + new Vector2(3, 0), lineRenderTargets[boardOptions[Value]].Bounds, pathOutlineColor, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
@@ -81,29 +117,14 @@ namespace MadelineParty {
             Draw.SpriteBatch.Draw(lineRenderTargets[boardOptions[Value]], renderPos, lineRenderTargets[boardOptions[Value]].Bounds, pathColor, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
 
             foreach (BoardSpace space in boardSpaces[boardOptions[Value]]) {
-                //if (!string.IsNullOrWhiteSpace(space.greenSpaceEvent) && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
-                //    spaceEvent.Render(space, boardSpaces);
-                //} else
-                    spaceTextures.OrDefault(space.type, null)?.DrawCentered((Position - level.Camera.Position + new Vector2(space.x, space.y)) * 6, Color.White, 3);
-                //}
+                spaceTextures.OrDefault(space.type, null)?.DrawCentered((Position - level.Camera.Position + new Vector2(space.x, space.y)) * 6, Color.White, 3);
             }
 
-            //foreach (BoardSpace space in boardSpaces) {
-            //    if (!string.IsNullOrWhiteSpace(space.greenSpaceEvent) && greenSpaces.TryGetValue(space.greenSpaceEvent, out GreenSpaceEvent spaceEvent)) {
-            //        spaceEvent.RenderSubHUD(space, boardSpaces);
-            //    }
-            //}
-
-            Draw.SpriteBatch.End();
-            Draw.SpriteBatch.Begin(SpriteSortMode.Deferred,
-                spriteBatchData.Get<BlendState>("blendState"),
-                before,
-                spriteBatchData.Get<DepthStencilState>("depthStencilState"),
-                spriteBatchData.Get<RasterizerState>("rasterizerState"),
-                spriteBatchData.Get<Effect>("customEffect"),
-                spriteBatchData.Get<Matrix>("transformMatrix"));
-
             ActiveFont.DrawOutline(Dialog.Clean("MadelineParty_Board_Name_" + boardOptions[Value]), (Position - level.Camera.Position + new Vector2(40, 85f)) * 6, new Vector2(0.5f), new Vector2(0.7f), Color.White, 2, Color.Black);
+
+            SubHudRenderer.EndRender();
+            Engine.Graphics.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
+            Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage = oldUsage;
         }
 
         private void LoadBoardSpaces(string board) {

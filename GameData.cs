@@ -26,48 +26,42 @@ namespace MadelineParty
         public static readonly IReadOnlyDictionary<string, Item> items = new Dictionary<string, Item>() {
             {
                 "Double Dice",
-                new() {
-                    Name = "Double Dice",
-                    Price = 3,
-                    Action = (player) => {
+                new((player) => {
                         // Double dice are special
                         if(player != Instance.realPlayerID) {
                             return;
                         }
                         BoardController.Instance.RollDice(player, 2);
-                    }
+                    }) {
+                    Name = "Double Dice",
+                    Price = 3
                 }
             },
             {
                 "Triple Dice",
-                new() {
-                    Name = "Triple Dice",
-                    Price = 6,
-                    Action = (player) => {
+                new((player) => {
                         // Triple dice are special
                         if(player != Instance.realPlayerID) {
                             return;
                         }
                         BoardController.Instance.RollDice(player, 3);
-                    }
+                    }) {
+                    Name = "Triple Dice",
+                    Price = 6
                 }
             },
             {
                 "eciD esreveR",
-                new() {
-                    Name = "eciD esreveR",
-                    Price = 5,
-                    Action = (player) => {
+                new((player) => {
                         BoardController.Instance.Add(new Coroutine(BoardController.Instance.DieRollAnimation(player, new[] { 0, -5, 0 }, ReverseDieRolled)));
-                    }
+                    }) {
+                    Name = "eciD esreveR",
+                    Price = 5
                 }
             },
             {
                 "Flip Flop",
-                new() {
-                    Name = "Flip Flop",
-                    Price = 4,
-                    Action = (player) => {
+                new((player) => {
                         BoardController.Instance.SetLeftButtonStatus(player, LeftButton.Modes.Inactive);
                         BoardController.Instance.SetRightButtonStatus(player, RightButton.Modes.Inactive);
                         Level level = Engine.Scene as Level;
@@ -84,36 +78,36 @@ namespace MadelineParty
                         var textbox = new PersistentMiniTextbox("MadelineParty_Item_FlipFlop_Who", pauseUpdate: true);
                         level.Add(textbox);
                         textbox.OnFinish += () => BoardController.Instance.Add(new Coroutine(FlipFlopCoroutine(textbox, Instance.players[player], swapping, swappable.Count == 0), true));
-                    }
+                    }) {
+                    Name = "Flip Flop",
+                    Price = 4
                 }
             },
             {
                 "Minigame Skip",
-                new() {
-                    Name = "Minigame Skip",
-                    Price = 7,
-                    CanUseInTurn = false,
-                    Action = (player) => {
+                new((player) => {
                         Level level = Engine.Scene as Level;
                         if(level.Tracker.GetEntity<MinigameSelectUI>() is { } ui) {
                             ui.Reroll(player);
                         }
-                    }
+                    }) {
+                    Name = "Minigame Skip",
+                    Price = 7,
+                    CanUseInTurn = false
                 }
             },
             {
                 "Heart Block",
-                new() {
-                    Name = "Heart Block",
-                    Price = 10,
-                    Action = (player) => {
+                new((player) => {
                         BoardController.Instance.SetLeftButtonStatus(player, LeftButton.Modes.Inactive);
                         BoardController.Instance.SetRightButtonStatus(player, RightButton.Modes.Inactive);
                         Instance.heartBlocks.Add(player);
                         Engine.Scene.Add(new HeartBlock(
                             BoardController.Instance.boardSpaces.Find(s => s.ID == Instance.heartSpaceID).screenPosition - new Vector2(48), 48, 48));
                         Alarm.Set(BoardController.Instance, 2, () => BoardController.Instance.SetDice(player));
-                    }
+                    }) {
+                    Name = "Heart Block",
+                    Price = 10
                 }
             },
         };
@@ -167,7 +161,21 @@ namespace MadelineParty
             public string Name { get; set; }
             public int Price { get; set; }
             public bool CanUseInTurn { get; set; } = true;
-            public Action<int> Action { get; set; }
+            private Action<int> Action { get; set; }
+
+            public Item(Action<int> action) {
+                Action = action;
+            }
+
+            public void UseItem(int playerID) {
+                if (!MadelinePartyModule.SaveData.ItemsUsed.ContainsKey(Name)) {
+                    MadelinePartyModule.SaveData.ItemsUsed[Name] = 0;
+                }
+                if (playerID == Instance.realPlayerID) {
+                    MadelinePartyModule.SaveData.ItemsUsed[Name]++;
+                }
+                Action?.Invoke(playerID);
+            }
         }
 
         public const int START_BERRIES = 10;
@@ -180,7 +188,7 @@ namespace MadelineParty
         public PlayerData[] players = { null, null, null, null };
         // The ID of the player at this client
         public int realPlayerID = -1;
-        public bool gnetHost = true;
+        public bool celesteNetHost = true;
         public List<uint> celestenetIDs = new();
         // Which playerSelectTrigger each player is in
         public ConcurrentDictionary<uint, int> playerSelectTriggers = new();
@@ -207,6 +215,8 @@ namespace MadelineParty
                 return turn <= maxTurns / 2 ? earlyShop : lateShop;
             }
         }
+
+        public PlayerData RealPlayer => players[realPlayerID];
 
         private Random _textRand;
 
