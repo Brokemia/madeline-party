@@ -120,9 +120,12 @@ namespace MadelineParty {
                     case SpawnOptions.Seeker:
                         var data = new EntityData { Position = seekerSpawns[rand.Next(seekerSpawns.Count)] };
                         data.Values = new();
-                        data.Values["SightDistance"] = 9999f;
-                        data.Values["SpottedLosePlayerTime"] = 2.0f;
-                        level.Add(new CustomSeeker(data, Vector2.Zero));
+                        data.Values["SightDistance"] = float.MaxValue;
+                        data.Values["SpottedLosePlayerTime"] = float.MaxValue;
+                        data.Values["AlwaysSeePlayer"] = true;
+                        data.Values["SpottedNoCameraLimit"] = true;
+                        var seeker = new CustomSeeker(data, Vector2.Zero);
+                        level.Add(seeker);
                         //level.Add(new Seeker(seekerSpawns[rand.Next(seekerSpawns.Count)], null));
                         break;
                     case SpawnOptions.Oshiro:
@@ -132,7 +135,9 @@ namespace MadelineParty {
                         break;
                     case SpawnOptions.FinalBoss:
                         var boss = new FinalBoss(bossSpawns[rand.Next(bossSpawns.Count)], new[] { Vector2.Zero }, validBossPatterns[rand.Next(validBossPatterns.Count)], 120, false, false, false);
+                        boss.playerHasMoved = true;
                         level.Add(boss);
+                        boss.StartAttacking();
                         break;
                 }
             }

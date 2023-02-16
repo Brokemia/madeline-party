@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MadelineParty {
+    [Tracked]
     [CustomEntity("madelineparty/dreamBlockRNGSyncer")]
     class DreamBlockRNGSyncer : Entity {
 
@@ -25,7 +26,7 @@ namespace MadelineParty {
 
         private static void DreamBlock_Update(On.Celeste.DreamBlock.orig_Update orig, DreamBlock self) {
             Scene scene = self.Scene;
-            if (MadelinePartyModule.IsSIDMadelineParty((scene as Level).Session.Area.GetSID()) && scene.Entities.FindFirst<DreamBlockRNGSyncer>() != null) {
+            if (MadelinePartyModule.IsSIDMadelineParty((scene as Level).Session.Area.GetSID()) && scene.Tracker.GetEntity<DreamBlockRNGSyncer>() != null) {
                 DynData<DreamBlock> selfData = new DynData<DreamBlock>(self);
 
                 Random oldRand = Calc.Random;

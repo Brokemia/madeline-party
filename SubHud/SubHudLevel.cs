@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using Celeste.Mod.UI;
 using Microsoft.Xna.Framework.Graphics;
 using Celeste.Mod.Entities;
+using MonoMod.RuntimeDetour;
 
 namespace MadelineParty.SubHud {
     [CustomEntity("madelineparty/subHudLevelForwarder")]
@@ -68,7 +69,9 @@ namespace MadelineParty.SubHud {
             if (subHudLevel != null) {
                 SubHudRenderer.EndRender();
                 var matrix = SubHudRenderer.DrawToBuffer ? Matrix.Identity : Engine.ScreenMatrix;
-                Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, matrix * Matrix.CreateScale(2) * Matrix.CreateTranslation(new(-subHudLevel.Bounds.Location.ToVector2() * 2 - Level.ShakeVector * 6, 0)));
+                var offsetMatrix = Matrix.CreateTranslation(new(-subHudLevel.Bounds.Location.ToVector2() * 2 - Level.ShakeVector * 6, 0));
+                Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null,
+                    Matrix.CreateScale(2) * offsetMatrix * matrix);
                 
                 var oldTempA = GameplayBuffers.TempA;
                 var oldResortDust = GameplayBuffers.ResortDust;
@@ -91,10 +94,15 @@ namespace MadelineParty.SubHud {
             On.Celeste.LevelEnter.Go += LevelEnter_Go;
             On.Celeste.DustEdges.BeforeRender += DustEdges_BeforeRender;
             On.Celeste.Audio.CreateInstance += Audio_CreateInstance;
+            On.Celeste.Audio.Stop += Audio_Stop;
+            On.Celeste.Audio.SetMusic += Audio_SetMusic;
+            On.Celeste.Audio.SetAltMusic += Audio_SetAltMusic;
             On.Celeste.Level.AfterRender += Level_AfterRender;
             On.Monocle.Scene.BeforeUpdate += Scene_BeforeUpdate;
             On.Monocle.Scene.AfterUpdate += Scene_AfterUpdate;
             On.Celeste.Mod.Everest.Events.Player.Spawn += Player_Spawn;
+
+            new Hook(typeof(SubHudRenderer).GetProperty("DrawToBuffer", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public).GetGetMethod(), () => false);
         }
 
         // Stop Death Tracker from breaking because LevelLoader.StartLevel never was called
@@ -127,6 +135,25 @@ namespace MadelineParty.SubHud {
             if(updatingSubHudLevel)
                 return null;
             return orig(path, position);
+        }
+
+        private static void Audio_Stop(On.Celeste.Audio.orig_Stop orig, FMOD.Studio.EventInstance instance, bool allowFadeOut) {
+            if (!updatingSubHudLevel) {
+                orig(instance, allowFadeOut);
+            }
+        }
+
+        private static void Audio_SetAltMusic(On.Celeste.Audio.orig_SetAltMusic orig, string path) {
+            if (!updatingSubHudLevel) {
+                orig(path);
+            }
+        }
+
+        private static bool Audio_SetMusic(On.Celeste.Audio.orig_SetMusic orig, string path, bool startPlaying, bool allowFadeOut) {
+            if (updatingSubHudLevel) {
+                return false;
+            }
+            return orig(path, startPlaying, allowFadeOut);
         }
 
         private static void DustEdges_BeforeRender(On.Celeste.DustEdges.orig_BeforeRender orig, DustEdges self) {
@@ -168,19 +195,24 @@ namespace MadelineParty.SubHud {
         }
 
         private static void LevelEnter_Go(On.Celeste.LevelEnter.orig_Go orig, Session session, bool fromSaveData) {
-            if (MadelinePartyModule.IsSIDMadelineParty(session.Area.SID) && AreaData.Get(session.Area.SID + "-Deco") is { } areaData) {
-                var subHudSession = new Session(new AreaKey(areaData.ID));
+            if (MadelinePartyModule.IsSIDMadelineParty(session.Area.SID)) {
+                updatingSubHudLevel = true;
+                var subHudSession = new Session(new AreaKey(session.Area.ID) { Mode = AreaMode.BSide });
                 LoadLevel(subHudSession);
 
                 subHudLevel.LoadLevel(Player.IntroTypes.None, isFromLoader: true);
 
                 ResortDustLarge ??= VirtualContent.CreateRenderTarget("MadelineParty-Large-ResortDust", 960, 540);
                 TempALarge ??= VirtualContent.CreateRenderTarget("MadelineParty-Large-TempA", 960, 540);
+                updatingSubHudLevel = false;
             }
             orig(session, fromSaveData);
         }
 
         public void ChangeSubHudLevel(string level) {
+            if (subHudLevel == null)
+                return;
+            updatingSubHudLevel = true;
             subHudLevel.UnloadLevel();
             subHudLevel.Session.Level = level;
             subHudLevel.LoadLevel(Player.IntroTypes.None, isFromLoader: false);
@@ -190,6 +222,7 @@ namespace MadelineParty.SubHud {
             subHudLevel.Camera.Zoom = 1 / 3f;
             subHudLevel.Camera.Position = subHudLevel.Bounds.Location.ToVector2();
             subHudLevel.Tracker.GetEntity<Player>().StateMachine.State = Player.StFrozen;
+            updatingSubHudLevel = false;
         }
 
         #region Modified Level Loading
@@ -534,6 +567,18 @@ namespace MadelineParty.SubHud {
                 if (component.Entity.Active) {
                     component.OnPostUpdate();
                 }
+            }
+            if (updateHair) {
+                foreach (Component component2 in Tracker.GetComponents<PlayerHair>()) {
+                    if (component2.Active && component2.Entity.Active) {
+                        (component2 as PlayerHair).AfterUpdate();
+                    }
+                }
+                if (FrozenOrPaused) {
+                    updateHair = false;
+                }
+            } else if (!FrozenOrPaused) {
+                updateHair = true;
             }
         }
 

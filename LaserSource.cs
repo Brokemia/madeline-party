@@ -138,7 +138,7 @@ namespace MadelineParty {
                 player ??= Scene.CollideFirst<Player>(closeTarget - tangential * i, farTarget - tangential * i);
             }
             
-            player?.Die((player.Center - BeamOrigin).SafeNormalize());
+            player?.Die((player.Center - BeamOrigin).SafeNormalize())?.AddTag(Tags.PauseUpdate | Tags.FrozenUpdate);
         }
 
         public override void Render() {

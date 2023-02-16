@@ -7,9 +7,11 @@ using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
+using MonoMod.RuntimeDetour;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using static MadelineParty.BoardController;
 
 namespace MadelineParty {
@@ -87,6 +89,17 @@ namespace MadelineParty {
             GameData.Instance.board = "Board_" + boardOptions[Value];
         }
 
+        public static void BeginRender(bool buffer) {
+            var parameters = renderBehindPlayerShader.Parameters;
+            parameters["ScreenOffset"]?.SetValue(SubHudRenderer.DrawToBuffer ? Vector2.Zero : Engine.Viewport.Bounds.Location.ToVector2());
+            parameters["FrameScale"]?.SetValue(SubHudRenderer.DrawToBuffer ? 1 : Engine.Width / (float)Engine.ViewWidth);
+
+            Engine.Graphics.GraphicsDevice.Textures[1] = playerTarget;
+            if (buffer) {
+                Engine.Graphics.GraphicsDevice.SetRenderTarget(SubHudRenderer.Buffer);
+            }
+        }
+
         public void AfterGameplay() {
             if (!lineRenderTargets.ContainsKey(boardOptions[Value])) {
                 lineRenderTargets[boardOptions[Value]] = VirtualContent.CreateRenderTarget("madelineparty-board-select-lines-" + boardOptions[Value], 160, 160);
@@ -103,12 +116,26 @@ namespace MadelineParty {
                 Draw.SpriteBatch.End();
             }
             
-            Engine.Graphics.GraphicsDevice.Textures[1] = playerTarget;
+            if(!SubHudRenderer.DrawToBuffer) {
+                return;
+            }
+
             var oldUsage = Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage;
             Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
-            Engine.Graphics.GraphicsDevice.SetRenderTarget(SubHudRenderer.Buffer);
+
+            BeginRender(true);
+            
             Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, renderBehindPlayerShader, Matrix.Identity);
 
+            RenderEntity();
+
+            SubHudRenderer.EndRender();
+            
+            Engine.Graphics.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
+            Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage = oldUsage;
+        }
+
+        private void RenderEntity() {
             Vector2 renderPos = (Position - level.Camera.Position) * 6;
             Draw.SpriteBatch.Draw(lineRenderTargets[boardOptions[Value]], renderPos + new Vector2(3, 0), lineRenderTargets[boardOptions[Value]].Bounds, pathOutlineColor, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
             Draw.SpriteBatch.Draw(lineRenderTargets[boardOptions[Value]], renderPos - new Vector2(3, 0), lineRenderTargets[boardOptions[Value]].Bounds, pathOutlineColor, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
@@ -121,10 +148,20 @@ namespace MadelineParty {
             }
 
             ActiveFont.DrawOutline(Dialog.Clean("MadelineParty_Board_Name_" + boardOptions[Value]), (Position - level.Camera.Position + new Vector2(40, 85f)) * 6, new Vector2(0.5f), new Vector2(0.7f), Color.White, 2, Color.Black);
+        }
 
-            SubHudRenderer.EndRender();
-            Engine.Graphics.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
-            Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage = oldUsage;
+        public override void Render() {
+            if (!SubHudRenderer.DrawToBuffer) {
+                SubHudRenderer.EndRender();
+
+                BeginRender(false);
+                Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, renderBehindPlayerShader, Matrix.Identity);
+
+                RenderEntity();
+
+                SubHudRenderer.EndRender();
+                SubHudRenderer.BeginRender();
+            }
         }
 
         private void LoadBoardSpaces(string board) {

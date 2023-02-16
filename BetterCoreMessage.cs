@@ -1,12 +1,10 @@
 ﻿using Celeste;
-using Celeste.Mod;
 using Celeste.Mod.Entities;
 using Celeste.Mod.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using System;
-using VivHelper;
 
 namespace MadelineParty {
 	[CustomEntity("madelineparty/betterCoreMessage")]
@@ -58,22 +56,35 @@ namespace MadelineParty {
 		}
 
 		private void AfterGameplay() {
-            Engine.Graphics.GraphicsDevice.Textures[1] = BoardSelect.playerTarget;
-			var oldUsage = Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage;
-            Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
-            Engine.Graphics.GraphicsDevice.SetRenderTarget(SubHudRenderer.Buffer);
-            Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, BoardSelect.renderBehindPlayerShader, Matrix.Identity);
-            
-			RenderEntity();
-            
-            SubHudRenderer.EndRender();
-            Engine.Graphics.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
-            Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage = oldUsage;
+			if (SubHudRenderer.DrawToBuffer) {
+				var oldUsage = Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage;
+                Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
+                BoardSelect.BeginRender(true);
+
+                Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, BoardSelect.renderBehindPlayerShader, Matrix.Identity);
+
+				RenderEntity();
+
+				SubHudRenderer.EndRender();
+
+                Engine.Graphics.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
+                Engine.Graphics.GraphicsDevice.PresentationParameters.RenderTargetUsage = oldUsage;
+            }
         }
 
 		public override void Render() {
 			if (!renderBehindPlayer) {
 				RenderEntity();
+			} else if(!SubHudRenderer.DrawToBuffer) {
+				SubHudRenderer.EndRender();
+
+				BoardSelect.BeginRender(false);
+                Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, BoardSelect.renderBehindPlayerShader, Matrix.Identity);
+
+                RenderEntity();
+
+				SubHudRenderer.EndRender();
+				SubHudRenderer.BeginRender();
 			}
 		}
 

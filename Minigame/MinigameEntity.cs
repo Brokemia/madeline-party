@@ -159,11 +159,12 @@ namespace MadelineParty {
                     level.Remove(player);
                     level.UnloadLevel();
 
-                    level.Session.Level = "Game_PlayerRanking";
+                    var rankingLevel = "Game_PlayerRanking";
+                    level.Session.Level = rankingLevel;
                     List<Vector2> spawns = new List<Vector2>(level.Session.LevelData.Spawns);
                     // Sort the spawns so the highest ones are first
                     spawns.Sort((x, y) => { return x.Y.CompareTo(y.Y); });
-                    Console.WriteLine(spawns + " " + realPlayerPlace + " " + GameData.Instance.minigameResults.FindIndex((obj) => obj.Item1 == GameData.Instance.realPlayerID));
+                    //Console.WriteLine(spawns + " " + realPlayerPlace + " " + GameData.Instance.minigameResults.FindIndex((obj) => obj.Item1 == GameData.Instance.realPlayerID));
                     level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(spawns[realPlayerPlace].X, spawns[realPlayerPlace].Y));
 
                     level.LoadLevel(Player.IntroTypes.None);
@@ -171,7 +172,10 @@ namespace MadelineParty {
                     if(level.Wipe != null) {
                         Action onComplete = level.Wipe.OnComplete;
                         level.Wipe.OnComplete = delegate {
-                            level.Add(new PersistentMiniTextbox(GetWinnerText(winners), pauseUpdate: true));
+                            // If the level was paused enough that the wipe didn't finish in the ranking room, don't show the textbox
+                            if (level.Session.Level == rankingLevel) {
+                                level.Add(new PersistentMiniTextbox(GetWinnerText(winners), pauseUpdate: true));
+                            }
                             onComplete?.Invoke();
                         };
                     } else {
