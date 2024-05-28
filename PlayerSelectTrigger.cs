@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Celeste;
+using MadelineParty.Board;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace MadelineParty {
+namespace MadelineParty
+{
     public class PlayerSelectTrigger : Trigger, IComparable {
         private Level level;
         private List<PlayerSelectTrigger> otherChoices = new List<PlayerSelectTrigger>();
@@ -46,7 +48,7 @@ namespace MadelineParty {
             }
         }
 
-        private void MultiplayerOccupiedAction() {
+        private void MultiplayerOccupiedAction(int seed) {
             GameData.Instance.players[playerID] = new PlayerData(playerID, MultiplayerSingleton.Instance.CurrentPlayerID());
             foreach (KeyValuePair<uint, int> pair in GameData.Instance.playerSelectTriggers) {
                 if (pair.Value != playerID && pair.Value >= 0) {
@@ -56,7 +58,7 @@ namespace MadelineParty {
             // Host determines the random seeds for the game
             // Seeds are determined in advance to avoid duplicate rolls when it matters
             if (GameData.Instance.celesteNetHost) {
-                MultiplayerSingleton.Instance.Send(new RandomSeed { turnOrderSeed = GameData.Instance.turnOrderSeed, tieBreakerSeed = GameData.Instance.tieBreakerSeed });
+                MultiplayerSingleton.Instance.Send(new RandomSeed { seed = seed });
             }
         }
 
@@ -65,12 +67,12 @@ namespace MadelineParty {
             // Store playerID
             GameData.Instance.realPlayerID = playerID;
             Random rand = new Random();
-            // If not the host, the seeds will be changed by a recieved communication
-            GameData.Instance.turnOrderSeed = (uint)rand.Next(2, 100000);
-            GameData.Instance.tieBreakerSeed = (uint)rand.Next(2, 100000);
-            BoardController.generateTurnOrderRolls();
+            // If not the host, the random seed will be changed by a recieved communication
+            var seed = rand.Next();
+            GameData.Instance.Random = new Random(seed);
+            BoardController.GenerateTurnOrderRolls();
             if (MultiplayerSingleton.Instance.BackendConnected()) {
-                MultiplayerOccupiedAction();
+                MultiplayerOccupiedAction(seed);
             } else {
                 GameData.Instance.players[playerID] = new PlayerData(playerID);
             }

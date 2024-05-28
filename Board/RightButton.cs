@@ -5,12 +5,15 @@ using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace MadelineParty {
+namespace MadelineParty.Board
+{
 
-    public class RightButton : Solid, IComparable {
+    public class RightButton : Solid, IComparable
+    {
         private const string decalPrefix = "madelineparty/rightbutton/";
 
-        public enum Modes {
+        public enum Modes
+        {
             Cancel,
             // TODO remove in favor of general Cancel mode paired with OnPressButton
             CancelHeartBuy,
@@ -25,9 +28,12 @@ namespace MadelineParty {
             Inactive
         }
 
-        protected char tileType {
-            get {
-                switch (currentMode) {
+        protected char tileType
+        {
+            get
+            {
+                switch (currentMode)
+                {
                     case Modes.Inactive:
                         return '3';
                     default:
@@ -40,8 +46,10 @@ namespace MadelineParty {
 
         private float height;
 
-        protected bool currentlyBreakable {
-            get {
+        protected bool currentlyBreakable
+        {
+            get
+            {
                 return currentMode != Modes.Inactive;
             }
         }
@@ -57,7 +65,8 @@ namespace MadelineParty {
         public event Action<Modes> OnPressButton;
 
         public RightButton(Vector2 position, float width, float height, Modes startingMode, int playerID)
-            : base(position, width, height, safe: true) {
+            : base(position, width, height, safe: true)
+        {
             this.width = width;
             this.height = height;
             this.playerID = playerID;
@@ -71,16 +80,20 @@ namespace MadelineParty {
         }
 
         public RightButton(EntityData data, Vector2 offset)
-            : this(data.Position + offset, data.Width, data.Height, data.Enum("startingMode", Modes.Inactive), data.Int("playerID", 0)) {
+            : this(data.Position + offset, data.Width, data.Height, data.Enum("startingMode", Modes.Inactive), data.Int("playerID", 0))
+        {
         }
 
-        public Modes GetCurrentMode() {
+        public Modes GetCurrentMode()
+        {
             return currentMode;
         }
 
-        public void SetCurrentMode(Modes mode) {
+        public void SetCurrentMode(Modes mode)
+        {
             currentMode = mode;
-            switch (mode) {
+            switch (mode)
+            {
                 case Modes.CancelHeartBuy:
                 case Modes.CancelItemBuy:
                 case Modes.CancelShopEnter:
@@ -93,53 +106,71 @@ namespace MadelineParty {
                     SwapDecal(decalPrefix + currentMode.ToString().ToLower());
                     break;
             }
-            if (mode == Modes.Inactive) {
+            if (mode == Modes.Inactive)
+            {
                 OnPressButton = null;
             }
         }
 
-        public override void Added(Scene scene) {
+        public override void Added(Scene scene)
+        {
             base.Added(scene);
             level = SceneAs<Level>();
         }
 
-        public override void Awake(Scene scene) {
+        public override void Awake(Scene scene)
+        {
             base.Awake(scene);
             // Choose the closest left button decal to display to
-            foreach (Decal item in scene.Entities.FindAll<Decal>()) {
+            foreach (Decal item in scene.Entities.FindAll<Decal>())
+            {
                 //Console.WriteLine("Decal found: " + item.Name);
-                if (item.Name.StartsWith("decals/" + decalPrefix, StringComparison.InvariantCulture)) {
-                    if (DistanceBetween(item, this) < DistanceBetween(associatedDecal, this)) {
+                if (item.Name.StartsWith("decals/" + decalPrefix, StringComparison.InvariantCulture))
+                {
+                    if (DistanceBetween(item, this) < DistanceBetween(associatedDecal, this))
+                    {
                         associatedDecal = item;
                     }
                 }
             }
-            foreach (BoardController item in scene.Entities.FindAll<BoardController>()) {
+            foreach (BoardController item in scene.Entities.FindAll<BoardController>())
+            {
                 board = item;
             }
             SwapDecal(decalPrefix + currentMode.ToString().ToLower());
         }
 
-        private double DistanceBetween(Entity e1, Entity e2) {
+        private double DistanceBetween(Entity e1, Entity e2)
+        {
             if (e1 == null || e2 == null)
                 return double.MaxValue;
             return Math.Sqrt(Math.Pow(e1.CenterX - e2.CenterX, 2) + Math.Pow(e1.CenterY - e2.CenterY, 2));
         }
 
-        public override void Removed(Scene scene) {
+        public override void Removed(Scene scene)
+        {
             base.Removed(scene);
             Celeste.Celeste.Freeze(0.05f);
         }
 
-        public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true) {
-            if (playSound) {
-                if (tileType == '1') {
+        public void Break(Vector2 from, Vector2 direction, bool playSound = true, bool playDebrisSound = true)
+        {
+            if (playSound)
+            {
+                if (tileType == '1')
+                {
                     Audio.Play("event:/game/general/wall_break_dirt", Position);
-                } else if (tileType == '3') {
+                }
+                else if (tileType == '3')
+                {
                     Audio.Play("event:/game/general/wall_break_ice", Position);
-                } else if (tileType == '9') {
+                }
+                else if (tileType == '9')
+                {
                     Audio.Play("event:/game/general/wall_break_wood", Position);
-                } else {
+                }
+                else
+                {
                     Audio.Play("event:/game/general/wall_break_stone", Position);
                 }
             }
@@ -147,14 +178,17 @@ namespace MadelineParty {
             DoBreakAction();
         }
 
-        private void DoBreakAction() {
-            if (OnPressButton != null) {
+        private void DoBreakAction()
+        {
+            if (OnPressButton != null)
+            {
                 var oldEvent = OnPressButton;
                 OnPressButton = null;
                 oldEvent(currentMode);
                 return;
             }
-            switch (currentMode) {
+            switch (currentMode)
+            {
                 case Modes.UseItem:
                     SetCurrentMode(Modes.Inactive);
                     board.UseItem(playerID);
@@ -193,29 +227,36 @@ namespace MadelineParty {
 
         // Swaps the associatedDecal with a different one
         // Does nothing if associatedDecal is null
-        private void SwapDecal(string name) {
-            if (associatedDecal != null) {
+        private void SwapDecal(string name)
+        {
+            if (associatedDecal != null)
+            {
                 associatedDecal.RemoveSelf();
                 associatedDecal = new Decal(name, associatedDecal.Position, associatedDecal.Scale, associatedDecal.Depth);
-                base.Scene.Add(associatedDecal);
+                Scene.Add(associatedDecal);
             }
         }
 
-        private DashCollisionResults OnDashed(Player player, Vector2 direction) {
+        private DashCollisionResults OnDashed(Player player, Vector2 direction)
+        {
             Break(player.Center, direction);
             return DashCollisionResults.Rebound;
         }
 
-        public int CompareTo(object obj) {
+        public int CompareTo(object obj)
+        {
             if (obj == null) return 1;
             return obj is RightButton other ? playerID.CompareTo(other.playerID) : 1;
         }
 
-        public override void Render() {
+        public override void Render()
+        {
             base.Render();
-            if (currentMode == Modes.UseItem) {
+            if (currentMode == Modes.UseItem)
+            {
                 var pItems = GameData.Instance.players[playerID].Items.FindAll(item => item.CanUseInTurn);
-                for (int i = 0; i < pItems.Count; i++) {
+                for (int i = 0; i < pItems.Count; i++)
+                {
                     // 4 pixels of vertical spacing between items
                     GFX.Game["decals/madelineparty/items/" + GameData.Instance.players[playerID].Items[i].Name].DrawCentered((Position - level.LevelOffset) * 6 + new Vector2(8 * 6, 16 * 6 /* center it*/ - 18 * (pItems.Count - 1) /* to top */ + 36 * i /* descend */) - level.ShakeVector * 6, Color.White, new Vector2(2));
                 }

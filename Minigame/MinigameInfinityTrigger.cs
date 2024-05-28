@@ -3,6 +3,7 @@ using System.Collections;
 using Celeste;
 using Celeste.Mod;
 using Celeste.Mod.Entities;
+using MadelineParty.Minigame;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
@@ -11,14 +12,16 @@ using Monocle;
 namespace MadelineParty {
     [CustomEntity("madelineparty/minigameInfinityTrigger")]
     public class MinigameInfinityTrigger : MinigameEntity {
-        public static uint loops = 0;
-        public static uint dist;
+        public class InfinityMinigamePersistentData : MinigamePersistentData {
+            public uint Loops { get; set; }
+            public uint Distance { get; set; }
+        }
         public Coroutine endCoroutine;
         public Vector2 backwardsSpot;
         public float tpDist;
         private bool everyOtherFrame;
         private bool vertical;
-        public static new void Load() { }
+        private InfinityMinigamePersistentData infinityData;
 
         public MinigameInfinityTrigger(EntityData data, Vector2 offset) : base(data, offset) {
             backwardsSpot = data.NodesOffset(offset)[0];
@@ -26,36 +29,39 @@ namespace MadelineParty {
             tpDist = vertical ? Position.Y - backwardsSpot.Y : Position.X - backwardsSpot.X;
         }
 
+        protected override MinigamePersistentData NewData() {
+            return new InfinityMinigamePersistentData();
+        }
+
         protected override void AfterStart() {
             base.AfterStart();
-            // Reset timer so it starts at 30 instead of (30 - the time it takes to count down)
-            startTime = level.RawTimeActive;
+            infinityData = DataAs<InfinityMinigamePersistentData>();
             level.Add(new MinigameDistanceDisplay(this));
             level.Add(new MinigameTimeDisplay(this, true));
         }
 
         public override void Update() {
             base.Update();
-            if (!started) return;
-            if (level.RawTimeActive - startTime >= 30 && endCoroutine == null) {
+            if (!Data.Started) return;
+            if (level.RawTimeActive - Data.StartTime >= 30 && endCoroutine == null) {
                 Add(endCoroutine = new Coroutine(FinishMinigame()));
             }
 
             Player player = level.Tracker.GetEntity<Player>();
 
-            if (player != null && loops > 0 && (vertical ? player.Y > backwardsSpot.Y + Height + 3 * 8 : player.X < backwardsSpot.X - Width - 3 * 8)) {
-                loops--;
+            if (player != null && infinityData.Loops > 0 && (vertical ? player.Y > backwardsSpot.Y + Height + 3 * 8 : player.X < backwardsSpot.X - Width - 3 * 8)) {
+                infinityData.Loops--;
                 Teleport(player, tpDist * (vertical ? Vector2.UnitY : Vector2.UnitX));
             }
 
             if (everyOtherFrame) {
-                MultiplayerSingleton.Instance.Send(new MinigameStatus { results = dist });
+                MultiplayerSingleton.Instance.Send(new MinigameStatus { results = infinityData.Distance });
             }
             everyOtherFrame = !everyOtherFrame;
 
             if (player != null) {
-                dist = calculateDist(loops, player.Position);
-                GameData.Instance.minigameStatus[GameData.Instance.realPlayerID] = dist;
+                infinityData.Distance = calculateDist(infinityData.Loops, player.Position);
+                GameData.Instance.minigameStatus[GameData.Instance.realPlayerID] = infinityData.Distance;
             }
         }
 
@@ -74,23 +80,17 @@ namespace MadelineParty {
             // Freeze the player so they can't do any more moving until everyone else is done
             player.StateMachine.State = Player.StFrozen;
             player.Speed = Vector2.Zero;
-            startTime = -1;
-            started = false;
-            didRespawn = false;
             level.CanRetry = false;
-            dist = calculateDist(loops, player.Position);
-            Console.WriteLine("Minigame Distance: " + dist);
-            GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, dist));
-            MultiplayerSingleton.Instance.Send(new MinigameEnd { results = dist });
+            infinityData.Distance = calculateDist(infinityData.Loops, player.Position);
+            Console.WriteLine("Minigame Distance: " + infinityData.Distance);
+            GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, infinityData.Distance));
+            MultiplayerSingleton.Instance.Send(new MinigameEnd { results = infinityData.Distance });
 
-            yield return new SwapImmediately(EndMinigame(HIGHEST_WINS, () => {
-                dist = 0;
-                loops = 0;
-            }));
+            yield return new SwapImmediately(EndMinigame(HIGHEST_WINS, null));
         }
 
         public override void OnEnter(Player player) {
-            loops++;
+            infinityData.Loops++;
             Teleport(player, -tpDist * (vertical ? Vector2.UnitY : Vector2.UnitX));
         }
 

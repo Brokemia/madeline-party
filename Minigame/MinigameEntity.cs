@@ -5,6 +5,7 @@ using System.Linq;
 using BrokemiaHelper;
 using Celeste;
 using MadelineParty.Minigame;
+using MadelineParty.Minigame.Display;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
@@ -18,10 +19,16 @@ namespace MadelineParty {
         protected Level level;
         protected int displayNum = -1;
         protected List<MTexture> diceNumbers;
-        public static bool didRespawn;
-        public static bool started;
         public bool completed;
-        public static float startTime = -1;
+        public MinigamePersistentData Data { get; private set; }
+        
+        protected T DataAs<T>() where T : MinigamePersistentData {
+            return Data as T;
+        }
+
+        protected virtual MinigamePersistentData NewData() {
+            return new MinigamePersistentData();
+        }
 
         protected MinigameEntity(EntityData data, Vector2 offset) : base(data, offset) {
             diceNumbers = GFX.Game.GetAtlasSubtextures("decals/madelineparty/dicenumbers/dice_");
@@ -47,11 +54,14 @@ namespace MadelineParty {
         public override void Added(Scene scene) {
             base.Added(scene);
             level = SceneAs<Level>();
+            if ((Data = level.Tracker.GetEntity<MinigamePersistentData>()) == null) {
+                level.Add(Data = NewData());
+            }
         }
 
         public override void Awake(Scene scene) {
             base.Awake(scene);
-            if (!started) {
+            if (!Data.Started) {
                 level.Add(new MinigameReadyPrompt(this));
                 Player player = level.Tracker.GetEntity<Player>();
                 player.JustRespawned = true;
@@ -83,6 +93,8 @@ namespace MadelineParty {
 
         public IEnumerator Countdown() {
             Player player = level.Tracker.GetEntity<Player>();
+            level.Session.Audio.Music.Event = GameData.GetMinigameMusic(GameData.Instance.minigame);
+            level.Session.Audio.Apply();
             player.StateMachine.State = Player.StFrozen;
             // Stops the player from being moved by wind immediately
             // Probably saves you from Badeline too
@@ -99,6 +111,9 @@ namespace MadelineParty {
             displayNum = -1;
             player.StateMachine.State = 0;
             level.CanRetry = true;
+            // Reset timer so it doesn't include the countdown
+            Data.StartTime = level.RawTimeActive;
+            Data.Started = true;
             AfterStart();
         }
 
@@ -112,6 +127,8 @@ namespace MadelineParty {
 
         protected IEnumerator EndMinigame(Comparison<Tuple<int, uint>> placeOrderer, Action cleanup) {
             Player player = level.Tracker.GetEntity<Player>();
+            Data.RemoveSelf();
+            Data.Started = false;
             // A little extra gap so you aren't teleported quite as suddenly
             float extraTime = 1;
             while (extraTime > 0) {
@@ -149,7 +166,7 @@ namespace MadelineParty {
             int realPlayerPlace = winners.Contains(GameData.Instance.realPlayerID) ? 0 : GameData.Instance.minigameResults.FindIndex((obj) => obj.Item1 == GameData.Instance.realPlayerID) - winners.Count + 1;
             // A check to stop the game from crashing when I hit one of these while testing
             if (winners[0] >= 0 && GameData.Instance.players[winners[0]] != null) {
-                cleanup();
+                cleanup?.Invoke();
                 if(!GameData.Instance.minigameWins.ContainsKey(winners[0])) {
                     GameData.Instance.minigameWins[winners[0]] = 1;
                 } else {

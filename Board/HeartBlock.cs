@@ -6,9 +6,14 @@ using Monocle;
 using MonoMod.Utils;
 using System;
 
-namespace MadelineParty {
+namespace MadelineParty.Board
+{
     [Tracked(false)]
-    public class HeartBlock : Entity {
+    /**
+     * Blocks the heart space from being bought
+     */
+    public class HeartBlock : Entity
+    {
         private const int SCALE = 2;
 
         private MTexture[,] nineSlice;
@@ -21,14 +26,17 @@ namespace MadelineParty {
 
         public bool fadeOut;
 
-        public HeartBlock(Vector2 position, float width, float height) : base(position) {
+        public HeartBlock(Vector2 position, float width, float height) : base(position)
+        {
             this.width = width;
             this.height = height;
             startY = Y;
             MTexture mTexture = GFX.Game["objects/madelineparty/heartblock"];
             nineSlice = new MTexture[3, 3];
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
                     nineSlice[i, j] = mTexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
                 }
             }
@@ -36,24 +44,29 @@ namespace MadelineParty {
             AddTag(TagsExt.SubHUD);
         }
 
-        public override void Awake(Scene scene) {
+        public override void Awake(Scene scene)
+        {
             base.Awake(scene);
             renderLerp = 1f;
         }
 
-        private void DrawBlock(Vector2 offset, Color color) {
+        private void DrawBlock(Vector2 offset, Color color)
+        {
             float tileWidth = width / 8f - 1f;
             float tileHeight = height / 8f - 1f;
-            for (int i = 0; i <= tileWidth; i++) {
-                for (int j = 0; j <= tileHeight; j++) {
-                    int num3 = ((i < tileWidth) ? Math.Min(i, 1) : 2);
-                    int num4 = ((j < tileHeight) ? Math.Min(j, 1) : 2);
+            for (int i = 0; i <= tileWidth; i++)
+            {
+                for (int j = 0; j <= tileHeight; j++)
+                {
+                    int num3 = i < tileWidth ? Math.Min(i, 1) : 2;
+                    int num4 = j < tileHeight ? Math.Min(j, 1) : 2;
                     nineSlice[num3, num4].Draw(Position + offset * SCALE + new Vector2(i * 8, j * 8) * SCALE, Vector2.Zero, color, SCALE);
                 }
             }
         }
 
-        public override void Render() {
+        public override void Render()
+        {
             SubHudRenderer.EndRender();
             SubHudRenderer.BeginRender(null, SamplerState.PointClamp);
             Vector2 oldPos = Position;
@@ -69,17 +82,21 @@ namespace MadelineParty {
             SubHudRenderer.BeginRender();
         }
 
-        public override void Update() {
+        public override void Update()
+        {
             base.Update();
-            if (Visible) {
+            if (Visible)
+            {
                 renderLerp = Calc.Approach(renderLerp, fadeOut ? 1f : 0f, Engine.DeltaTime * 3f);
             }
-            if (fadeOut && renderLerp >= .999f) {
+            if (fadeOut && renderLerp >= .999f)
+            {
                 RemoveSelf();
             }
         }
 
-        public void FadeOut() {
+        public void FadeOut()
+        {
             fadeOut = true;
         }
     }

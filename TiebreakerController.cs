@@ -1,5 +1,6 @@
 ﻿using Celeste;
 using Celeste.Mod.Entities;
+using MadelineParty.Board;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
@@ -9,7 +10,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MadelineParty {
+namespace MadelineParty
+{
     [CustomEntity("madelineparty/tieBreakerController")]
     class TiebreakerController : Entity {
         private Level level;
@@ -23,9 +25,8 @@ namespace MadelineParty {
             level = SceneAs<Level>();
             rolls = new int[4];
             List<int> list = new List<int>(BoardController.oneToTen);
-            Random rand = new Random((int)GameData.Instance.tieBreakerSeed);
             for (int i = 0; i < 4; i++) {
-                rolls[i] = list[rand.Next(list.Count)];
+                rolls[i] = list[GameData.Instance.Random.Next(list.Count)];
                 list.Remove(rolls[i]);
             }
         }

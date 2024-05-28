@@ -10,9 +10,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace MadelineParty.GreenSpace {
+namespace MadelineParty.Board.GreenSpace
+{
     [GreenSpace("gondola")]
-    class GS_Gondola : GreenSpaceEvent {
+    class GS_Gondola : GreenSpaceEvent
+    {
         private static MTexture back = GFX.Game["objects/gondola/back"],
                                 front = GFX.Game["objects/gondola/front"],
                                 left = GFX.Game["objects/madelineparty/gondola/cliffsideLeft"],
@@ -33,18 +35,22 @@ namespace MadelineParty.GreenSpace {
         private BoardController.BoardSpace? lastSpace = null;
         private Action lastAfter;
 
-        public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after) {
+        public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after)
+        {
             lastBoard = board;
             lastSpace = space;
             lastAfter = after;
-            if (GameData.Instance.players[board.CurrentPlayerToken.id].Strawberries >= GONDOLA_COST && (GameData.Instance.heartBlocks.Count <= 0 || GameData.Instance.heartSpaceID != getDestination(space, board.boardSpaces).ID)) {
-                board.GetLeftButton(board.CurrentPlayerToken).OnPressButton += delegate {
+            if (GameData.Instance.players[board.CurrentPlayerToken.id].Strawberries >= GONDOLA_COST && (GameData.Instance.heartBlocks.Count <= 0 || GameData.Instance.heartSpaceID != getDestination(space, board.boardSpaces).ID))
+            {
+                board.GetLeftButton(board.CurrentPlayerToken).OnPressButton += delegate
+                {
                     MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "TAKEGONDOLA", choice = 1 });
                     GondolaChoiceMade(true, board, space, after);
                 };
                 board.SetLeftButtonStatus(board.CurrentPlayerToken, LeftButton.Modes.Confirm);
             }
-            board.GetRightButton(board.CurrentPlayerToken).OnPressButton += delegate {
+            board.GetRightButton(board.CurrentPlayerToken).OnPressButton += delegate
+            {
                 MultiplayerSingleton.Instance.Send(new PlayerChoice { choiceType = "TAKEGONDOLA", choice = 0 });
                 GondolaChoiceMade(false, board, space, after);
             };
@@ -52,11 +58,13 @@ namespace MadelineParty.GreenSpace {
             board.GetScoreboard(board.CurrentPlayerToken).BuyArbitrary(GFX.Game["decals/madelineparty/gondola"], GONDOLA_COST);
         }
 
-        private void GondolaChoiceMade(bool taking, BoardController board, BoardController.BoardSpace space, Action after) {
+        private void GondolaChoiceMade(bool taking, BoardController board, BoardController.BoardSpace space, Action after)
+        {
             board.SetLeftButtonStatus(board.CurrentPlayerToken, LeftButton.Modes.Inactive);
             board.SetRightButtonStatus(board.CurrentPlayerToken, RightButton.Modes.Inactive);
             board.GetScoreboard(board.CurrentPlayerToken).SetCurrentMode(GameScoreboard.Modes.NORMAL);
-            if(!taking) {
+            if (!taking)
+            {
                 after();
                 return;
             }
@@ -65,27 +73,31 @@ namespace MadelineParty.GreenSpace {
             board.Add(new Coroutine(GondolaRoutine(board, space, after)));
         }
 
-        private IEnumerator GondolaRoutine(BoardController board, BoardController.BoardSpace space, Action after) {
+        private IEnumerator GondolaRoutine(BoardController board, BoardController.BoardSpace space, Action after)
+        {
             Vector2 gondolaCenterOffset = new Vector2(back.Width / 2, 2 * back.Height / 3);
             PlayerToken token = board.CurrentPlayerToken;
             BoardController.BoardSpace dest = getDestination(space, board.boardSpaces);
             Vector2 destPos = dest.screenPosition;
             Vector2 target = CalcGondolaPosition(space.screenPosition, destPos, 0) + gondolaCenterOffset;
-            while (!token.Position.Equals(target)) {
+            while (!token.Position.Equals(target))
+            {
                 yield return null;
                 token.Position = Calc.Approach(token.Position, target, BoardController.TOKEN_SPEED * Engine.DeltaTime);
             }
             yield return 0.3f;
             // Begin moving gondola
             progress[space.screenPosition] = 0;
-            while (progress[space.screenPosition] < 1) {
+            while (progress[space.screenPosition] < 1)
+            {
                 yield return null;
                 progress[space.screenPosition] += Engine.DeltaTime / 3;
                 token.Position = CalcGondolaPosition(space.screenPosition, destPos, progress[space.screenPosition]) + gondolaCenterOffset;
             }
             progress[space.screenPosition] = 1;
             yield return 0.3f;
-            while (!token.Position.Equals(destPos)) {
+            while (!token.Position.Equals(destPos))
+            {
                 yield return null;
                 token.Position = Calc.Approach(token.Position, destPos, BoardController.TOKEN_SPEED * Engine.DeltaTime);
             }
@@ -94,7 +106,8 @@ namespace MadelineParty.GreenSpace {
             yield return 0.2f;
             // Send gondola back
             progress[space.screenPosition] = 1;
-            while (progress[space.screenPosition] > 0) {
+            while (progress[space.screenPosition] > 0)
+            {
                 yield return null;
                 progress[space.screenPosition] -= Engine.DeltaTime / 3;
             }
@@ -102,11 +115,13 @@ namespace MadelineParty.GreenSpace {
             after();
         }
 
-        private Vector2 CalcGondolaPosition(Vector2 start, Vector2 end, float progress) {
+        private Vector2 CalcGondolaPosition(Vector2 start, Vector2 end, float progress)
+        {
             return Vector2.Lerp(start + gondolaStartOffset, end + gondolaEndOffset, Ease.CubeInOut(progress));
         }
 
-        public override void RenderSubHUD(BoardController.BoardSpace space, List<BoardController.BoardSpace> spaces) {
+        public override void RenderSubHUD(BoardController.BoardSpace space, List<BoardController.BoardSpace> spaces)
+        {
             base.RenderSubHUD(space, spaces);
             Vector2 destPos = getDestination(space, spaces).screenPosition;
             Vector2 leftPos = space.screenPosition + new Vector2(10, -spaceWidth / 2 - left.Height / 2 + 6);
@@ -124,9 +139,11 @@ namespace MadelineParty.GreenSpace {
             right.DrawCentered(rightPos, Color.White, 1, 0, SpriteEffects.FlipHorizontally);
         }
 
-        private void RenderRope(Vector2 leftPos, Vector2 rightPos, Vector2 gondolaLeft, Vector2 gondolaRight) {
+        private void RenderRope(Vector2 leftPos, Vector2 rightPos, Vector2 gondolaLeft, Vector2 gondolaRight)
+        {
             Vector2 slope = (leftPos - rightPos).SafeNormalize();
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 2; i++)
+            {
                 Vector2 value5 = Vector2.UnitY * i;
                 Draw.Line(leftPos + value5, gondolaLeft + slope * 6 + value5, Color.Black);
                 Draw.Line(gondolaRight - slope * 6 + value5, rightPos + value5, Color.Black);
@@ -135,28 +152,32 @@ namespace MadelineParty.GreenSpace {
 
         // We cache the results of this
         // TODO put caching back if possible, was removed because it doesn't take into account different boards having different gondolas
-        private BoardController.BoardSpace getDestination(BoardController.BoardSpace start, List<BoardController.BoardSpace> spaces) {
+        private BoardController.BoardSpace getDestination(BoardController.BoardSpace start, List<BoardController.BoardSpace> spaces)
+        {
             //if(destinations.TryGetValue(start.screenPosition, out BoardController.BoardSpace res)) {
             //    return res;
             //} else {
-                var result = spaces
-                    .Where(s => s.position != start.position)
-                    .OrderBy(s => (s.screenPosition - start.screenPosition - destinationOffset).LengthSquared())
-                    .First();
-                destinations[start.screenPosition] = result;
-                return result;
+            var result = spaces
+                .Where(s => s.position != start.position)
+                .OrderBy(s => (s.screenPosition - start.screenPosition - destinationOffset).LengthSquared())
+                .First();
+            destinations[start.screenPosition] = result;
+            return result;
             //}
         }
 
-        public override void LoadContent() {
+        public override void LoadContent()
+        {
             base.LoadContent();
             MultiplayerSingleton.Instance.RegisterUniqueHandler<PlayerChoice>("MadelinePartyGondola", HandlePlayerChoice);
         }
 
-        private void HandlePlayerChoice(MPData data) {
+        private void HandlePlayerChoice(MPData data)
+        {
             if (data is not PlayerChoice playerChoice) return;
             // If another player in our party has made a gondola choice
-            if (lastSpace.HasValue && GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.CurrentPlayerID() && playerChoice.choiceType.Equals("TAKEGONDOLA")) {
+            if (lastSpace.HasValue && GameData.Instance.celestenetIDs.Contains(playerChoice.ID) && playerChoice.ID != MultiplayerSingleton.Instance.CurrentPlayerID() && playerChoice.choiceType.Equals("TAKEGONDOLA"))
+            {
                 GondolaChoiceMade(playerChoice.choice == 1, lastBoard, lastSpace.Value, lastAfter);
             }
         }

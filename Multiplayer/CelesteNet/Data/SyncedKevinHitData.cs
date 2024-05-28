@@ -1,18 +1,18 @@
-﻿using Celeste.Mod.CelesteNet;
-using Celeste.Mod.CelesteNet.DataTypes;
+﻿using Celeste.Mod.CelesteNet.DataTypes;
+using Celeste.Mod.CelesteNet;
 using MadelineParty.Multiplayer.General;
 
 namespace MadelineParty.Multiplayer.CelesteNet.Data {
-    public class RandomSeedData : DataType<RandomSeedData>, MultiplayerData {
-        static RandomSeedData() {
-            DataID = "mPartyRandomSeed";
+    public class SyncedKevinHitData : DataType<SyncedKevinHitData>, MultiplayerData {
+        static SyncedKevinHitData() {
+            DataID = "mPartySyncedKevinHit";
         }
 
         public DataPlayerInfo Player;
 
-        private RandomSeed data;
+        private SyncedKevinHit data;
 
-        public RandomSeed Data {
+        public SyncedKevinHit Data {
             get {
                 data.ID = Player.ID;
                 data.DisplayName = Player.DisplayName;
@@ -20,7 +20,7 @@ namespace MadelineParty.Multiplayer.CelesteNet.Data {
             }
         }
 
-        public void Initialize(MPData args) => data = args as RandomSeed;
+        public void Initialize(MPData args) => data = args as SyncedKevinHit;
 
         public override MetaType[] GenerateMeta(DataContext ctx)
         => new MetaType[] {
@@ -33,11 +33,13 @@ namespace MadelineParty.Multiplayer.CelesteNet.Data {
 
         protected override void Read(CelesteNetBinaryReader reader) {
             data = new();
-            data.seed = reader.ReadInt32();
+            data.kevinID = reader.ReadString();
+            data.dir = reader.ReadVector2();
         }
 
         protected override void Write(CelesteNetBinaryWriter writer) {
-            writer.Write(data.seed);
+            writer.Write(data.kevinID);
+            writer.Write(data.dir);
         }
     }
 }

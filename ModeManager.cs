@@ -1,4 +1,5 @@
 ﻿using Celeste;
+using MadelineParty.Minigame;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
@@ -54,12 +55,31 @@ namespace MadelineParty {
         }
 
         public void AfterMinigameChosen() {
-            if (Mode.Equals(MINIGAME_MODE) && Engine.Scene is Level level) {
+            if (Engine.Scene is not Level level) return;
+            if (Mode.Equals(MINIGAME_MODE)) {
                 GameData.Instance.minigameStatus.Clear();
                 level.Remove(level.Entities.FindAll<MinigameDisplay>());
                 level.OnEndOfFrame += delegate {
-                    level.Teleport(GameData.Instance.minigame, () => level.Session.LevelData.Spawns[level.Session.LevelData.Spawns.Count >= 4 ? GameData.Instance.realPlayerID : 0]);
-                    level.Session.Audio.Music.Event = GameData.GetMinigameMusic(GameData.Instance.minigame);
+                    level.Teleport(GameData.Instance.minigame, () => level.Session.LevelData.Spawns.Count >= 4 ? level.Session.LevelData.Spawns[GameData.Instance.realPlayerID] : level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top)));
+                };
+            } else if (Mode.Equals(BOARD_MODE)) {
+                var selectUI = new MinigameSelectUI(GameData.Instance.minigame);
+                level.Add(selectUI);
+                selectUI.OnSelect = selection => {
+                    GameData.Instance.playedMinigames.Add(selection);
+                    Player player = level.Tracker.GetEntity<Player>();
+                    level.OnEndOfFrame += delegate {
+                        player.Speed = Vector2.Zero;
+                        Leader.StoreStrawberries(player.Leader);
+                        level.Remove(player);
+                        level.UnloadLevel();
+
+                        level.Session.Level = selection;
+                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
+                        level.LoadLevel(Player.IntroTypes.None);
+
+                        Leader.RestoreStrawberries(player.Leader);
+                    };
                 };
             }
         }

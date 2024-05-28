@@ -1,4 +1,5 @@
-﻿using Celeste;
+﻿using BrokemiaHelper;
+using Celeste;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -16,9 +17,8 @@ namespace MadelineParty {
         public override void Added(Scene scene) {
             base.Added(scene);
             Level level = SceneAs<Level>();
-            Random rand = new Random((int)(GameData.Instance.turnOrderSeed / 2) + level.Session.Level.GetHashCode() / 2);
             level.Session.Flags.RemoveWhere((flag) => flag.StartsWith("madelinepartytempseed"));
-            level.Session.SetFlag("madelinepartytempseed" + rand.Next() % partitions, true);
+            level.Session.SetFlag("madelinepartytempseed" + GameData.Instance.Random.Next(partitions), true);
         }
     }
 }

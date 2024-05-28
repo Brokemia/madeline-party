@@ -5,11 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using BrokemiaHelper;
 using Celeste;
+using MadelineParty.Board;
+using MadelineParty.Minigame;
 using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
-using static MadelineParty.BoardController;
+using static MadelineParty.Board.BoardController;
 
 namespace MadelineParty
 {
@@ -20,8 +22,6 @@ namespace MadelineParty
         private GameData()
         {
         }
-
-        private static readonly Random rand = new();
 
         public static readonly IReadOnlyDictionary<string, Item> items = new Dictionary<string, Item>() {
             {
@@ -69,7 +69,7 @@ namespace MadelineParty
                         if(swappable.Count == 0) {
                             swappable = new List<PlayerData>() { Instance.players[player] };
                         }
-                        var swapping = swappable[rand.Next(swappable.Count())];
+                        var swapping = swappable[Instance.Random.Next(swappable.Count())];
                         swappable.Remove(swapping);
                         Dialog.Language.Dialog["MadelineParty_Swappable_Players"] = swapping == Instance.players[player] ? Dialog.Get("MadelineParty_Yourself") : Instance.GetPlayerName(swapping.token.id);
                         if(swappable.Count > 0) {
@@ -178,13 +178,13 @@ namespace MadelineParty
             }
         }
 
+        public Random Random;
+
         public const int START_BERRIES = 10;
         public const int MAX_ITEMS = 3;
         public int turn = 1;
         public int maxTurns = 10;
         public int playerNumber = -1;
-        public uint turnOrderSeed = 21;
-        public uint tieBreakerSeed = 20;
         public PlayerData[] players = { null, null, null, null };
         // The ID of the player at this client
         public int realPlayerID = -1;
@@ -218,24 +218,10 @@ namespace MadelineParty
 
         public PlayerData RealPlayer => players[realPlayerID];
 
-        private Random _textRand;
-
-        private Random TextRand {
-            get => _textRand == null ? _textRand = new Random((int)(turnOrderSeed / 3) - 120) : _textRand;
-        }
-
         public static void Reset()
         {
             Instance = new GameData();
             BoardController.hackfixRespawn = false;
-            MinigameEntity.startTime = -1;
-            MinigameEntity.started = false;
-            MinigameEntity.didRespawn = false;
-            MinigameTheoMover.theoCount = 0;
-            MinigameInfinityTrigger.loops = 0;
-            MinigameInfinityTrigger.dist = 0;
-            MinigameSwitchGatherer.switchCount = 0;
-            MinigameSwitchGatherer.switchesOn = new();
         }
 
         public string GetPlayerName(int id) {
@@ -250,15 +236,25 @@ namespace MadelineParty
         }
 
         public string GetRandomDialogID(string listID) {
-            return TextRand.Choose(Dialog.Clean(listID).Split(','));
+            return Random.Choose(Dialog.Clean(listID).Split(','));
         }
 
-        public List<LevelData> GetAllMinigames(Level level) {
-            return level.Session.MapData.Levels.FindAll((lvl) => lvl.Name.StartsWith("z_Minigame", StringComparison.InvariantCulture));
+        private bool LevelMatchesSearch(LevelData level, MinigameSearchQuery query) {
+            if (query == null) return true;
+            if (level.Entities.Find(data => data.Name == MinigameMetadataController.EntityName) is not { } data) return true;
+            var meta = MinigameMetadataController.LoadMetadata(data);
+            if (meta.MinPlayers > query.PlayerCount || meta.MaxPlayers < query.PlayerCount) return false;
+            // Make sure minigame tags contains at least all the tags in query.Tags
+            if (!meta.MinigameTags.IsSupersetOf(query.Tags)) return false;
+            return true;
         }
 
-        public List<LevelData> GetAllUnplayedMinigames(Level level) {
-            return GetAllMinigames(level).FindAll((lvl) => !playedMinigames.Contains(lvl.Name));
+        public List<LevelData> GetAllMinigames(Level level, MinigameSearchQuery query) {
+            return level.Session.MapData.Levels.FindAll((lvl) => lvl.Name.StartsWith("z_Minigame", StringComparison.InvariantCulture) && LevelMatchesSearch(lvl, query));
+        }
+
+        public List<LevelData> GetAllUnplayedMinigames(Level level, MinigameSearchQuery query) {
+            return GetAllMinigames(level, query).FindAll((lvl) => !playedMinigames.Contains(lvl.Name));
         }
 
         public static string GetMinigameMusic(string name) {

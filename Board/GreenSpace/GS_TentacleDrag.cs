@@ -7,13 +7,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MadelineParty.GreenSpace
+namespace MadelineParty.Board.GreenSpace
 {
     [GreenSpace("tentacleDrag")]
-    class GS_TentacleDrag : GreenSpaceEvent {
+    class GS_TentacleDrag : GreenSpaceEvent
+    {
         private const float scaleFactor = 3;
 
-        public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after) {
+        public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after)
+        {
             Sprite tentacleSprite = GFX.SpriteBank.Create("madelinePartyTentacle");
             SubHudSprite tentacle = new SubHudSprite(tentacleSprite);
             Vector2 targetPosition = space.screenPosition - new Vector2(tentacleSprite.Width * scaleFactor / 2, 27 * scaleFactor);
@@ -24,7 +26,8 @@ namespace MadelineParty.GreenSpace
 
             float posOffset = tentacleSprite.Height;
             tentacleSprite.Scale = new Vector2(scaleFactor);
-            while (tentacle.Position.Y + posOffset < Engine.ViewHeight) {
+            while (tentacle.Position.Y + posOffset < Engine.ViewHeight)
+            {
                 Sprite extension = GFX.SpriteBank.Create("madelinePartyTentacle");
                 extension.Play("long");
                 tentacle.Add(extension);
@@ -37,14 +40,16 @@ namespace MadelineParty.GreenSpace
 
             Tween riseTween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeIn, 0.25f, true);
             riseTween.OnUpdate = t => tentacle.Position.Y = Calc.LerpClamp(Engine.ViewHeight, targetPosition.Y, t.Eased);
-            riseTween.OnComplete = t => {
+            riseTween.OnComplete = t =>
+            {
                 tentacleSprite.Play("tentacle_grab");
                 board.Add(new Coroutine(PullDown(board, after, tentacle, space)));
             };
             board.Add(riseTween);
         }
 
-        private IEnumerator PullDown(BoardController board, Action after, SubHudSprite tentacle, BoardController.BoardSpace startSpace) {
+        private IEnumerator PullDown(BoardController board, Action after, SubHudSprite tentacle, BoardController.BoardSpace startSpace)
+        {
             yield return 1.5f;
             // The highest space with the exact same x
             // Or if there is no space with the same x
@@ -62,7 +67,8 @@ namespace MadelineParty.GreenSpace
             Vector2 offset = new Vector2(tentacle.sprite.Width * scaleFactor / 2, 27 * scaleFactor);
             Vector2 speed = (endSpace.screenPosition - startSpace.screenPosition).SafeNormalize() * 150 * Engine.DeltaTime;
             Vector2 pos = startSpace.screenPosition;
-            while (tentacle.Position != endSpace.screenPosition - offset) {
+            while (tentacle.Position != endSpace.screenPosition - offset)
+            {
                 pos = Vector2.Clamp(pos + speed, Vector2.Min(startSpace.screenPosition, endSpace.screenPosition), Vector2.Max(startSpace.screenPosition, endSpace.screenPosition));
                 speed += speed.SafeNormalize() * 150 * Engine.DeltaTime;
                 dragToPos(tentacle, grabbed, pos, offset);
@@ -72,27 +78,32 @@ namespace MadelineParty.GreenSpace
             float tentacleStartY = tentacle.Position.Y;
             tentacle.sprite.Rate = 0.5f;
             tentacle.sprite.Play("tentacle_ungrab");
-            
-            tentacle.sprite.OnLastFrame = s => {
+
+            tentacle.sprite.OnLastFrame = s =>
+            {
                 tentacle.sprite.OnLastFrame = null;
                 Tween fallTween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, 0.25f, true);
                 fallTween.OnUpdate = t => tentacle.Position.Y = Calc.LerpClamp(tentacleStartY, Engine.ViewHeight + tentacle.sprite.Height * scaleFactor, t.Percent);
-                fallTween.OnComplete = t => {
+                fallTween.OnComplete = t =>
+                {
                     tentacle.RemoveSelf();
                     after();
                 };
                 board.Add(fallTween);
             };
 
-            foreach(PlayerToken token in grabbed) {
+            foreach (PlayerToken token in grabbed)
+            {
                 token.currentSpace = endSpace;
                 GameData.Instance.players[token.id].pastBoardSpaceIDs.Add(endSpace.ID);
             }
         }
 
-        private void dragToPos(SubHudSprite tentacle, IEnumerable<PlayerToken> tokens, Vector2 position, Vector2 tentacleOffset) {
+        private void dragToPos(SubHudSprite tentacle, IEnumerable<PlayerToken> tokens, Vector2 position, Vector2 tentacleOffset)
+        {
             tentacle.Position = position - tentacleOffset;
-            foreach(PlayerToken token in tokens) {
+            foreach (PlayerToken token in tokens)
+            {
                 token.Position = position;
             }
         }

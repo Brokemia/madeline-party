@@ -5,32 +5,35 @@ using System.Reflection;
 using BrokemiaHelper;
 using Celeste;
 using Celeste.Mod.Entities;
+using MadelineParty.Board;
+using MadelineParty.Minigame;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
 
-namespace MadelineParty {
+namespace MadelineParty
+{
     // Try to dodge opponents trails in a feather
     [CustomEntity("madelineparty/minigameTron")]
     public class MinigameTron : MinigameEntity {
-        private static FieldInfo diedInGBJInfo = typeof(Player).GetField("diedInGBJ", BindingFlags.Static | BindingFlags.NonPublic);
+        public class TronMinigamePersistentData : MinigamePersistentData {
+            // Note: Brokemia Helper handles the trail for the real player
+            public List<Vector2>[] Trails { get; private set; } = new List<Vector2>[4];
+        }
+
+
         protected Vector2 deadRespawn;
-        // Note: Brokemia Helper handles the trail for the real player
-        private static List<Vector2>[] trails = new List<Vector2>[4];
         private Player player;
+        private TronMinigamePersistentData tronData;
         
         public MinigameTron(EntityData data, Vector2 offset) : base(data, offset) {
             deadRespawn = data.NodesOffset(offset)[0];
         }
 
-        public static new void Load() {
-            TronState.OnAddTrailPt += OnAddTrailPt;
-        }
-
-        public static void Unload() {
-            TronState.OnAddTrailPt -= OnAddTrailPt;
+        protected override MinigamePersistentData NewData() {
+            return new TronMinigamePersistentData();
         }
 
         private static void OnAddTrailPt(Vector2 pt) {
@@ -39,6 +42,7 @@ namespace MadelineParty {
 
         public override void Added(Scene scene) {
             base.Added(scene);
+            tronData = DataAs<TronMinigamePersistentData>();
         }
 
         public override void Awake(Scene scene) {
@@ -48,11 +52,8 @@ namespace MadelineParty {
                 completed = true;
                 MinigameTimeDisplay display = level.Entities.FindFirst<MinigameTimeDisplay>();
                 if (display != null)
-                    display.finalTime = level.RawTimeActive - startTime;
-                float timeElapsed = (level.RawTimeActive - startTime) * 10000;
-                startTime = -1;
-                started = false;
-                didRespawn = false;
+                    display.finalTime = level.RawTimeActive - Data.StartTime;
+                float timeElapsed = (level.RawTimeActive - Data.StartTime) * 10000;
                 level.CanRetry = false;
                 GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, (uint)timeElapsed));
                 MultiplayerSingleton.Instance.Send(new MinigameEnd { results = (uint)timeElapsed });
@@ -62,13 +63,13 @@ namespace MadelineParty {
                 // Don't prevent pausing if we're still on the ready screen
                 //if (started) {
                 level.PauseLock = true;
-                diedInGBJInfo.SetValue(null, 0);
-                lock (trails) {
+                Player.diedInGBJ = 0;
+                lock (tronData.Trails) {
                     for (int i = 0; i < 4; i++) {
                         if (i != GameData.Instance.realPlayerID && GameData.Instance.players[i] != null) {
-                            trails[i] = new();
+                            tronData.Trails[i] = new();
                         } else {
-                            trails[i] = null;
+                            tronData.Trails[i] = null;
                         }
                     }
                 }
@@ -78,29 +79,30 @@ namespace MadelineParty {
 
         protected override void AfterStart() {
             base.AfterStart();
-            // Reset timer so it starts at 0 instead of 4.2
-            startTime = level.RawTimeActive;
             player = level.Tracker.GetEntity<Player>();
             player.JustRespawned = false;
+            
+            var state = player.Get<TronState>();
             // TODO fix this when I refactor characters
-            var pData = DynamicData.For(player);
-            pData.Set("BrokemiaHelperTronHairColor", PlayerToken.colors[PlayerToken.GetFullPath(BoardController.TokenPaths[GameData.Instance.realPlayerID])]);
-            pData.Set("BrokemiaHelperTronTargetSpeed", (float?)110f);
-            pData.Set("BrokemiaHelperTronMaxSpeed", (float?)140f);
-            TronState.StartTron(player);
+            state.HairColor = PlayerToken.colors[PlayerToken.GetFullPath(BoardController.TokenPaths[GameData.Instance.realPlayerID])];
+            state.TargetSpeed = 110;
+            state.MaxSpeed = 140;
+            state.OnAddTrailPt += OnAddTrailPt;
+            state.StartTron();
+            
             level.Session.RespawnPoint = deadRespawn;
             level.Add(new MinigameTimeDisplay(this));
         }
 
         public override void Update() {
             base.Update();
-            if (!started) return;
+            if (!Data.Started) return;
             player = level.Tracker.GetEntity<Player>();
             if (player != null) {
-                lock (trails) {
-                    for (int i = 0; i < trails.Length; i++) {
-                        if (trails[i] != null) {
-                            foreach (Vector2 pt in trails[i]) {
+                lock (tronData.Trails) {
+                    for (int i = 0; i < tronData.Trails.Length; i++) {
+                        if (tronData.Trails[i] != null) {
+                            foreach (Vector2 pt in tronData.Trails[i]) {
                                 if ((pt - player.Center).LengthSquared() < TronState.pointSpacingSq * Engine.DeltaTime * Engine.DeltaTime) {
                                     player.Die(Vector2.Zero);
                                 }
@@ -109,34 +111,35 @@ namespace MadelineParty {
                     }
                 }
                 if(GameData.Instance.playerNumber > 1 && GameData.Instance.minigameResults.Count == GameData.Instance.playerNumber - 1 && !GameData.Instance.minigameResults.Any(t => t.Item1 == GameData.Instance.realPlayerID)) {
-                    float timeElapsed = (level.RawTimeActive - startTime + 2) * 10000; // Add 2 seconds just to be sure, since this player is obviously the winner
+                    float timeElapsed = (level.RawTimeActive - Data.StartTime + 2) * 10000; // Add 2 seconds just to be sure, since this player is obviously the winner
                     MultiplayerSingleton.Instance.Send(new MinigameEnd { results = (uint)timeElapsed });
 
-                    Add(new Coroutine(EndMinigame(HIGHEST_WINS, () => { })));
+                    Add(new Coroutine(EndMinigame(HIGHEST_WINS, null)));
                 }
             } else {
-                lock (trails) {
-                    trails[GameData.Instance.realPlayerID] = TronState.trail;
+                lock (tronData.Trails) {
+                    // TODO don't break with quick respawn mods?
+                    tronData.Trails[GameData.Instance.realPlayerID] = level.Entities.FindFirst<PlayerDeadBody>().Get<TronState>().trail;
                 }
             }
         }
 
         public override void MultiplayerReceiveVector2(Vector2 vec, int extra) {
             base.MultiplayerReceiveVector2(vec, extra);
-            lock (trails) {
-                trails[extra].Add(vec);
+            lock (tronData.Trails) {
+                tronData.Trails[extra].Add(vec);
             }
         }
 
         public override void Render() {
             base.Render();
-            if (!started) return;
-            lock (trails) {
+            //if (!started) return;
+            lock (tronData.Trails) {
                 for (int i = 0; i < 4; i++) {
-                    if (trails[i] != null) {
+                    if (tronData.Trails[i] != null) {
                         Color color = PlayerToken.colors[PlayerToken.GetFullPath(BoardController.TokenPaths[i])];
-                        for (int j = 0; j < trails[i].Count - 1; j++) {
-                            Draw.Line(trails[i][j], trails[i][j + 1], color, 3);
+                        for (int j = 0; j < tronData.Trails[i].Count - 1; j++) {
+                            Draw.Line(tronData.Trails[i][j], tronData.Trails[i][j + 1], color, 3);
                         }
                     }
                 }

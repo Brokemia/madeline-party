@@ -5,6 +5,8 @@ using System;
 
 namespace MadelineParty {
     public class MinigameTimeDisplay : MinigameDisplay {
+        public float CountdownTime { get; set; } = 30;
+
         private static float spacerWidth;
 
         private static float numberWidth;
@@ -36,7 +38,7 @@ namespace MadelineParty {
                     float y = -56f * Ease.CubeIn(1f - DrawLerp);
                     Level level = Scene as Level;
 
-                    TimeSpan timeSpan2 = TimeSpan.FromTicks((long)((finalTime > 0 ? finalTime : level.RawTimeActive - MinigameEntity.startTime) * 10000000));
+                    TimeSpan timeSpan2 = TimeSpan.FromTicks((long)((finalTime > 0 ? finalTime : level.RawTimeActive - minigame.Data.StartTime) * 10000000));
                     string timeString = timeSpan2.ToString("mm\\:ss\\.fff");
                     timerBg.Draw(new Vector2(816, y));
                     DrawTime(new Vector2(816 + 16f, y + 52f), timeString, 1f + wiggler.Value * 0.15f, true, minigame.completed, false);
@@ -45,7 +47,7 @@ namespace MadelineParty {
                 float timerY = -56f * Ease.CubeIn(1f - DrawLerp);
                 Level level = Scene as Level;
 
-                TimeSpan timeSpan = TimeSpan.FromTicks((long)(((minigame.completed || MinigameEntity.startTime < 0) ? 0 : 30 - (level.RawTimeActive - MinigameEntity.startTime)) * 10000000));
+                TimeSpan timeSpan = TimeSpan.FromTicks((long)(((minigame.completed || minigame.Data.StartTime < 0) ? 0 : CountdownTime - (level.RawTimeActive - minigame.Data.StartTime)) * 10000000));
                 string timeString = timeSpan.ToString("ss\\.fff");
                 timerBg.Draw(new Vector2(816, timerY));
                 DrawTime(new Vector2(816 + 64f, timerY + 52f), timeString, 1f + wiggler.Value * 0.15f, true, minigame.completed, false);

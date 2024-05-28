@@ -1,13 +1,19 @@
 ﻿using Celeste;
+using MadelineParty.Board;
 using Microsoft.Xna.Framework;
 using Monocle;
+using System;
 
-namespace MadelineParty {
+namespace MadelineParty
+{
     public class MinigameScoreDisplay : MinigameDisplay {
-        private int max;
+        private static readonly Func<uint, object> defaultProcessor = s => s;
+        private string format;
+        private Func<uint, object> statusProcessor;
 
-        public MinigameScoreDisplay(MinigameEntity minigame, int max = -1) : base(minigame) {
-            this.max = max;
+        public MinigameScoreDisplay(MinigameEntity minigame, string format = "{0}", Func<uint, object> processor = null) : base(minigame) {
+            statusProcessor = processor ?? defaultProcessor;
+            this.format = format;
             Y = 120;
         }
 
@@ -21,7 +27,7 @@ namespace MadelineParty {
                     if (GameData.Instance.players[i] != null) {
                         scoreBg.Draw(new Vector2(lerpIn, Y + 44 * (index + 1)));
                         
-                        RenderScore((GameData.Instance.minigameStatus.ContainsKey(i) ? GameData.Instance.minigameStatus[i].ToString() : "0") + (max > 0 ? "/" + max : ""),
+                        RenderScore(string.Format(format, statusProcessor(GameData.Instance.minigameStatus.ContainsKey(i) ? GameData.Instance.minigameStatus[i] : 0)),
                             i, index, lerpIn, 120);
                         index++;
                     }

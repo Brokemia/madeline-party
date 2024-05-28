@@ -74,7 +74,7 @@ namespace MadelineParty.Multiplayer {
             return new();
         }
 
-        public void RegisterHandler<T>(Action<MPData> handler) {
+        public void RegisterHandler<T>(Action<MPData> handler) where T : MPData {
             if(!handlers.ContainsKey(typeof(T))) {
                 handlers[typeof(T)] = new();
             }
@@ -86,6 +86,12 @@ namespace MadelineParty.Multiplayer {
                 uniqueHandlers[typeof(T)] = new();
             }
             uniqueHandlers[typeof(T)][key] = handler;
+        }
+
+        public void UnregisterUniqueHandler<T>(string key) where T : MPData {
+            if (uniqueHandlers.ContainsKey(typeof(T))) {
+                uniqueHandlers[typeof(T)].Remove(key);
+            }
         }
 
         public void Handle(MPData data) {

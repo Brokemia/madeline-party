@@ -78,12 +78,15 @@ namespace MadelineParty.Multiplayer.General {
     }
 
     public class RandomSeed : MPData {
-        public uint turnOrderSeed;
-        public uint tieBreakerSeed;
+        public int seed;
     }
 
     public class TiebreakerRolled : MPData {
         public Vector2 ButtonPosition;
     }
 
+    public class SyncedKevinHit : MPData {
+        public string kevinID;
+        public Vector2 dir;
+    }
 }

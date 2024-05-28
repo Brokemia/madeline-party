@@ -1,10 +1,12 @@
 ﻿using Celeste;
 using Celeste.Mod.Entities;
+using MadelineParty.Entities;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 
-namespace MadelineParty {
+namespace MadelineParty
+{
 
     [CustomEntity("madelineparty/beginModeTrigger")]
     public class BeginModeTrigger : Trigger {

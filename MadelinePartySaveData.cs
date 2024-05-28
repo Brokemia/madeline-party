@@ -1,11 +1,13 @@
 ﻿using Celeste.Mod;
+using MadelineParty.Board;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MadelineParty {
+namespace MadelineParty
+{
     public class MadelinePartySaveData : EverestModuleSaveData {
         public int Version { get; set; } = 1;
 

@@ -18,6 +18,7 @@ using Celeste.Mod.Entities;
 using MonoMod.RuntimeDetour;
 
 namespace MadelineParty.SubHud {
+    // TODO Rewrite to have less duplicate code in level loading
     [CustomEntity("madelineparty/subHudLevelForwarder")]
     [Tracked]
     public class SubHudLevelForwarder : Entity {
@@ -90,6 +91,9 @@ namespace MadelineParty.SubHud {
             subHudLevel?.AfterRender();
         }
 
+        private static Hook hookPlayerSpawn;
+        private static Hook hookSubHudRendererDTBGetter;
+
         public static void Load() {
             On.Celeste.LevelEnter.Go += LevelEnter_Go;
             On.Celeste.DustEdges.BeforeRender += DustEdges_BeforeRender;
@@ -100,13 +104,15 @@ namespace MadelineParty.SubHud {
             On.Celeste.Level.AfterRender += Level_AfterRender;
             On.Monocle.Scene.BeforeUpdate += Scene_BeforeUpdate;
             On.Monocle.Scene.AfterUpdate += Scene_AfterUpdate;
-            On.Celeste.Mod.Everest.Events.Player.Spawn += Player_Spawn;
+            hookPlayerSpawn = new Hook(() => Everest.Events.Player.Spawn(null), Player_Spawn);
+            //On.Celeste.Mod.Everest.Events.Player.Spawn += Player_Spawn;
 
-            new Hook(typeof(SubHudRenderer).GetProperty("DrawToBuffer", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public).GetGetMethod(), () => false);
+            hookSubHudRendererDTBGetter = new Hook(typeof(SubHudRenderer).GetProperty("DrawToBuffer", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public).GetGetMethod(), () => false);
         }
 
         // Stop Death Tracker from breaking because LevelLoader.StartLevel never was called
-        private static void Player_Spawn(On.Celeste.Mod.Everest.Events.Player.orig_Spawn orig, Player player) {
+        // TODO investigate the possibility of a better technique
+        private static void Player_Spawn(Action<Player> orig, Player player) {
             if (player.Scene is not SubHudLevel) {
                 orig(player);
             }
@@ -257,7 +263,7 @@ namespace MadelineParty.SubHud {
             SurfaceIndex.IndexToCustomPath.Clear();
             string text = "";
             try {
-                MapMeta meta = AreaData.Get(session).GetMeta();
+                MapMeta meta = AreaData.Get(session).Meta;
                 text = meta?.BackgroundTiles;
                 if (string.IsNullOrEmpty(text)) {
                     text = Path.Combine("Graphics", "BackgroundTiles.xml");
@@ -286,8 +292,8 @@ namespace MadelineParty.SubHud {
                         string key = spriteDatum.Key;
                         SpriteData value = spriteDatum.Value;
                         if (spriteBank.SpriteData.TryGetValue(key, out var value2)) {
-                            IDictionary animations = value2.Sprite.GetAnimations();
-                            foreach (DictionaryEntry item2 in (IDictionary)value.Sprite.GetAnimations()) {
+                            IDictionary animations = value2.Sprite.Animations;
+                            foreach (DictionaryEntry item2 in (IDictionary)value.Sprite.Animations) {
                                 animations[item2.Key] = item2.Value;
                             }
                             value2.Sources.AddRange(value.Sources);
@@ -374,7 +380,9 @@ namespace MadelineParty.SubHud {
             subHudLevel.ParticlesFG.Tag = Tags.Global;
             subHudLevel.ParticlesFG.Add(new MirrorReflection());
             subHudLevel.Add(subHudLevel.ParticlesFG);
-            
+
+            subHudLevel.Add(subHudLevel.strawberriesDisplay = new TotalStrawberriesDisplay());
+
             Rectangle tileBounds = mapData.TileBounds;
             GFX.FGAutotiler.LevelBounds.Clear();
             var virtualMap = new VirtualMap<char>(tileBounds.Width, tileBounds.Height, '0');
@@ -549,7 +557,8 @@ namespace MadelineParty.SubHud {
             On.Celeste.Level.AfterRender -= Level_AfterRender;
             On.Monocle.Scene.BeforeUpdate -= Scene_BeforeUpdate;
             On.Monocle.Scene.AfterUpdate -= Scene_AfterUpdate;
-            On.Celeste.Mod.Everest.Events.Player.Spawn -= Player_Spawn;
+            hookPlayerSpawn.Dispose();
+            hookSubHudRendererDTBGetter.Dispose();
         }
     }
 

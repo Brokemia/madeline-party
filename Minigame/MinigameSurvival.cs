@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Celeste;
 using Celeste.Mod.Entities;
 using MadelineParty.Multiplayer;
@@ -14,7 +13,6 @@ namespace MadelineParty {
     // Survive an increasing number of seekers for as long as possible
     [CustomEntity("madelineparty/minigameSurvival")]
     public class MinigameSurvival : MinigameEntity {
-        private static FieldInfo diedInGBJInfo = typeof(Player).GetField("diedInGBJ", BindingFlags.Static | BindingFlags.NonPublic);
         private List<Vector2> seekerSpawns = new();
         private List<Vector2> bossSpawns = new();
         private Random rand;
@@ -54,11 +52,8 @@ namespace MadelineParty {
                 completed = true;
                 MinigameTimeDisplay display = level.Entities.FindFirst<MinigameTimeDisplay>();
                 if (display != null)
-                    display.finalTime = level.RawTimeActive - startTime;
-                float timeElapsed = (level.RawTimeActive - startTime) * 10000;
-                startTime = -1;
-                started = false;
-                didRespawn = false;
+                    display.finalTime = level.RawTimeActive - Data.StartTime;
+                float timeElapsed = (level.RawTimeActive - Data.StartTime) * 10000;
                 level.CanRetry = false;
                 GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, (uint)timeElapsed));
                 MultiplayerSingleton.Instance.Send(new MinigameEnd { results = (uint)timeElapsed });
@@ -66,9 +61,9 @@ namespace MadelineParty {
                 Add(new Coroutine(EndMinigame(HIGHEST_WINS, () => { })));
             } else {
                 // Don't prevent pausing if we're still on the ready screen
-                if (started) {
+                if (Data.Started) {
                     level.PauseLock = true;
-                    diedInGBJInfo.SetValue(null, 0);
+                    Player.diedInGBJ = 0;
                 }
                 if (spawnSeekers) {
                     List<Entity> seekers = level.Tracker.GetEntities<Seeker>();
@@ -84,14 +79,12 @@ namespace MadelineParty {
                         boss.RemoveSelf();
                     }
                 }
-                rand = new Random((int)GameData.Instance.turnOrderSeed + (int)Y);
+                rand = new Random(GameData.Instance.Random.Next());
             }
         }
 
         protected override void AfterStart() {
             base.AfterStart();
-            // Reset timer so it starts at 0 instead of 4.2
-            startTime = level.RawTimeActive;
             level.Tracker.GetEntity<Player>().JustRespawned = false;
             level.Session.RespawnPoint = deadRespawn;
             level.Add(new MinigameTimeDisplay(this));
@@ -102,7 +95,7 @@ namespace MadelineParty {
 
         public override void Update() {
             base.Update();
-            if (!started) return;
+            if (!Data.Started) return;
             spawnTimer -= Engine.DeltaTime;
             if(lastOshiro != null) {
                 DynamicData.For(lastOshiro).Get<StateMachine>("state").State = 0;

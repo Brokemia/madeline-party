@@ -10,12 +10,16 @@ using Monocle;
 using System.Runtime.CompilerServices;
 using MadelineParty.SubHud;
 using MonoMod.ModInterop;
+using MadelineParty.Minigame;
+using MadelineParty.Board;
+using MadelineParty.Entities;
 
 // TODO minigames for most bounces of oshiro, seekers, snowballs, etc...
 // TODO survive the longest minigames
 
 [assembly: IgnoresAccessChecksTo("Celeste")]
-namespace MadelineParty {
+namespace MadelineParty
+{
     public class MadelinePartyModule : EverestModule {
 
         // Only one alive module instance can exist at any given time.
@@ -71,7 +75,6 @@ namespace MadelineParty {
             };
             MinigameEntity.Load();
             MinigameSwitchGatherer.Load();
-            MinigameTron.Load();
             BoardController.Load();
             TiebreakerController.Load();
             TextMenuPlus.Load();
@@ -207,7 +210,6 @@ namespace MadelineParty {
             Everest.Events.Level.OnLoadEntity -= Level_OnLoadEntity;
             On.Celeste.Player.Update -= Player_Update;
             MinigameSwitchGatherer.Unload();
-            MinigameTron.Unload();
             TextMenuPlus.Unload();
             SubHudLevelForwarder.Unload();
             BoardSelect.Unload();
@@ -304,9 +306,8 @@ namespace MadelineParty {
             if (data is not RandomSeed seed) return;
             // If another player in our party is distributing the randomization seeds
             if (GameData.Instance.celestenetIDs.Contains(seed.ID) && seed.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
-                GameData.Instance.turnOrderSeed = seed.turnOrderSeed;
-                GameData.Instance.tieBreakerSeed = seed.tieBreakerSeed;
-                BoardController.generateTurnOrderRolls();
+                GameData.Instance.Random = new Random(seed.seed);
+                BoardController.GenerateTurnOrderRolls();
             }
         }
 

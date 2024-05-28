@@ -1,5 +1,6 @@
 ﻿using Celeste;
 using Celeste.Mod.Entities;
+using MadelineParty.Entities;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
@@ -7,7 +8,8 @@ using Monocle;
 using System;
 using System.Collections;
 
-namespace MadelineParty {
+namespace MadelineParty
+{
     [CustomEntity("madelineparty/minigameModeScreen")]
     public class MinigameModeScreen : Entity {
         public class ScreenTerminal : Entity {
@@ -105,7 +107,9 @@ namespace MadelineParty {
             };
             menu.Add(header);
 
-			var minigameLevels = GameData.Instance.GetAllMinigames(level);
+			var minigameLevels = GameData.Instance.GetAllMinigames(level, new() {
+				PlayerCount = GameData.Instance.playerNumber
+			});
 
 			menu.Add(new TextMenu.Button(Dialog.Clean("MadelineParty_Minigame_List_Random")).Pressed(delegate {
 				if (terminal.Interacting) {
@@ -128,8 +132,8 @@ namespace MadelineParty {
                 }
 			};
 			menu.Focused = false;
-			MultiplayerSingleton.Instance.RegisterUniqueHandler<MinigameMenu>("minigameModeScreen", HandleMinigameMenu);
-			Scene.Add(menu);
+            Add(new MultiplayerHandlerComponent<MinigameMenu>("minigameModeScreen", HandleMinigameMenu));
+            Scene.Add(menu);
 		}
 
 		private void SelectLevel(string levelName) {
@@ -140,7 +144,9 @@ namespace MadelineParty {
 
 		private void HandleMinigameMenu(MPData data) {
 			if (data is not MinigameMenu mm) return;
-			menu.Selection = mm.selection;
+			if (GameData.Instance.celestenetIDs.Contains(mm.ID) && mm.ID != MultiplayerSingleton.Instance.CurrentPlayerID()) {
+				menu.Selection = mm.selection;
+			}
         }
-    }
+	}
 }

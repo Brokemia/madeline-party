@@ -1,5 +1,6 @@
 ﻿using Celeste;
 using Celeste.Mod.Entities;
+using MadelineParty.Board;
 using MadelineParty.Multiplayer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,7 +11,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MadelineParty {
+namespace MadelineParty
+{
     [CustomEntity("madelineparty/partyUIController")]
     public class PartyUIController : Entity {
         /*

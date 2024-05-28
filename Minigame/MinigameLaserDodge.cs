@@ -7,8 +7,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Monocle;
 using Celeste.Mod.Entities;
+using MadelineParty.Entity;
 
-namespace MadelineParty.Minigame {
+namespace MadelineParty.Minigame
+{
     [CustomEntity("madelineparty/minigameLaserDodge")]
     public class MinigameLaserDodge : MinigameEntity {
         private float spawnDecrease;
@@ -61,10 +63,8 @@ namespace MadelineParty.Minigame {
                 completed = true;
                 MinigameTimeDisplay display = level.Entities.FindFirst<MinigameTimeDisplay>();
                 if (display != null)
-                    display.finalTime = level.RawTimeActive - startTime;
-                float timeElapsed = (level.RawTimeActive - startTime) * 10000;
-                startTime = -1;
-                started = false;
+                    display.finalTime = level.RawTimeActive - Data.StartTime;
+                float timeElapsed = (level.RawTimeActive - Data.StartTime) * 10000;
                 level.CanRetry = false;
                 GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, (uint)timeElapsed));
                 MultiplayerSingleton.Instance.Send(new MinigameEnd { results = (uint)timeElapsed });
@@ -72,13 +72,11 @@ namespace MadelineParty.Minigame {
                 Add(new Coroutine(EndMinigame(HIGHEST_WINS, () => { })));
             }
 
-            rand = new Random((int)GameData.Instance.turnOrderSeed - (int)Y);
+            rand = new Random(GameData.Instance.Random.Next());
         }
 
         protected override void AfterStart() {
             base.AfterStart();
-            // Reset timer so it starts at 0 instead of 4.2
-            startTime = level.RawTimeActive;
             level.Tracker.GetEntity<Player>().JustRespawned = false;
             level.Session.RespawnPoint = deadRespawn;
             level.Add(new MinigameTimeDisplay(this));
@@ -86,7 +84,7 @@ namespace MadelineParty.Minigame {
 
         public override void Update() {
             base.Update();
-            if (!started) return;
+            if (!Data.Started) return;
             spawnTimer -= Engine.DeltaTime;
             if (spawnTimer < 0 && !completed) {
                 spawnTimer = nextSpawnTime;

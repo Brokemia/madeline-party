@@ -1,19 +1,19 @@
 ﻿using System;
 using Celeste;
+using MadelineParty.Entities;
 using MadelineParty.Multiplayer;
 using MadelineParty.Multiplayer.General;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace MadelineParty {
+namespace MadelineParty
+{
     public class MinigameFinishTrigger : MinigameEntity {
         public MinigameFinishTrigger(EntityData data, Vector2 offset) : base(data, offset) {
         }
 
         protected override void AfterStart() {
             base.AfterStart();
-            // Reset timer so it starts at 0 instead of 4.2
-            startTime = level.RawTimeActive;
             level.Add(new MinigameTimeDisplay(this));
         }
 
@@ -25,13 +25,10 @@ namespace MadelineParty {
             completed = true;
             MinigameTimeDisplay display = level.Entities.FindFirst<MinigameTimeDisplay>();
             if (display != null)
-                display.finalTime = level.RawTimeActive - startTime;
-            float timeElapsed = (level.RawTimeActive - startTime) * 10000;
-            startTime = -1;
-            started = false;
-            didRespawn = false;
+                display.finalTime = level.RawTimeActive - Data.StartTime;
+            float timeElapsed = (level.RawTimeActive - Data.StartTime) * 10000;
             level.CanRetry = false;
-            foreach(SyncedKevin kevin in level.Tracker.GetEntities<SyncedKevin>()) {
+            foreach(GroupedKevin kevin in level.Tracker.GetEntities<GroupedKevin>()) {
                 kevin.deactivated = true;
             }
             GameData.Instance.minigameResults.Add(new Tuple<int, uint>(GameData.Instance.realPlayerID, (uint)timeElapsed));

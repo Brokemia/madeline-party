@@ -5,13 +5,15 @@ using Monocle;
 using System;
 using System.Collections;
 
-namespace MadelineParty.GreenSpace
+namespace MadelineParty.Board.GreenSpace
 {
     [GreenSpace("seeker")]
-    class GS_Seeker : GreenSpaceEvent {
+    class GS_Seeker : GreenSpaceEvent
+    {
         private static Vector2 startOffset = new Vector2(120, -36);
 
-        public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after) {
+        public override void RunGreenSpace(BoardController board, BoardController.BoardSpace space, Action after)
+        {
             Sprite seekerSprite = GFX.SpriteBank.Create("seeker");
             SubHudSprite seeker = new SubHudSprite(seekerSprite);
             seeker.Collider = new Hitbox(50, 50, -25, -25);
@@ -25,16 +27,19 @@ namespace MadelineParty.GreenSpace
             board.Add(new Coroutine(SeekerCharge(board, after, seeker, seeker.Position, space.screenPosition - startOffset / 2)));
         }
 
-        private IEnumerator SeekerCharge(BoardController board, Action after, SubHudSprite seeker, Vector2 start, Vector2 end) {
+        private IEnumerator SeekerCharge(BoardController board, Action after, SubHudSprite seeker, Vector2 start, Vector2 end)
+        {
             yield return 0.6f;
             float speed = -6;
-            while ((start - end).Sign().Equals((seeker.Position - end).Sign())) {
+            while ((start - end).Sign().Equals((seeker.Position - end).Sign()))
+            {
                 CheckSeekerCollision(board, seeker);
                 speed = Calc.Approach(speed, 26f, 30f * Engine.DeltaTime);
                 seeker.Position += speed * (end - start).SafeNormalize();
                 yield return null;
             }
-            while (speed > 0.5) {
+            while (speed > 0.5)
+            {
                 CheckSeekerCollision(board, seeker);
                 speed = Calc.Approach(speed, 0, 40f * Engine.DeltaTime);
                 seeker.Position += speed * (end - start).SafeNormalize();
@@ -44,9 +49,11 @@ namespace MadelineParty.GreenSpace
             seeker.sprite.OnLoop = s => { seeker.RemoveSelf(); after(); };
         }
 
-        private void CheckSeekerCollision(BoardController board, SubHudSprite seeker) {
+        private void CheckSeekerCollision(BoardController board, SubHudSprite seeker)
+        {
             PlayerToken token;
-            if ((token = seeker.CollideFirst<PlayerToken>()) != null) {
+            if ((token = seeker.CollideFirst<PlayerToken>()) != null)
+            {
                 token.Add(new Coroutine(token.Respawn()));
                 token.OnRespawn = (t) => board.ChangeStrawberries(t.id, -5);
             }

@@ -12,7 +12,6 @@ namespace MadelineParty {
     public class GameEndController : Entity {
         private Level level;
         public int winnerID;
-        private Random textRand = new Random((int)(GameData.Instance.turnOrderSeed / 3) + 70);
 
         public override void Added(Scene scene) {
             base.Added(scene);
@@ -32,7 +31,7 @@ namespace MadelineParty {
         private string GetWinnerText(int player) {
             // First, set the name to use as a dialog entry
             Dialog.Language.Dialog["MadelineParty_Winner_ID_Name"] = GameData.Instance.GetPlayerName(player);
-            return textRand.Choose(Dialog.Clean("MadelineParty_Game_Winner_List").Split(','));
+            return GameData.Instance.Random.Choose(Dialog.Clean("MadelineParty_Game_Winner_List").Split(','));
         }
 
         private IEnumerator GameEndRoutine() {

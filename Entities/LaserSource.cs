@@ -10,10 +10,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MadelineParty {
+namespace MadelineParty.Entities
+{
     [CustomEntity("madelineparty/laserSource")]
     [Tracked]
-    public class LaserSource : Entity {
+    public class LaserSource : Entity
+    {
         private const float ActiveTime = 0.12f;
 
         private const float CollideCheckSep = 4f;
@@ -43,13 +45,16 @@ namespace MadelineParty {
 
         public Vector2 BeamOrigin => Position;
 
-        public LaserSource(EntityData data, Vector2 offset) : base(data.Position + offset) {
+        public LaserSource(EntityData data, Vector2 offset) : base(data.Position + offset)
+        {
             laserID = data.Int("laserID");
             angle = data.Float("angle").ToRad();
             Add(beamSprite = GFX.SpriteBank.Create("badeline_beam"));
             //beamSprite.SetAnimationFrame(Calc.Random.Next(beamSprite.CurrentAnimationTotalFrames));
-            beamSprite.OnLastFrame = delegate (string anim) {
-                if (anim == "shoot") {
+            beamSprite.OnLastFrame = delegate (string anim)
+            {
+                if (anim == "shoot")
+                {
                     active = false;
                 }
             };
@@ -61,18 +66,21 @@ namespace MadelineParty {
             AddTag(Tags.FrozenUpdate);
         }
 
-        public void Lase(float delay) {
+        public void Lase(float delay)
+        {
             Add(new Coroutine(LaseRoutine(delay)));
         }
 
-        private IEnumerator LaseRoutine(float delay) {
+        private IEnumerator LaseRoutine(float delay)
+        {
             active = true;
             beamAlpha = 0f;
             sideFadeAlpha = 0f;
             beamSprite.Play("charge", true, true);
 
             var chargeTimer = delay - ActiveTime;
-            while (chargeTimer > 0) {
+            while (chargeTimer > 0)
+            {
                 sideFadeAlpha = Calc.Approach(sideFadeAlpha, 1f, Engine.DeltaTime);
                 chargeTimer -= Engine.DeltaTime;
                 yield return null;
@@ -84,25 +92,30 @@ namespace MadelineParty {
             DissipateParticles();
 
             var activeTimer = ActiveTime;
-            while (activeTimer > 0f) {
+            while (activeTimer > 0f)
+            {
                 sideFadeAlpha = Calc.Approach(sideFadeAlpha, 0f, Engine.DeltaTime * 8f);
-                if (beamSprite.CurrentAnimationID != "shoot") {
+                if (beamSprite.CurrentAnimationID != "shoot")
+                {
                     beamSprite.Play("shoot");
                     beamStartSprite.Play("shoot", restart: true);
                 }
                 activeTimer -= Engine.DeltaTime;
-                if (activeTimer > 0f) {
+                if (activeTimer > 0f)
+                {
                     PlayerCollideCheck();
                 }
             }
         }
 
-        public override void Update() {
+        public override void Update()
+        {
             base.Update();
             beamAlpha = Calc.Approach(beamAlpha, 1f, 4f * Engine.DeltaTime);
         }
 
-        private void DissipateParticles() {
+        private void DissipateParticles()
+        {
             Level level = SceneAs<Level>();
             Vector2 screenCenter = level.Camera.Position + new Vector2(160f, 90f);
             Vector2 closeTarget = BeamOrigin + Calc.AngleToVector(angle, 12f);
@@ -115,11 +128,14 @@ namespace MadelineParty {
             float direction2 = (-tangential).Angle();
             float num = Vector2.Distance(screenCenter, closeTarget) - 12f;
             screenCenter = Calc.ClosestPointOnLine(closeTarget, farTarget, screenCenter);
-            for (int i = 0; i < (int)BeamLength / 10; i += 12) {
-                for (int j = -1; j <= 1; j += 2) {
+            for (int i = 0; i < (int)BeamLength / 10; i += 12)
+            {
+                for (int j = -1; j <= 1; j += 2)
+                {
                     level.ParticlesFG.Emit(FinalBossBeam.P_Dissipate, screenCenter + normal * i + tangential * 2f * j + Calc.Random.Range(min, max), direction);
                     level.ParticlesFG.Emit(FinalBossBeam.P_Dissipate, screenCenter + normal * i - tangential * 2f * j + Calc.Random.Range(min, max), direction2);
-                    if (i != 0 && i < num) {
+                    if (i != 0 && i < num)
+                    {
                         level.ParticlesFG.Emit(FinalBossBeam.P_Dissipate, screenCenter - normal * i + tangential * 2f * j + Calc.Random.Range(min, max), direction);
                         level.ParticlesFG.Emit(FinalBossBeam.P_Dissipate, screenCenter - normal * i - tangential * 2f * j + Calc.Random.Range(min, max), direction2);
                     }
@@ -127,22 +143,26 @@ namespace MadelineParty {
             }
         }
 
-        private void PlayerCollideCheck() {
+        private void PlayerCollideCheck()
+        {
             Vector2 closeTarget = BeamOrigin + Calc.AngleToVector(angle, 12f);
             Vector2 farTarget = BeamOrigin + Calc.AngleToVector(angle, BeamLength);
             Vector2 tangential = (farTarget - closeTarget).Perpendicular().SafeNormalize(CollideCheckSep);
-            
+
             Player player = Scene.CollideFirst<Player>(closeTarget, farTarget);
-            for(int i = 1; i <= CollideCheckCount && player == null; i++) {
+            for (int i = 1; i <= CollideCheckCount && player == null; i++)
+            {
                 player ??= Scene.CollideFirst<Player>(closeTarget + tangential * i, farTarget + tangential * i);
                 player ??= Scene.CollideFirst<Player>(closeTarget - tangential * i, farTarget - tangential * i);
             }
-            
+
             player?.Die((player.Center - BeamOrigin).SafeNormalize())?.AddTag(Tags.PauseUpdate | Tags.FrozenUpdate);
         }
 
-        public override void Render() {
-            if(!active) {
+        public override void Render()
+        {
+            if (!active)
+            {
                 return;
             }
             Vector2 beamOrigin = BeamOrigin;
@@ -151,15 +171,18 @@ namespace MadelineParty {
             beamSprite.Color = Color.White * beamAlpha;
             beamStartSprite.Rotation = angle;
             beamStartSprite.Color = Color.White * beamAlpha;
-            if (beamSprite.CurrentAnimationID == "shoot") {
+            if (beamSprite.CurrentAnimationID == "shoot")
+            {
                 beamOrigin += Calc.AngleToVector(angle, 8f);
             }
-            for (int i = 0; i < BeamsDrawn; i++) {
+            for (int i = 0; i < BeamsDrawn; i++)
+            {
                 beamSprite.RenderPosition = beamOrigin;
                 beamSprite.Render();
                 beamOrigin += vector;
             }
-            if (beamSprite.CurrentAnimationID == "shoot") {
+            if (beamSprite.CurrentAnimationID == "shoot")
+            {
                 beamStartSprite.RenderPosition = BeamOrigin;
                 beamStartSprite.Render();
             }

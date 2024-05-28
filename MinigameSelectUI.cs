@@ -39,13 +39,11 @@ namespace MadelineParty {
         public Action<string> OnSelect;
 
         private Level level;
-        private Random rand;
         private List<string> unchoosable = new();
         private string startChoice;
 
         public MinigameSelectUI(string choice) {
             startChoice = choice;
-            rand = new(choice.GetHashCode() + GameData.Instance.turn + (int)(GameData.Instance.tieBreakerSeed - int.MaxValue));
             unchoosable.Add(choice);
             AddTag(TagsExt.SubHUD);
             Depth = -10000;
@@ -58,19 +56,21 @@ namespace MadelineParty {
             base.Added(scene);
             level = SceneAs<Level>();
             var options = GenerateOptions();
-            actualSelection = rand.Next(totalOptions);
+            actualSelection = GameData.Instance.Random.Next(totalOptions);
             options[actualSelection] = startChoice;
             UpdateOptions(options);
         }
 
         private string[] GenerateOptions() {
             // Generate the other options for the minigame select UI
-            List<LevelData> decoyMinigames = GameData.Instance.GetAllUnplayedMinigames(level);
+            List<LevelData> decoyMinigames = GameData.Instance.GetAllUnplayedMinigames(level, new() {
+                PlayerCount = GameData.Instance.playerNumber
+            });
             decoyMinigames.RemoveAll(item => unchoosable.Contains(item.Name));
             
             var minigameOptions = new string[totalOptions];
             for (int i = 0; i < totalOptions; i++) {
-                int decoyIdx = rand.Next(decoyMinigames.Count);
+                int decoyIdx = GameData.Instance.Random.Next(decoyMinigames.Count);
                 minigameOptions[i] = decoyMinigames[decoyIdx].Name;
                 decoyMinigames.RemoveAt(decoyIdx);
             }
@@ -153,7 +153,7 @@ namespace MadelineParty {
 
         public void Reroll(int player) {
             var options = GenerateOptions();
-            actualSelection = rand.Next(totalOptions);
+            actualSelection = GameData.Instance.Random.Next(totalOptions);
             unchoosable.Add(options[actualSelection]);
             UpdateOptions(options);
             statusText = Dialog.Clean("MadelineParty_Minigame_Select_Choosing");

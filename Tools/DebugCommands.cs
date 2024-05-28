@@ -1,8 +1,10 @@
 ﻿using Celeste;
+using MadelineParty.Board;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace MadelineParty.Tools {
+namespace MadelineParty.Tools
+{
 
     class DebugCommands {
         [Command("rig_minigame", "set the next minigame that will be chosen (if you are the host)")]

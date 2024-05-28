@@ -6,19 +6,24 @@ using System.Text.RegularExpressions;
 using Celeste;
 using Microsoft.Xna.Framework;
 using Monocle;
-using static MadelineParty.BoardController;
+using static MadelineParty.Board.BoardController;
 
-namespace MadelineParty {
+namespace MadelineParty.Board
+{
     [Tracked]
-    public class PlayerToken : Entity {
-        private class TokenImage : Component {
+    public class PlayerToken : Entity
+    {
+        private class TokenImage : Component
+        {
             public PlayerToken token => (PlayerToken)Entity;
 
             public TokenImage()
-                : base(active: true, visible: true) {
+                : base(active: true, visible: true)
+            {
             }
 
-            public override void Render() {
+            public override void Render()
+            {
                 token.textures[(int)token.frame].DrawCentered(token.Position - token.level.ShakeVector * 6, Color.White, token.scale * token.scaleModifier);
             }
         }
@@ -63,7 +68,8 @@ namespace MadelineParty {
 
         public Color color;
 
-        public PlayerToken(int id, string texture, Vector2 position, Vector2 scale, int depth, BoardSpace space) : base(position) {
+        public PlayerToken(int id, string texture, Vector2 position, Vector2 scale, int depth, BoardSpace space) : base(position)
+        {
             this.id = id;
             Collider = new Hitbox(20, 20, -5, -5);
             AnimationSpeed = 12f;
@@ -78,8 +84,10 @@ namespace MadelineParty {
             currentSpace = space;
         }
 
-        public static string GetFullPath(string texture) {
-            if (string.IsNullOrEmpty(Path.GetExtension(texture))) {
+        public static string GetFullPath(string texture)
+        {
+            if (string.IsNullOrEmpty(Path.GetExtension(texture)))
+            {
                 texture += ".png";
             }
             string extension = Path.GetExtension(texture);
@@ -87,13 +95,17 @@ namespace MadelineParty {
             return Regex.Replace(input, "\\d+$", string.Empty);
         }
 
-        public override void Update() {
+        public override void Update()
+        {
             base.Update();
-            if (textures.Count > 1) {
+            if (textures.Count > 1)
+            {
                 timeTilBlink -= AnimationSpeed * Engine.DeltaTime;
-                if (timeTilBlink < 0) {
+                if (timeTilBlink < 0)
+                {
                     frame += AnimationSpeed * Engine.DeltaTime;
-                    if (frame >= textures.Count) {
+                    if (frame >= textures.Count)
+                    {
                         frame = 0;
                         timeTilBlink = rand.NextFloat(50) + 25;
                     }
@@ -101,8 +113,10 @@ namespace MadelineParty {
             }
         }
 
-        public IEnumerator Respawn() {
-            if (deathEffect == null) {
+        public IEnumerator Respawn()
+        {
+            if (deathEffect == null)
+            {
                 Add(deathEffect = new DeathEffect(color));
                 image.Visible = false;
                 yield return deathEffect.Duration + 0.1f;
@@ -124,17 +138,21 @@ namespace MadelineParty {
             }
         }
 
-        public override void Render() {
+        public override void Render()
+        {
             base.Render();
-            if (respawnEase >= 0) {
+            if (respawnEase >= 0)
+            {
                 DeathEffect.Draw(Position - level.ShakeVector * 6, color, respawnEase);
             }
         }
 
-        public override void Added(Scene scene) {
+        public override void Added(Scene scene)
+        {
             base.Added(scene);
             level = SceneAs<Level>();
-            if (image == null) {
+            if (image == null)
+            {
                 Add(image = new TokenImage());
             }
         }
