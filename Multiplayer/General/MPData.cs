@@ -89,4 +89,11 @@ namespace MadelineParty.Multiplayer.General {
         public string kevinID;
         public Vector2 dir;
     }
+
+    public class BlockCrystalUpdate : MPData {
+        public int crystalId;
+        public Vector2 position;
+        // Distinguish between just a change in position or if it's spawning a block
+        public bool spawning;
+    }
 }

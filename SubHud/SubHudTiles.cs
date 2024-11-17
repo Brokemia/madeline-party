@@ -52,8 +52,8 @@ namespace MadelineParty.SubHud {
                 GroupBoundsMin = new Point((int)screenOffset.X, (int)screenOffset.Y);
                 GroupBoundsMax = new Point((int)screenOffset.X + width, (int)screenOffset.Y + height);
                 AddToGroupAndFindChildren(this);
-                Rectangle rectangle = new Rectangle(GroupBoundsMin.X / 8, GroupBoundsMin.Y / 8, (GroupBoundsMax.X - GroupBoundsMin.X) / 8 + 1, (GroupBoundsMax.Y - GroupBoundsMin.Y) / 8 + 1);
-                VirtualMap<char> virtualMap = new VirtualMap<char>(rectangle.Width, rectangle.Height, '0');
+                var rectangle = new Rectangle(GroupBoundsMin.X / 8, GroupBoundsMin.Y / 8, (GroupBoundsMax.X - GroupBoundsMin.X) / 8 + 1, (GroupBoundsMax.Y - GroupBoundsMin.Y) / 8 + 1);
+                var virtualMap = new VirtualMap<char>(rectangle.Width, rectangle.Height, '0');
                 foreach (var item in Group) {
                     int num = (int)(item.screenOffset.X / 8f) - rectangle.X;
                     int num2 = (int)(item.screenOffset.Y / 8f) - rectangle.Y;
@@ -70,10 +70,11 @@ namespace MadelineParty.SubHud {
                     EdgesIgnoreOutOfLevel = false,
                     PaddingIgnoreOutOfLevel = false
                 }).TileGrid;
-                tiles = new(vanillaTiles.TileWidth, vanillaTiles.TileHeight, vanillaTiles.TilesX, vanillaTiles.TilesY, scale);
-                tiles.Tiles = vanillaTiles.Tiles;
+                tiles = new(vanillaTiles.TileWidth, vanillaTiles.TileHeight, vanillaTiles.TilesX, vanillaTiles.TilesY, scale) {
+                    Tiles = vanillaTiles.Tiles,
 
-                tiles.Position = new Vector2(GroupBoundsMin.X - screenOffset.X, GroupBoundsMin.Y - screenOffset.Y);
+                    Position = new Vector2(GroupBoundsMin.X - screenOffset.X, GroupBoundsMin.Y - screenOffset.Y)
+                };
                 Add(tiles);
             }
         }

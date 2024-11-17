@@ -28,46 +28,42 @@ namespace MadelineParty.Minigame {
 
         public override void Added(Scene scene) {
             base.Added(scene);
+            if (!Data.Started) {
+                // Assign roles
+
+                var killer = GameData.Instance.Random.Next(GameData.Instance.playerNumber);
+                // Account for gaps in players
+                for (int i = 0; i <= killer; i++) {
+                    if (GameData.Instance.players[i] == null) {
+                        killer++;
+                    }
+                }
+                for (int i = 0; i < GameData.Instance.players.Length; i++) {
+                    if (i == killer) {
+                        Data.AssignRole(i, SOLO_ROLE);
+                    } else {
+                        Data.AssignRole(i, TEAM_ROLE);
+                    }
+                }
+            }
         }
 
         public override void Awake(Scene scene) {
             base.Awake(scene);
             // If we have just died
             if (level.Session.RespawnPoint == deadRespawn) {
-                if (level.Entities.FindFirst<MinigameTimeDisplay>() is { } display) {
-                    display.finalTime = level.RawTimeActive - Data.StartTime;
-                }
-
                 Add(endCoroutine = new Coroutine(FinishMinigame(false)));
             } else {
                 // Don't prevent pausing if we're still on the ready screen
                 if (Data.Started) {
                     level.PauseLock = true;
                     Player.diedInGBJ = 0;
-                } else {
-                    // Assign roles
-                    
-                    var killer = Calc.Random.Next(GameData.Instance.playerNumber);
-                    // Account for gaps in players
-                    for (int i = 0; i <= killer; i++) {
-                        if (GameData.Instance.players[i] == null) {
-                            killer++;
-                        }
-                    }
-                    for (int i = 0; i < GameData.Instance.players.Length; i++) {
-                        if (i == killer) {
-                            Data.AssignRole(i, SOLO_ROLE);
-                        } else {
-                            Data.AssignRole(i, TEAM_ROLE);
-                        }
-                    }
                 }
             }
         }
 
         protected override void AfterStart() {
             base.AfterStart();
-            // Reset timer so it starts at 0 instead of 4.2
             level.Tracker.GetEntity<Player>().JustRespawned = false;
             level.Session.RespawnPoint = deadRespawn;
             level.Add(new MinigameTimeDisplay(this, true));
@@ -102,6 +98,9 @@ namespace MadelineParty.Minigame {
             while (player == null) {
                 yield return null;
                 player = level.Tracker.GetEntity<Player>();
+            }
+            if (level.Entities.FindFirst<MinigameTimeDisplay>() is { } display) {
+                display.finalTime = level.RawTimeActive - Data.StartTime;
             }
             completed = true;
             // Freeze the player so they can't do any more moving until everyone else is done

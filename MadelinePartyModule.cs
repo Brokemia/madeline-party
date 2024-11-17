@@ -15,7 +15,6 @@ using MadelineParty.Board;
 using MadelineParty.Entities;
 
 // TODO minigames for most bounces of oshiro, seekers, snowballs, etc...
-// TODO survive the longest minigames
 
 [assembly: IgnoresAccessChecksTo("Celeste")]
 namespace MadelineParty
@@ -80,6 +79,7 @@ namespace MadelineParty
             TextMenuPlus.Load();
             SubHudLevelForwarder.Load();
             BoardSelect.Load();
+            BlockCrystal.Load();
 
             MultiplayerSingleton.Instance.RegisterHandler<Party>(HandleParty);
             MultiplayerSingleton.Instance.RegisterHandler<MinigameEnd>(HandleMinigameEnd);
@@ -213,6 +213,7 @@ namespace MadelineParty
             TextMenuPlus.Unload();
             SubHudLevelForwarder.Unload();
             BoardSelect.Unload();
+            BlockCrystal.Unload();
         }
 
         private void HandleParty(MPData data) {

@@ -43,6 +43,9 @@
     <Reference Include="BrokemiaHelper">
       <HintPath>lib-stripped\BrokemiaHelper.dll</HintPath>
     </Reference>
+    <Reference Include="FactoryHelper">
+      <HintPath>lib-stripped\FactoryHelper.dll</HintPath>
+    </Reference>
     <Reference Include="VivHelper">
       <HintPath>lib-stripped\VivHelper.dll</HintPath>
     </Reference>

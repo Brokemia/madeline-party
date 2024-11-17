@@ -11,8 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MadelineParty
-{
+namespace MadelineParty {
     [CustomEntity("madelineparty/partyUIController")]
     public class PartyUIController : Entity {
         /*
@@ -33,7 +32,7 @@ namespace MadelineParty
         private const int padding = 10;
         private const int playerNameSeparation = 5;
 
-        private string lookingForOneText, lookingForPluralText, waitingText;
+        private string lookingForOneText, lookingForPluralText, allPlayersText, waitingText;
 
         public PartyUIController() {
             Depth = -2000;
@@ -46,17 +45,25 @@ namespace MadelineParty
                 RemoveSelf();
                 return;
             }
+            var modeName = Dialog.Clean("MadelineParty_Menu_Mode_" + ModeManager.Instance.Mode);
             lookingForOneText = Dialog.Clean("MadelineParty_Party_Need_One_More")
-                .Replace("((mode))", Dialog.Clean("MadelineParty_Menu_Mode_" + ModeManager.Instance.Mode));
+                .Replace("((mode))", modeName);
             lookingForPluralText = Dialog.Clean("MadelineParty_Party_Need_Multiple_More")
-                .Replace("((mode))", Dialog.Clean("MadelineParty_Menu_Mode_" + ModeManager.Instance.Mode));
+                .Replace("((mode))", modeName);
+            allPlayersText = Dialog.Clean("MadelineParty_Party_All_Players_Joined")
+                .Replace("((mode))", modeName);
             waitingText = Dialog.Clean("MadelineParty_Party_Waiting");
         }
 
         public override void Render() {
             base.Render();
             var neededPlayers = GameData.Instance.playerNumber - 1 - GameData.Instance.celestenetIDs.Count;
-            var filledLookingForText = (neededPlayers == 1 ? lookingForOneText : lookingForPluralText).Replace("((count))", neededPlayers.ToString());
+            var filledLookingForText = neededPlayers switch {
+                0 => allPlayersText,
+                1 => lookingForOneText,
+                _ => lookingForPluralText
+            };
+            filledLookingForText = filledLookingForText.Replace("((count))", neededPlayers.ToString());
             var width = Calc.Max(minWidth, (int)(ActiveFont.Measure(filledLookingForText).X / 2) + padding * 2, (int)(ActiveFont.Measure(waitingText).X / 2) + padding * 2);
             var height = padding * 2 + ActiveFont.LineHeight / 2 + (GameData.Instance.playerNumber + 0.5f) * (playerNameSeparation * 2 + ActiveFont.LineHeight / 2);
 
@@ -67,11 +74,14 @@ namespace MadelineParty
 
             for (int i = 0; i < GameData.Instance.playerNumber; i++) {
                 string playerName = null;
+                Color nameColor = Color.White;
                 uint playerID = uint.MaxValue;
                 MTexture tokenTex = null;
+
                 if (i == 0) {
                     playerID = MultiplayerSingleton.Instance.CurrentPlayerID();
                     playerName = MultiplayerSingleton.Instance.GetPlayer(playerID).Name;
+                    nameColor = new Color(1, 1, 0.7f);
                     if (GameData.Instance.currentPlayerSelection != null) {
                         tokenTex = GFX.Gui[PlayerToken.GetFullPath(BoardController.TokenPaths[GameData.Instance.currentPlayerSelection.playerID]) + "00"];
                     }
@@ -87,7 +97,7 @@ namespace MadelineParty
                 tokenTex?.DrawJustified(new(padding, textTop + ActiveFont.LineHeight / 4), new Vector2(0, 0.5f), Color.White, 0.25f);
 
                 ActiveFont.Draw(playerName ?? waitingText, new(padding * 2 + 40, textTop),
-                    Vector2.Zero, new(0.5f), playerName == null ? Color.Gray : Color.White);
+                    Vector2.Zero, new(0.5f), playerName == null ? Color.Gray : nameColor);
             }
         }
 

@@ -17,7 +17,7 @@ namespace MadelineParty.Multiplayer {
 
         private static MultiplayerBackend CreateBackend() {
             Type singletonType = Type.GetType($"MadelineParty.Multiplayer.{backendName}.{backendName}Backend, {Assembly.GetExecutingAssembly().FullName}");
-            return (MultiplayerBackend)singletonType.GetConstructor(Everest._EmptyTypeArray).Invoke(Everest._EmptyObjectArray);
+            return (MultiplayerBackend)singletonType.GetConstructor(Type.EmptyTypes).Invoke(Array.Empty<object>());
         }
 
         private MultiplayerSingleton() { }
@@ -44,7 +44,7 @@ namespace MadelineParty.Multiplayer {
 
         private MultiplayerData GetData(string id) {
             Type dataType = Type.GetType($"MadelineParty.Multiplayer.{backendName}.Data.{id}, {Assembly.GetExecutingAssembly().FullName}");
-            MultiplayerData data = (MultiplayerData)dataType.GetConstructor(Everest._EmptyTypeArray).Invoke(Everest._EmptyObjectArray);
+            MultiplayerData data = (MultiplayerData)dataType.GetConstructor(Type.EmptyTypes).Invoke(Array.Empty<object>());
             return data;
         }
 

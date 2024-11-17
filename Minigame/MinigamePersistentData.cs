@@ -1,10 +1,7 @@
 ﻿using Celeste;
 using Monocle;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace MadelineParty.Minigame {
     [Tracked(true)]
@@ -28,6 +25,10 @@ namespace MadelineParty.Minigame {
 
         public bool HasRole(int playerID, string role) {
             return roles.ContainsKey(playerID) && roles[playerID].Contains(role);
+        }
+
+        public ReadOnlyCollection<string> GetRoles(int playerID) {
+            return roles.GetValueOrDefault(playerID, []).AsReadOnly();
         }
     }
 }

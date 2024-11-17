@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Monocle;
 using Celeste.Mod.Entities;
-using MadelineParty.Entity;
+using MadelineParty.Entities;
 
 namespace MadelineParty.Minigame
 {

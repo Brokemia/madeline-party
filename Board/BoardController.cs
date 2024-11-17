@@ -1085,7 +1085,7 @@ namespace MadelineParty.Board
                 minigameStartTime = DateTime.UtcNow.AddSeconds(3);
                 ChoseMinigame(chosenMinigame);
                 MultiplayerSingleton.Instance.Send(new MinigameStart { choice = chosenMinigame, gameStart = minigameStartTime.ToFileTimeUtc() });
-                ModeManager.Instance.AfterMinigameChosen();
+                ModeManager.Instance.AfterMinigameChosen(level);
             }
         }
 
@@ -1486,7 +1486,9 @@ namespace MadelineParty.Board
             if (GameData.Instance.celestenetIDs.Contains(start.ID) && start.ID != MultiplayerSingleton.Instance.CurrentPlayerID())
             {
                 ChoseMinigame(start.choice, start.gameStart);
-                ModeManager.Instance.AfterMinigameChosen();
+                if (Engine.Scene is Level level) {
+                    ModeManager.Instance.AfterMinigameChosen(level);
+                }
             }
         }
 

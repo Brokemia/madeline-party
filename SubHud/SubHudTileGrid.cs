@@ -24,9 +24,9 @@ namespace MadelineParty.SubHud {
 
         public int TilesY => Tiles.Rows;
 
-        public int Scale { get; private set; }
+        public float Scale { get; set; }
 
-        public SubHudTileGrid(int tileWidth, int tileHeight, int tilesX, int tilesY, int scale)
+        public SubHudTileGrid(int tileWidth, int tileHeight, int tilesX, int tilesY, float scale)
             : base(active: false, visible: true) {
             TileWidth = tileWidth;
             TileHeight = tileHeight;

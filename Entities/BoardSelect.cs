@@ -167,7 +167,7 @@ namespace MadelineParty.Entities
 
             foreach (BoardSpace space in boardSpaces[boardOptions[Value]])
             {
-                spaceTextures.OrDefault(space.type, null)?.DrawCentered((Position - level.Camera.Position + new Vector2(space.x, space.y)) * 6, Color.White, 3);
+                spaceTextures.GetValueOrDefault(space.type, null)?.DrawCentered((Position - level.Camera.Position + new Vector2(space.x, space.y)) * 6, Color.White, 3);
             }
 
             ActiveFont.DrawOutline(Dialog.Clean("MadelineParty_Board_Name_" + boardOptions[Value]), (Position - level.Camera.Position + new Vector2(40, 85f)) * 6, new Vector2(0.5f), new Vector2(0.7f), Color.White, 2, Color.Black);

@@ -1,25 +1,13 @@
 ﻿using Celeste;
+using MadelineParty.Minigame;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MadelineParty {
     static class Extensions {
-
-		public static T OrDefault<S, T>(this Dictionary<S, T> self, S key, T defaultValue) {
-            if(self.TryGetValue(key, out T value)) {
-                return value;
-            }
-            return defaultValue;
-        }
-
-        public static T OrDefault<S, T>(this Dictionary<S, object> self, S key, T defaultValue) {
-            if (self.TryGetValue(key, out object value)) {
-                return (T)value;
-            }
-            return defaultValue;
-        }
 
 		public static void Teleport(this Level self, string levelName, Vector2? spawnPoint = null) {
             self.Teleport(levelName, () => spawnPoint);
@@ -42,11 +30,8 @@ namespace MadelineParty {
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 			self.Session.Level = levelName;
-			Vector2? spawnPoint = spawnPointFunc.Invoke();
-			if (spawnPoint == null) {
-				spawnPoint = self.GetSpawnPoint(new Vector2(self.Bounds.Left, self.Bounds.Top));
-			}
-			self.Session.RespawnPoint = spawnPoint;
+			Vector2 spawnPoint = spawnPointFunc.Invoke() ?? self.GetSpawnPoint(new Vector2(self.Bounds.Left, self.Bounds.Top));
+            self.Session.RespawnPoint = spawnPoint;
 			self.LoadLevel(Player.IntroTypes.None);
 			self.strawberriesDisplay.DrawLerp = 0f;
 			WindController windController = self.Entities.FindFirst<WindController>();
@@ -57,5 +42,23 @@ namespace MadelineParty {
 			}
 		}
 
+		public static Vector2 GetMinigameSpawnPoint(this Level level, MinigamePersistentData data, int playerID) {
+			// Get spawnpoints for the player's role
+			var roles = data.GetRoles(playerID);
+            List<Vector2> possibleSpawns = [];
+			foreach (MinigameSpawnpoint spawn in level.Tracker.GetEntities<MinigameSpawnpoint>()) {
+				if (spawn.Roles.Intersect(roles).Any()) {
+					possibleSpawns.Add(spawn.Position);
+				}
+			}
+
+			// Default back to using normal spawnpoints
+			if (!possibleSpawns.Any()) {
+                possibleSpawns = level.Session.LevelData.Spawns;
+            }
+			
+			// Try to space out players. This is kind of janky for spawn points with roles
+            return possibleSpawns[playerID % possibleSpawns.Count];
+		}
 	}
 }

@@ -30,6 +30,10 @@ namespace MadelineParty.Entities
         {
             base.Added(scene);
             Add(new MultiplayerHandlerComponent<SyncedKevinHit>("syncedKevin " + id.Key, HandleSyncedKevinHit));
+        }
+
+        public override void Awake(Scene scene) {
+            base.Awake(scene);
             minigame = Scene.Tracker.GetEntity<MinigameEntity>();
         }
 

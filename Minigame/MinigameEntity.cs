@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BrokemiaHelper;
 using Celeste;
+using FactoryHelper.Components;
 using MadelineParty.Minigame;
 using MadelineParty.Minigame.Display;
 using MadelineParty.Multiplayer;
@@ -21,7 +22,7 @@ namespace MadelineParty {
         protected List<MTexture> diceNumbers;
         public bool completed;
         public MinigamePersistentData Data { get; private set; }
-        
+
         protected T DataAs<T>() where T : MinigamePersistentData {
             return Data as T;
         }
@@ -64,8 +65,10 @@ namespace MadelineParty {
             if (!Data.Started) {
                 level.Add(new MinigameReadyPrompt(this));
                 Player player = level.Tracker.GetEntity<Player>();
+                player.Position = level.GetMinigameSpawnPoint(Data, GameData.Instance.RealPlayer.TokenSelected);
                 player.JustRespawned = true;
                 player.StateMachine.State = Player.StFrozen;
+                player.Get<ConveyorMover>().Active = false;
             }
             //// FIXME hackfix for invis
             //if (!didRespawn) {
@@ -114,6 +117,7 @@ namespace MadelineParty {
             // Reset timer so it doesn't include the countdown
             Data.StartTime = level.RawTimeActive;
             Data.Started = true;
+            player.Get<ConveyorMover>().Active = true;
             AfterStart();
         }
 
@@ -147,7 +151,7 @@ namespace MadelineParty {
 
             GameData.Instance.minigameResults.Sort(placeOrderer);
 
-            List<int> winners = new() { GameData.Instance.minigameResults[0].Item1 };
+            List<int> winners = [ GameData.Instance.minigameResults[0].Item1 ];
             for (int i = 1; i < GameData.Instance.minigameResults.Count; i++) {
                 if (GameData.Instance.minigameResults[i].Item2 == GameData.Instance.minigameResults[0].Item2) {
                     winners.Add(GameData.Instance.minigameResults[i].Item1);
@@ -167,7 +171,8 @@ namespace MadelineParty {
             // A check to stop the game from crashing when I hit one of these while testing
             if (winners[0] >= 0 && GameData.Instance.players[winners[0]] != null) {
                 cleanup?.Invoke();
-                if(!GameData.Instance.minigameWins.ContainsKey(winners[0])) {
+                // TODO this is a reward and can go in mode manager DistributeMinigameRewards
+                if (!GameData.Instance.minigameWins.ContainsKey(winners[0])) {
                     GameData.Instance.minigameWins[winners[0]] = 1;
                 } else {
                     GameData.Instance.minigameWins[winners[0]]++;
